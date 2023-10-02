@@ -1,4 +1,4 @@
-import { getContentFromArchives } from "../../test/resources/TestUtil";
+import {getContentFromArchives} from "../../test/resources/TestUtil";
 import {
 	complexQuery,
 	emptyQuery,
@@ -7,7 +7,7 @@ import {
 	simpleQueryWithNoOrder,
 	wildCardQueryA,
 	wildCardQueryB,
-	wildCardQueryC
+	wildCardQueryC,
 } from "../../test/resources/queries/performQueryData";
 import {
 	IInsightFacade,
@@ -16,28 +16,42 @@ import {
 	InsightError,
 	InsightResult,
 	NotFoundError,
-	ResultTooLargeError
+	ResultTooLargeError,
 } from "./IInsightFacade";
+import JSZip from "jszip";
+import Section, {ContentSection} from "./Section";
+import Sections from "./Sections";
 
 /**
  * This is the main programmatic entry point for the project.
  * Method documentation is in IInsightFacade
  *
  */
+
+interface ZipFile {
+	result: ContentSection[];
+	rank: number;
+}
+
 export default class InsightFacade implements IInsightFacade {
 	constructor() {
 		console.log("InsightFacadeImpl::init()");
 	}
 
-	public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
+	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
 		if (!this.validateID(id)) {
 			return Promise.reject(new InsightError("id is invalid"));
 		}
 
-		if ((content !== getContentFromArchives("leastPair.zip") &&
-			content !== getContentFromArchives("lessPair.zip") &&
-			content !== getContentFromArchives("pair.zip")) ||
-			kind === InsightDatasetKind.Rooms) {
+		const result = await this.parseContentSection(content);
+		console.log("results: ", result);
+
+		if (
+			(content !== getContentFromArchives("leastPair.zip") &&
+				content !== getContentFromArchives("lessPair.zip") &&
+				content !== getContentFromArchives("pair.zip")) ||
+			kind === InsightDatasetKind.Rooms
+		) {
 			return Promise.reject(new InsightError("dataset is invalid"));
 		}
 
@@ -78,11 +92,13 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {
-		const dataset: InsightDataset[] = [{
-			id: "sections",
-			kind: InsightDatasetKind.Sections,
-			numRows: 4,
-		}];
+		const dataset: InsightDataset[] = [
+			{
+				id: "sections",
+				kind: InsightDatasetKind.Sections,
+				numRows: 4,
+			},
+		];
 
 		return Promise.resolve(dataset);
 	}
@@ -93,5 +109,54 @@ export default class InsightFacade implements IInsightFacade {
 			return false;
 		}
 		return true;
+	}
+
+	private async parseContentSection(content: string): Promise<Sections> {
+		let count = 0;
+		const decode = (str: string): string => Buffer.from(str, "base64").toString("binary");
+
+		try {
+			const data = decode(content);
+			const zip = await JSZip.loadAsync(data);
+			const folderPath = "courses/";
+			const sections = new Sections();
+
+			const promises: any[] = [];
+
+			zip.forEach(async function (relativePath, zipEntry) {
+				if (relativePath.startsWith(folderPath) && relativePath !== folderPath) {
+					count++;
+					const promise = zipEntry.async("text").then((jsonContent) => {
+						try {
+							const jsonObject: ZipFile = JSON.parse(jsonContent);
+							const results = jsonObject.result;
+
+							if (results.length !== 0) {
+								results.forEach((result) => {
+									const section = new Section(result);
+									sections.addSection(section);
+								});
+							}
+						} catch (error) {
+							console.error(`Error parsing JSON from ${zipEntry.name}:`, error);
+							throw error;
+						}
+					});
+
+					promises.push(promise);
+				}
+			});
+
+			await Promise.all(promises);
+
+			if (count === 0) {
+				throw Error("Dataset is invalid");
+			}
+
+			return sections;
+		} catch (error) {
+			console.error("Error loading the zip file:", error);
+			throw error;
+		}
 	}
 }

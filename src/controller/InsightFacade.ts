@@ -44,7 +44,7 @@ export default class InsightFacade implements IInsightFacade {
 		}
 
 		const result = await this.parseContentSection(content);
-		console.log("results: ", result);
+		result.writeToDisk(id);
 
 		if (
 			(content !== getContentFromArchives("leastPair.zip") &&

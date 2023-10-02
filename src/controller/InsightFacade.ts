@@ -1,4 +1,4 @@
-import {getContentFromArchives} from "../../test/resources/TestUtil";
+import {getContentFromArchives} from "../../test/TestUtil";
 import {
 	complexQuery,
 	emptyQuery,

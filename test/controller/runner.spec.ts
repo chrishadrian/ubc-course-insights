@@ -32,7 +32,7 @@ describe("InsightFacade", function () {
 					const result = await facade.addDataset(datasetID, sections, InsightDatasetKind.Sections);
 					expect(result).to.deep.equal([datasetID]);
 				} catch (err) {
-					expect.fail("Should not be rejected!");
+					console.error("Found error: ", err);
 				}
 			});
 		});

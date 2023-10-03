@@ -32,13 +32,12 @@ export default class Adder {
 				if (relativePath.startsWith(folderPath) &&
 				relativePath !== folderPath &&
 				!relativePath.startsWith(`${folderPath}.`)) {
-					count++;
 					const promise = zipEntry.async("text").then((jsonContent) => {
 						try {
 							const jsonObject: ZipFile = JSON.parse(jsonContent);
 							const results = jsonObject.result;
-
 							if (results.length !== 0) {
+								count++;
 								results.forEach((result) => {
 									const section = new Section(result);
 									sections.addSection(section);
@@ -68,23 +67,23 @@ export default class Adder {
 	public writeToDisk(sections: Sections, datasetID: string, kind: InsightDatasetKind) {
 		const data: Section[] = sections.getSections();
 		const jsonData = JSON.stringify(data, null, 2);
-		let directory: string = persistDir;
-
-		switch (kind) {
-			case InsightDatasetKind.Sections:
-				directory = `${persistDir}/sections`;
-				break;
-			case InsightDatasetKind.Rooms:
-				directory = `${persistDir}/rooms`;
-				break;
-		}
+		let fileName: string = "";
 
 		if (!fs.existsSync(persistDir)) {
 			fs.mkdirSync(persistDir);
-			fs.mkdirSync(directory);
 		}
 
-		const filePath = `${directory}/${datasetID}.json`;
+		switch (kind) {
+			case InsightDatasetKind.Sections:
+				fileName = `section_${datasetID}.json`;
+				break;
+			case InsightDatasetKind.Rooms:
+				fileName = `room_${datasetID}.json`;
+				break;
+		}
+
+
+		const filePath = `${persistDir}/${fileName}`;
 		fs.writeFileSync(filePath, jsonData);
 	}
 }

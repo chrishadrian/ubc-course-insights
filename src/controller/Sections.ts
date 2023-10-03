@@ -22,6 +22,5 @@ export default class Sections {
 
 		const filePath = `${persistDir}/${datasetID}.json`;
 		fs.writeFileSync(filePath, jsonData);
-		console.log(`JSON data has been written to ${filePath}`);
 	}
 }

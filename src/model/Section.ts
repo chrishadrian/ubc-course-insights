@@ -1,5 +1,3 @@
-import * as fs from "fs-extra";
-
 export interface ContentSection {
 	id: number;
 	Subject: string;
@@ -37,10 +35,6 @@ export default class Section {
 		this.audit = content.Audit || 0;
 		this.instructor = content.Professor || "";
 	}
-
-	// get
-
-	// set
 
 	// option:
 	// 1. create a function to transform current section structure to query structure

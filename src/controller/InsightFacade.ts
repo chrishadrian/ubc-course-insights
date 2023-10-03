@@ -1,4 +1,3 @@
-import {getContentFromArchives} from "../../test/TestUtil";
 import {
 	complexQuery,
 	emptyQuery,
@@ -14,10 +13,9 @@ import {
 	InsightDatasetKind,
 	InsightError,
 	InsightResult,
-	NotFoundError,
 	ResultTooLargeError,
 } from "./IInsightFacade";
-import { exceedLimitQuery } from "../../test/resources/queries/invalidQuery";
+import {exceedLimitQuery} from "../../test/resources/queries/invalidQuery";
 import Adder from "../usecase/Adder";
 import Validator from "../util/validator";
 

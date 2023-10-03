@@ -1,4 +1,4 @@
-import { InsightError } from "../controller/IInsightFacade";
+import {InsightError} from "../controller/IInsightFacade";
 import Viewer from "../usecase/Viewer";
 
 export default class Validator {

@@ -1,11 +1,8 @@
-import {
-	IInsightFacade,
-	InsightDatasetKind,
-} from "../../src/controller/IInsightFacade";
+import {IInsightFacade, InsightDatasetKind} from "../../src/controller/IInsightFacade";
 import InsightFacade from "../../src/controller/InsightFacade";
-import { expect, use } from "chai";
+import {expect, use} from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { clearDisk, getContentFromArchives } from "../TestUtil";
+import {clearDisk, getContentFromArchives} from "../TestUtil";
 
 use(chaiAsPromised);
 

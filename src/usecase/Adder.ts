@@ -1,7 +1,7 @@
 import JSZip from "jszip";
 import Sections from "../model/Sections";
-import Section, { ContentSection } from "../model/Section";
-import { InsightDatasetKind, InsightError } from "../controller/IInsightFacade";
+import Section, {ContentSection} from "../model/Section";
+import {InsightDatasetKind, InsightError} from "../controller/IInsightFacade";
 import * as fs from "fs-extra";
 
 interface ZipFile {
@@ -29,9 +29,11 @@ export default class Adder {
 			const promises: any[] = [];
 
 			zip.forEach(async function (relativePath, zipEntry) {
-				if (relativePath.startsWith(folderPath) &&
-				relativePath !== folderPath &&
-				!relativePath.startsWith(`${folderPath}.`)) {
+				if (
+					relativePath.startsWith(folderPath) &&
+					relativePath !== folderPath &&
+					!relativePath.startsWith(`${folderPath}.`)
+				) {
 					const promise = zipEntry.async("text").then((jsonContent) => {
 						try {
 							const jsonObject: ZipFile = JSON.parse(jsonContent);
@@ -82,9 +84,7 @@ export default class Adder {
 				break;
 		}
 
-
 		const filePath = `${persistDir}/${fileName}`;
 		fs.writeFileSync(filePath, jsonData);
 	}
 }
-

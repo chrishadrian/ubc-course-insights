@@ -39,4 +39,3 @@ export default class Section {
 	// option:
 	// 1. create a function to transform current section structure to query structure
 }
-

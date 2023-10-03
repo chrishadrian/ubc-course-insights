@@ -37,37 +37,34 @@ export default class InsightFacade implements IInsightFacade {
 
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
 		const adder = new Adder();
+		let datasetIDs: string[];
 
-		if (!this.validator.validateID(id)) {
-			return Promise.reject(new InsightError("id is invalid"));
+		try {
+			datasetIDs = this.validator.validateID(id);
+		} catch (error) {
+			return Promise.reject(error);
 		}
 
 		try {
 			const result = await adder.parseContentSection(content);
 			adder.writeToDisk(result, id, kind);
+			datasetIDs.push(id);
 		} catch (error) {
 			return Promise.reject(error);
 		}
 
-		if (
-			(content !== getContentFromArchives("leastPair.zip") &&
-				content !== getContentFromArchives("lessPair.zip") &&
-				content !== getContentFromArchives("pair.zip")) ||
-			kind === InsightDatasetKind.Rooms
-		) {
+		if (kind === InsightDatasetKind.Rooms) {
 			return Promise.reject(new InsightError("Dataset is invalid"));
 		}
 
-		return Promise.resolve([id]);
+		return Promise.resolve(datasetIDs);
 	}
 
 	public removeDataset(id: string): Promise<string> {
-		if (!this.validator.validateID(id)) {
-			return Promise.reject(new InsightError("id is invalid"));
-		}
-
-		if (id === "nonExistentID") {
-			return Promise.reject(new NotFoundError("id is non-existent"));
+		try {
+			this.validator.validateID(id);
+		} catch (error) {
+			return Promise.reject(error);
 		}
 
 		return Promise.resolve(id);

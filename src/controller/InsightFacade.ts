@@ -40,7 +40,7 @@ export default class InsightFacade implements IInsightFacade {
 		let datasetIDs: string[];
 
 		try {
-			datasetIDs = this.validator.validateID(id);
+			datasetIDs = this.validator.validateID(id, "add");
 		} catch (error) {
 			return Promise.reject(error);
 		}
@@ -62,7 +62,7 @@ export default class InsightFacade implements IInsightFacade {
 
 	public removeDataset(id: string): Promise<string> {
 		try {
-			this.validator.validateID(id);
+			this.validator.validateID(id, "remove");
 		} catch (error) {
 			return Promise.reject(error);
 		}

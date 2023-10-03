@@ -18,8 +18,8 @@ import {
 	ResultTooLargeError,
 } from "./IInsightFacade";
 import { exceedLimitQuery } from "../../test/resources/queries/invalidQuery";
-import Adder from "./Adder";
-import Validator from "../utils/validator";
+import Adder from "../usecase/Adder";
+import Validator from "../util/validator";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -44,7 +44,7 @@ export default class InsightFacade implements IInsightFacade {
 
 		try {
 			const result = await adder.parseContentSection(content);
-			result.writeToDisk(id, kind);
+			adder.writeToDisk(result, id, kind);
 		} catch (error) {
 			return Promise.reject(error);
 		}

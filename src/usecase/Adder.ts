@@ -1,12 +1,15 @@
 import JSZip from "jszip";
-import Sections from "./Sections";
-import Section, { ContentSection } from "./Section";
-import { InsightError } from "./IInsightFacade";
+import Sections from "../model/Sections";
+import Section, { ContentSection } from "../model/Section";
+import { InsightDatasetKind, InsightError } from "../controller/IInsightFacade";
+import * as fs from "fs-extra";
 
 interface ZipFile {
 	result: ContentSection[];
 	rank: number;
 }
+
+const persistDir = "./data";
 
 export default class Adder {
 	constructor() {
@@ -60,6 +63,29 @@ export default class Adder {
 		} catch (error) {
 			throw new InsightError(`Dataset is invalid: ${error}`);
 		}
+	}
+
+	public writeToDisk(sections: Sections, datasetID: string, kind: InsightDatasetKind) {
+		const data: Section[] = sections.getSections();
+		const jsonData = JSON.stringify(data, null, 2);
+		let directory: string = persistDir;
+
+		switch (kind) {
+			case InsightDatasetKind.Sections:
+				directory = `${persistDir}/sections`;
+				break;
+			case InsightDatasetKind.Rooms:
+				directory = `${persistDir}/rooms`;
+				break;
+		}
+
+		if (!fs.existsSync(persistDir)) {
+			fs.mkdirSync(persistDir);
+			fs.mkdirSync(directory);
+		}
+
+		const filePath = `${directory}/${datasetID}.json`;
+		fs.writeFileSync(filePath, jsonData);
 	}
 }
 

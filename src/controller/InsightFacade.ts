@@ -17,10 +17,9 @@ import {
 	NotFoundError,
 	ResultTooLargeError,
 } from "./IInsightFacade";
-import JSZip from "jszip";
-import Section, {ContentSection} from "./Section";
-import Sections from "./Sections";
 import { exceedLimitQuery } from "../../test/resources/queries/invalidQuery";
+import Adder from "./Adder";
+import Validator from "../utils/validator";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -28,24 +27,24 @@ import { exceedLimitQuery } from "../../test/resources/queries/invalidQuery";
  *
  */
 
-interface ZipFile {
-	result: ContentSection[];
-	rank: number;
-}
-
 export default class InsightFacade implements IInsightFacade {
+	private validator;
+
 	constructor() {
 		// console.log("InsightFacadeImpl::init()");
+		this.validator = new Validator();
 	}
 
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
-		if (!this.validateID(id)) {
+		const adder = new Adder();
+
+		if (!this.validator.validateID(id)) {
 			return Promise.reject(new InsightError("id is invalid"));
 		}
 
 		try {
-			const result = await this.parseContentSection(content);
-			result.writeToDisk(id);
+			const result = await adder.parseContentSection(content);
+			result.writeToDisk(id, kind);
 		} catch (error) {
 			return Promise.reject(error);
 		}
@@ -63,7 +62,7 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public removeDataset(id: string): Promise<string> {
-		if (!this.validateID(id)) {
+		if (!this.validator.validateID(id)) {
 			return Promise.reject(new InsightError("id is invalid"));
 		}
 
@@ -105,62 +104,5 @@ export default class InsightFacade implements IInsightFacade {
 		];
 
 		return Promise.resolve(dataset);
-	}
-
-	private validateID(id: string): boolean {
-		const invalidIdRegex = new RegExp("^\\s*$|.*_.*");
-		if (invalidIdRegex.test(id) || id === "dataset2") {
-			return false;
-		}
-		return true;
-	}
-
-	private async parseContentSection(content: string): Promise<Sections> {
-		let count = 0;
-		const decode = (str: string): string => Buffer.from(str, "base64").toString("binary");
-
-		try {
-			const data = decode(content);
-			const zip = await JSZip.loadAsync(data);
-			const folderPath = "courses/";
-			const sections = new Sections();
-
-			const promises: any[] = [];
-
-			zip.forEach(async function (relativePath, zipEntry) {
-				if (relativePath.startsWith(folderPath) &&
-				relativePath !== folderPath &&
-				!relativePath.startsWith(`${folderPath}.`)) {
-					count++;
-					const promise = zipEntry.async("text").then((jsonContent) => {
-						try {
-							const jsonObject: ZipFile = JSON.parse(jsonContent);
-							const results = jsonObject.result;
-
-							if (results.length !== 0) {
-								results.forEach((result) => {
-									const section = new Section(result);
-									sections.addSection(section);
-								});
-							}
-						} catch (error) {
-							throw new InsightError(`Course ${zipEntry.name} is invalid: ${error}`);
-						}
-					});
-
-					promises.push(promise);
-				}
-			});
-
-			await Promise.all(promises);
-
-			if (count === 0) {
-				throw new InsightError("There is no valid section!");
-			}
-
-			return sections;
-		} catch (error) {
-			throw new InsightError(`Dataset is invalid: ${error}`);
-		}
 	}
 }

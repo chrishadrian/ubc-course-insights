@@ -159,8 +159,14 @@ const InvalidKeySCompOnMKey = {
 };
 
 const InvalidIdStringEmptyId = {
-	WHERE: {AND: [{GT: {_avg: 99}}, {IS: {_dept: "**"}}]},
-	OPTIONS: {COLUMNS: ["_dept", "_avg"], ORDER: "_avg"},
+	WHERE: {
+		AND: [
+			{GT: {_avg: 99}},
+			{IS: {_dept: "**"}}
+		]},
+	OPTIONS: {
+		COLUMNS: ["_dept", "_avg"], ORDER: "_avg"
+	},
 };
 
 export {

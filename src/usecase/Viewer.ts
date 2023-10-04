@@ -10,7 +10,7 @@ export default class Viewer {
 		}
 
 		fs.readdirSync(persistDir).forEach((file) => {
-			const datasetID = file.split("_", 2)[1].replace(".json", "");
+			const datasetID = file.replace(".json", "");
 			result.push(datasetID);
 		});
 

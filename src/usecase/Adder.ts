@@ -67,24 +67,22 @@ export default class Adder {
 	}
 
 	public writeToDisk(sections: Sections, datasetID: string, kind: InsightDatasetKind) {
-		const data: Section[] = sections.getSections();
-		const jsonData = JSON.stringify(data, null, 2);
-		let fileName: string = "";
+		const datasetJSON: {
+			id: string,
+			kind: InsightDatasetKind,
+			sections: Section[]
+		} = {
+			id: datasetID,
+			kind: kind,
+			sections: sections.getSections(),
+		};
+		const jsonData = JSON.stringify(datasetJSON, null, 2);
 
 		if (!fs.existsSync(persistDir)) {
 			fs.mkdirSync(persistDir);
 		}
 
-		switch (kind) {
-			case InsightDatasetKind.Sections:
-				fileName = `section_${datasetID}.json`;
-				break;
-			case InsightDatasetKind.Rooms:
-				fileName = `room_${datasetID}.json`;
-				break;
-		}
-
-		const filePath = `${persistDir}/${fileName}`;
+		const filePath = `${persistDir}/${datasetID}.json`;
 		fs.writeFileSync(filePath, jsonData);
 	}
 }

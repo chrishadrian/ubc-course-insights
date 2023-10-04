@@ -69,35 +69,10 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public performQuery(query: unknown): Promise<InsightResult[]> {
-		switch (query) {
-			case emptyQuery.input:
-				return Promise.resolve(emptyQuery.output);
-			case simpleQuery.input:
-				return Promise.resolve(simpleQuery.output);
-			case simpleQueryWithNoOrder.input:
-				return Promise.resolve(simpleQueryWithNoOrder.output);
-			case complexQuery.input:
-				return Promise.resolve(complexQuery.output);
-			case wildCardQueryA.input:
-			case wildCardQueryB.input:
-			case wildCardQueryC.input:
-				return Promise.resolve(wildCardQueryA.output);
-			case exceedLimitQuery:
-				return Promise.reject(new ResultTooLargeError());
-			default:
-				return Promise.reject(new InsightError());
-		}
+		return Promise.reject("Not implemented.");
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {
-		const dataset: InsightDataset[] = [
-			{
-				id: "sections",
-				kind: InsightDatasetKind.Sections,
-				numRows: 4,
-			},
-		];
-
-		return Promise.resolve(dataset);
+		return Promise.reject("Not implemented.");
 	}
 }

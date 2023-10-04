@@ -1,13 +1,11 @@
-import { getContentFromArchives } from "../../test/resources/TestUtil";
 import {
 	complexQuery,
 	emptyQuery,
-	exceedLimitQuery,
 	simpleQuery,
 	simpleQueryWithNoOrder,
 	wildCardQueryA,
 	wildCardQueryB,
-	wildCardQueryC
+	wildCardQueryC,
 } from "../../test/resources/queries/performQueryData";
 import {
 	IInsightFacade,
@@ -15,42 +13,56 @@ import {
 	InsightDatasetKind,
 	InsightError,
 	InsightResult,
-	NotFoundError,
-	ResultTooLargeError
+	ResultTooLargeError,
 } from "./IInsightFacade";
+import {exceedLimitQuery} from "../../test/resources/queries/invalidQuery";
+import Adder from "../usecase/Adder";
+import Validator from "../util/validator";
 
 /**
  * This is the main programmatic entry point for the project.
  * Method documentation is in IInsightFacade
  *
  */
+
 export default class InsightFacade implements IInsightFacade {
+	private validator;
+
 	constructor() {
-		console.log("InsightFacadeImpl::init()");
+		// console.log("InsightFacadeImpl::init()");
+		this.validator = new Validator();
 	}
 
-	public addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
-		if (!this.validateID(id)) {
-			return Promise.reject(new InsightError("id is invalid"));
+	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
+		const adder = new Adder();
+		let datasetIDs: string[];
+
+		try {
+			datasetIDs = this.validator.validateID(id, "add");
+		} catch (error) {
+			return Promise.reject(error);
 		}
 
-		if ((content !== getContentFromArchives("leastPair.zip") &&
-			content !== getContentFromArchives("lessPair.zip") &&
-			content !== getContentFromArchives("pair.zip")) ||
-			kind === InsightDatasetKind.Rooms) {
-			return Promise.reject(new InsightError("dataset is invalid"));
+		try {
+			const result = await adder.parseContentSection(content);
+			adder.writeToDisk(result, id, kind);
+			datasetIDs.push(id);
+		} catch (error) {
+			return Promise.reject(error);
 		}
 
-		return Promise.resolve([id]);
+		if (kind === InsightDatasetKind.Rooms) {
+			return Promise.reject(new InsightError("Dataset is invalid"));
+		}
+
+		return Promise.resolve(datasetIDs);
 	}
 
 	public removeDataset(id: string): Promise<string> {
-		if (!this.validateID(id)) {
-			return Promise.reject(new InsightError("id is invalid"));
-		}
-
-		if (id === "nonExistentID") {
-			return Promise.reject(new NotFoundError("id is non-existent"));
+		try {
+			this.validator.validateID(id, "remove");
+		} catch (error) {
+			return Promise.reject(error);
 		}
 
 		return Promise.resolve(id);
@@ -78,20 +90,14 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {
-		const dataset: InsightDataset[] = [{
-			id: "sections",
-			kind: InsightDatasetKind.Sections,
-			numRows: 4,
-		}];
+		const dataset: InsightDataset[] = [
+			{
+				id: "sections",
+				kind: InsightDatasetKind.Sections,
+				numRows: 4,
+			},
+		];
 
 		return Promise.resolve(dataset);
-	}
-
-	private validateID(id: string): boolean {
-		const invalidIdRegex = new RegExp("^\\s*$|.*_.*");
-		if (invalidIdRegex.test(id) || id === "dataset2") {
-			return false;
-		}
-		return true;
 	}
 }

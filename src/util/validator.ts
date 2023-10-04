@@ -1,4 +1,4 @@
-import {InsightError} from "../controller/IInsightFacade";
+import {InsightError, NotFoundError} from "../controller/IInsightFacade";
 import Viewer from "../usecase/Viewer";
 
 export default class Validator {
@@ -18,7 +18,7 @@ export default class Validator {
 			throw new InsightError("ID already exists");
 		}
 		if (source === "remove" && !datasetIDs.includes(id)) {
-			throw new InsightError("ID does not exist!");
+			throw new NotFoundError("ID does not exist!");
 		}
 
 		return datasetIDs;

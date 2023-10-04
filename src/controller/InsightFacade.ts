@@ -1,23 +1,13 @@
 import {
-	complexQuery,
-	emptyQuery,
-	simpleQuery,
-	simpleQueryWithNoOrder,
-	wildCardQueryA,
-	wildCardQueryB,
-	wildCardQueryC,
-} from "../../test/resources/queries/performQueryData";
-import {
 	IInsightFacade,
 	InsightDataset,
 	InsightDatasetKind,
 	InsightError,
 	InsightResult,
-	ResultTooLargeError,
 } from "./IInsightFacade";
-import {exceedLimitQuery} from "../../test/resources/queries/invalidQuery";
 import Adder from "../usecase/Adder";
 import Validator from "../util/validator";
+import Remover from "../usecase/Remover";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -59,11 +49,14 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public removeDataset(id: string): Promise<string> {
+		const remover = new Remover();
 		try {
 			this.validator.validateID(id, "remove");
 		} catch (error) {
 			return Promise.reject(error);
 		}
+
+		remover.removeFromDisk(id);
 
 		return Promise.resolve(id);
 	}

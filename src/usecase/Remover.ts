@@ -10,7 +10,6 @@ export default class Remover {
 			if (err) {
 				throw err;
 			}
-			console.log("File deleted successfully");
 		});
 	}
 }

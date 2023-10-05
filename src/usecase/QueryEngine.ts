@@ -56,7 +56,9 @@ export default class QueryEngine {
 	}
 
 	private validateMSKey(key: string): boolean {
-		return false;
+		const validKeyRegex =
+			new RegExp("[^_]+_((avg)|(pass)|(fail)|(audit)|(year)|(dept)|(id)|(instructor)|(title)|(uuid))]");
+		return validKeyRegex.test(key);
 	}
 
 	private extractField(key: string): string {

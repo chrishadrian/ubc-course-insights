@@ -14,7 +14,6 @@ const persistDir = "./data";
 const getContentFromArchives = (name: string): string =>
 	fs.readFileSync("test/resources/archives/" + name).toString("base64");
 
-
 /**
  * Removes all files within the persistDir.
  */
@@ -45,5 +44,4 @@ const getContentCountFromArchives = async (fileName: string): Promise<Promise<nu
 	}
 };
 
-
-export { getContentFromArchives, clearDisk, getContentCountFromArchives };
+export {getContentFromArchives, clearDisk, getContentCountFromArchives};

@@ -1,5 +1,4 @@
 import * as fs from "fs-extra";
-import QueryNode from "./QueryNode";
 
 export class Range {
 	private min: number;
@@ -100,22 +99,16 @@ export class FieldFilters {
 	public getSField(): SField {
 		return this.sField;
 	}
+
 }
 
 export default class Where {
-	private child?: QueryNode;
 	private setId: string;
 	private filters: FieldFilters;
 
-	constructor(idstring?: string, child?: QueryNode, filters?: FieldFilters) {
+	constructor(idstring?: string, filters?: FieldFilters) {
 		this.setId = idstring || "";
-		this.child = child;
 		this.filters = filters || new FieldFilters();
-	}
-
-	// adds Child to QueryNode (validation occurs in QueryEngine)
-	public addChild(child: QueryNode) {
-		this.child = child;
 	}
 
 	public setSetId(id: string) {

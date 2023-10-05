@@ -52,6 +52,11 @@ export default class QueryEngine {
 		return keys.length === 1 || (keys.length === 0);
 	}
 
+	private validOpts(opts: unknown): boolean {
+		let keys = this.getKeysHelper(opts);
+		return (keys.length === 1 || (keys.length === 2 && keys[1] === "ORDER")) && keys[0] === "COLUMNS";
+	}
+
 	private getKeysHelper(obj: unknown): string[] {
 		let keys = [];
 		for (const i in obj as any) {
@@ -100,8 +105,29 @@ export default class QueryEngine {
 
 	}
 
-	private handleOptions(query: unknown) {
-		return new Options("", []);
+	private handleOptions(opts: unknown) {
+		if (!this.validOpts(opts)) {
+			throw new InsightError("Options structure invalid");
+		}
+		try {
+			let keys = this.getKeysHelper(opts);
+			let o = opts as any;
+			let cols: string[];
+			let id: string;
+			[id, cols] = this.handleCols(o[keys[0]]);
+			if (keys.length === 2) {
+            	let order: string = o[keys[1]];
+            	return new Options(id, cols, order);
+			}
+			return new Options(id, cols);
+		} catch {
+			throw new InsightError("part of columns or order incorrect");
+		}
+
+	}
+
+	private handleCols(obj: unknown): [string, string[]]{
+		return ["", []];
 	}
 
 

@@ -1,6 +1,6 @@
 import * as fs from "fs-extra";
-import Where, {FieldFilters, Range, MField, SField} from "./Where";
-import Options from "./Options";
+import Where, {FieldFilters, Range, MField, SField} from "../model/Where";
+import Options from "../model/Options";
 import {
 	IInsightFacade,
 	InsightDataset,
@@ -60,10 +60,7 @@ export default class QueryEngine {
 		return keys;
 	}
 
-	// input is a root node
-	// validate and if valid, return a Where block (has list of filters, a common dataset id, and initial
-	// querynode child)
-	// else reject with InsightError("Invalid Where Block")
+
 	public handleWhere(obj: unknown): Where {
 		if (!this.validWhere(obj)) {
 			throw new InsightError("WHERE has too many keys");

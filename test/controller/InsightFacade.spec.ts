@@ -299,7 +299,7 @@ describe("InsightFacade", function () {
 					try {
 						await facade.removeDataset("sections");
 						const datasets = await facade.listDatasets();
-						expect(datasets).to.deep.equal([]);
+						expect(datasets).to.deep.members([]);
 					} catch (err) {
 						expect.fail("Should not be rejected!");
 					}
@@ -342,7 +342,7 @@ describe("InsightFacade", function () {
 						await facade.removeDataset("sections");
 						const newFacade = new InsightFacade();
 						const datasets = await newFacade.listDatasets();
-						expect(datasets).to.deep.equal([]);
+						expect(datasets).to.deep.members([]);
 					} catch (err) {
 						expect.fail("Should not be rejected!");
 					}

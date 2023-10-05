@@ -1,13 +1,8 @@
-import {
-	IInsightFacade,
-	InsightDataset,
-	InsightDatasetKind,
-	InsightError,
-	InsightResult,
-} from "./IInsightFacade";
+import {IInsightFacade, InsightDataset, InsightDatasetKind, InsightError, InsightResult} from "./IInsightFacade";
 import Adder from "../usecase/Adder";
 import Validator from "../util/validator";
 import Remover from "../usecase/Remover";
+import Viewer from "../usecase/Viewer";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -17,10 +12,13 @@ import Remover from "../usecase/Remover";
 
 export default class InsightFacade implements IInsightFacade {
 	private validator;
+	private datasets: InsightDataset[];
 
 	constructor() {
-		// console.log("InsightFacadeImpl::init()");
+		const viewer = new Viewer();
+
 		this.validator = new Validator();
+		this.datasets = viewer.getInsightDatasets();
 	}
 
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
@@ -35,7 +33,8 @@ export default class InsightFacade implements IInsightFacade {
 
 		try {
 			const result = await adder.parseContentSection(content);
-			adder.writeToDisk(result, id, kind);
+			const datasetInsight = adder.writeToDisk(result, id, kind);
+			this.datasets.push(datasetInsight);
 			datasetIDs.push(id);
 		} catch (error) {
 			return Promise.reject(error);
@@ -57,6 +56,11 @@ export default class InsightFacade implements IInsightFacade {
 		}
 
 		remover.removeFromDisk(id);
+		this.datasets.forEach((item, index) => {
+			if (item.id === id) {
+				this.datasets.splice(index, 1);
+			}
+		});
 
 		return Promise.resolve(id);
 	}
@@ -66,6 +70,8 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {
-		return Promise.reject("Not implemented.");
+		const memoryResult = this.datasets;
+
+		return Promise.resolve(memoryResult);
 	}
 }

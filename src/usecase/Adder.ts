@@ -66,7 +66,7 @@ export default class Adder {
 		}
 	}
 
-	public writeToDisk(sections: Sections, datasetID: string, kind: InsightDatasetKind) {
+	public writeToDisk(sections: Sections, datasetID: string, kind: InsightDatasetKind): InsightDataset {
 		const data = sections.getSections();
 		const rows = data.length;
 		const datasetJSON: {
@@ -88,5 +88,7 @@ export default class Adder {
 
 		const filePath = `${persistDir}/${datasetID}.json`;
 		fs.writeFileSync(filePath, jsonData);
+
+		return datasetJSON.insight;
 	}
 }

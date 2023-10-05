@@ -104,7 +104,7 @@ export default class QueryEngine {
 	}
 
 	private handleOptions(query: unknown) {
-		return new Options();
+		return new Options("", []);
 	}
 
 
@@ -123,20 +123,4 @@ export default class QueryEngine {
 	private handleNot(obj: unknown, idString: string): [string, FieldFilters] {
         	return ["", new FieldFilters()];
 	}
-	/*
-	private constructQuery(root: QueryNode, query: unknown) {
-		for (const i in query) {
-			curr: QueryNode;
-			if (typeof query[i] == string) {
-				//case where there are no more nodes
-				curr = new QueryNode(i, query[i]);
-			} else {
-				//case where there are more nodes
-				curr = newQueryNode(i.key);
-				constructQuery(curr, query[i]);
-			}
-			root.addChild(i);
-		}
-	}
-	*/
 }

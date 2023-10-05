@@ -2,14 +2,12 @@ import * as fs from "fs-extra";
 import Where, {FieldFilters, Range, MField, SField} from "../model/Where";
 import Options from "../model/Options";
 import {
-	IInsightFacade,
-	InsightDataset,
-	InsightDatasetKind,
 	InsightError,
 	InsightResult,
 	NotFoundError,
 	ResultTooLargeError,
-} from "./IInsightFacade";
+} from "../controller/IInsightFacade";
+
 
 export class Query {
 	private whereBlock;
@@ -55,6 +53,18 @@ export default class QueryEngine {
 	private validOpts(opts: unknown): boolean {
 		let keys = this.getKeysHelper(opts);
 		return (keys.length === 1 || (keys.length === 2 && keys[1] === "ORDER")) && keys[0] === "COLUMNS";
+	}
+
+	private validateMSKey(key: string): boolean {
+		return false;
+	}
+
+	private extractField(key: string): string {
+		return "";
+	}
+
+	private extractKey(key: string): string {
+		return "";
 	}
 
 	private getKeysHelper(obj: unknown): string[] {
@@ -126,8 +136,24 @@ export default class QueryEngine {
 
 	}
 
-	private handleCols(obj: unknown): [string, string[]]{
-		return ["", []];
+	private handleCols(obj: unknown): [string, string[]] {
+		let strs: string[] = obj as string[];
+		let id: string = "";
+		let cols: string[] = [];
+		if (strs.length < 1) {
+			throw new InsightError("no columns specified");
+		}
+		for (let i of strs) {
+			this.validateMSKey(i);
+			let currId = this.extractKey(i);
+			if (id !== "" && id !== currId) {
+				throw new InsightError("more than one dataset specified in columns");
+			}
+			let field = this.extractField(i);
+			id = currId;
+			cols.push(field);
+		}
+		return [id, cols];
 	}
 
 

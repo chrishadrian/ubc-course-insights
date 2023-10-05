@@ -1,5 +1,5 @@
 import {getContentFromArchives} from "../../test/resources/TestUtil";
-import QueryEngine from "./QueryEngine";
+import QueryEngine from "../usecase/QueryEngine";
 import {
 	complexQuery,
 	emptyQuery,

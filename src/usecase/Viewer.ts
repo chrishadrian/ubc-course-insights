@@ -1,5 +1,5 @@
 import * as fs from "fs-extra";
-import { InsightDataset } from "../controller/IInsightFacade";
+import {InsightDataset} from "../controller/IInsightFacade";
 const persistDir = "./data";
 
 export default class Viewer {

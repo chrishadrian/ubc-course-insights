@@ -1,7 +1,7 @@
 import JSZip from "jszip";
 import Sections from "../model/Sections";
 import Section, {ContentSection} from "../model/Section";
-import {InsightDatasetKind, InsightError} from "../controller/IInsightFacade";
+import {InsightDataset, InsightDatasetKind, InsightError} from "../controller/IInsightFacade";
 import * as fs from "fs-extra";
 
 interface ZipFile {
@@ -66,15 +66,19 @@ export default class Adder {
 		}
 	}
 
-	public writeToDisk(sections: Sections, datasetID: string, kind: InsightDatasetKind) {
+	public writeToDisk(sections: Sections, datasetID: string, kind: InsightDatasetKind): InsightDataset {
+		const data = sections.getSections();
+		const rows = data.length;
 		const datasetJSON: {
-			id: string,
-			kind: InsightDatasetKind,
+			insight: InsightDataset,
 			sections: Section[]
 		} = {
-			id: datasetID,
-			kind: kind,
-			sections: sections.getSections(),
+			insight: {
+				id: datasetID,
+				kind: kind,
+				numRows: rows
+			},
+			sections: data,
 		};
 		const jsonData = JSON.stringify(datasetJSON, null, 2);
 
@@ -84,5 +88,7 @@ export default class Adder {
 
 		const filePath = `${persistDir}/${datasetID}.json`;
 		fs.writeFileSync(filePath, jsonData);
+
+		return datasetJSON.insight;
 	}
 }

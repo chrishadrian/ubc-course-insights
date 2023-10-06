@@ -61,12 +61,14 @@ export default class QueryEngine {
 		return validKeyRegex.test(key);
 	}
 
-	private extractField(key: string): string {
-		return "";
+	private extractField(str: string): string {
+		let field = str.split("_", 2);
+		return field[0];
 	}
 
-	private extractKey(key: string): string {
-		return "";
+	private extractKey(str: string): string {
+		let key = str.split("_", 2);
+		return key[1];
 	}
 
 	private getKeysHelper(obj: unknown): string[] {

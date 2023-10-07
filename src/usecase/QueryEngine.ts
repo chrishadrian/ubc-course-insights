@@ -130,8 +130,16 @@ export default class QueryEngine {
 			let id: string;
 			[id, cols] = this.handleCols(o[keys[0]]);
 			if (keys.length === 2) {
-            	let order: string = o[keys[1]];
-            	return new Options(id, cols, order);
+				if (!this.validateMSKey(o[keys[1]])) {
+					throw new InsightError("the key provided in order is incorrectly formatted");
+				}
+				let orderKey = this.extractKey(o[keys[1]]);
+				let orderField = this.extractField(o[keys[1]]);
+				if (orderKey !== id) {
+					throw new InsightError("multiple order keys found");
+				}
+				// options has the id already, just need to add fields
+            	return new Options(id, cols, orderField);
 			}
 			return new Options(id, cols);
 		} catch {

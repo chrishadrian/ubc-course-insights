@@ -124,7 +124,9 @@ export default class QueryEngine {
 				case "LT":
 				case "GT":
 				case "EQ":
-					[id, filters] = this.handleMComp(w[keys[0]], "");
+					[id, type, value] = this.handleMComp(w[keys[0]], "");
+					filters = new FieldFilters();
+					filters.addMField(type, value, Logic.OR);
 					break;
 				default:
 					throw new InsightError("Where clause has invalid filter");
@@ -209,8 +211,8 @@ export default class QueryEngine {
 		return ["", new FieldFilters()];
 	}
 
-	private handleMComp(obj: unknown, idString: string): [string, FieldFilters] {
-		return ["", new FieldFilters()];
+	private handleMComp(obj: unknown, idString: string): [string, string, Range] {
+		return ["", "", new Range(0, 0)];
 	}
 
 	private handleNot(obj: unknown, idString: string): [string, FieldFilters] {

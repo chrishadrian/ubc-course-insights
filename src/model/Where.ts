@@ -30,39 +30,16 @@ export class Range {
 }
 
 export class MField {
-	private avg: Range[];
-	private pass: Range[];
-	private fail: Range[];
-	private audit: Range[];
-	private year: Range[];
+	private mFields: Map<string, Range[]>;
 
 	constructor() {
-		this.avg = [];
-		this.pass = [];
-		this.fail = [];
-		this.audit = [];
-		this.year = [];
+		this.mFields = new Map();
 	}
 
-	public addAvg(avg: Range) {
-		this.avg.push(avg);
+	public setMField(type: string, value: Range, logic: Logic) {
+		return;
 	}
 
-	public addPass(pass: Range) {
-		this.pass.push(pass);
-	}
-
-	public addFail(fail: Range) {
-		this.fail.push(fail);
-	}
-
-	public addAudit(audit: Range) {
-		this.audit.push(audit);
-	}
-
-	public addYear(year: Range) {
-		this.year.push(year);
-	}
 }
 
 export class SField {
@@ -150,11 +127,12 @@ export class FieldFilters {
 		this.sField = new SField();
 	}
 
-	public setMField(m: MField) {
-		this.mField = m;
-	}
 	public addSField(type: string, value: string, logic: Logic) {
 		this.sField.setSField(type, value, logic);
+	}
+
+	public addMField(type: string, value: Range, logic: Logic) {
+		this.mField.setMField(type, value, logic);
 	}
 
 	public getMField(): MField {

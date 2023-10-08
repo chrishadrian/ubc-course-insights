@@ -12,8 +12,10 @@ interface ZipFile {
 const persistDir = "./data";
 
 export default class Adder {
+	private indexes: Record<string, Map<string | number, Section[]>>;
+
 	constructor() {
-		// console.log("InsightFacadeImpl::init()");
+		this.indexes = {};
 	}
 
 	public async parseContentSection(content: string): Promise<Sections> {
@@ -68,18 +70,28 @@ export default class Adder {
 
 	public writeToDisk(sections: Sections, datasetID: string, kind: InsightDatasetKind): InsightDataset {
 		const data = sections.getSections();
+
 		const rows = data.length;
-		const datasetJSON: {
-			insight: InsightDataset;
-			sections: Section[];
-		} = {
-			insight: {
-				id: datasetID,
-				kind: kind,
-				numRows: rows,
-			},
-			sections: data,
+		const insight = {
+			id: datasetID,
+			kind: kind,
+			numRows: rows,
 		};
+
+		const datasetJSON: {
+			insightDataset: InsightDataset;
+			MappedSection: Record<string, Record<string | number, Section[]>>;
+		} = {
+			insightDataset: insight,
+			MappedSection: {},
+		};
+
+		for (const key in data[0]) {
+			const fieldName: keyof Section = key as keyof Section;
+			this.createIndex(fieldName, data);
+			datasetJSON.MappedSection[fieldName] = mapToJSON(this.indexes[fieldName]);
+		}
+
 		const jsonData = JSON.stringify(datasetJSON, null, 2);
 
 		if (!fs.existsSync(persistDir)) {
@@ -89,6 +101,39 @@ export default class Adder {
 		const filePath = `${persistDir}/${datasetID}.json`;
 		fs.writeFileSync(filePath, jsonData);
 
-		return datasetJSON.insight;
+		return datasetJSON.insightDataset;
+	}
+
+	private createIndex(fieldName: keyof Section, data: Section[]): void {
+		const index = new Map<string | number, Section[]>();
+		for (const item of data) {
+			const value = item[fieldName];
+			if (!index.has(value)) {
+				index.set(value, []);
+			}
+			index.get(value)?.push(item);
+		}
+		this.indexes[fieldName] = index;
 	}
 }
+
+function mapToJSON(map: Map<string | number, Section[]>): Record<string | number, Section[]> {
+	const json: Record<string | number, Section[]> = {};
+	map.forEach((value, key) => {
+		json[key as string] = value;
+	});
+	return json;
+}
+
+// Perform a filter operation using the index
+// function filterByField(fieldName: string, value: string | number): Section[] {
+// 	return indexes[fieldName]?.get(value) || [];
+// }
+
+// function jsonToMap(json: Record<string | number, Section[]>): Map<string | number, Section[]> {
+// 	const map = new Map<string | number, Section[]>();
+// 	for (const key in json) {
+// 		map.set(key as string | number, json[key]);
+// 	}
+// 	return map;
+// }

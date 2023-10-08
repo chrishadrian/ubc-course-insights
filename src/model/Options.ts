@@ -1,4 +1,3 @@
-
 export default class Options {
 	private datasetID: string;
 	private columns: string[];
@@ -22,7 +21,7 @@ export default class Options {
 		this.order = order;
 	}
 
-	public getDatasetID(): string{
+	public getDatasetID(): string {
 		return this.datasetID;
 	}
 

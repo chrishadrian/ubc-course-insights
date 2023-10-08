@@ -70,13 +70,13 @@ export default class Adder {
 		const data = sections.getSections();
 		const rows = data.length;
 		const datasetJSON: {
-			insight: InsightDataset,
-			sections: Section[]
+			insight: InsightDataset;
+			sections: Section[];
 		} = {
 			insight: {
 				id: datasetID,
 				kind: kind,
-				numRows: rows
+				numRows: rows,
 			},
 			sections: data,
 		};

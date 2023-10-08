@@ -1,13 +1,7 @@
 import * as fs from "fs-extra";
-import Where, {FieldFilters, Range, MField, SField} from "../model/Where";
+import Where, {FieldFilters, Range, MField, SField, Logic} from "../model/Where";
 import Options from "../model/Options";
-import {
-	InsightError,
-	InsightResult,
-	NotFoundError,
-	ResultTooLargeError,
-} from "../controller/IInsightFacade";
-
+import {InsightError, InsightResult, NotFoundError, ResultTooLargeError} from "../controller/IInsightFacade";
 
 export class Query {
 	private whereBlock;
@@ -47,7 +41,7 @@ export default class QueryEngine {
 
 	private validWhere(where: unknown): boolean {
 		let keys = this.getKeysHelper(where);
-		return keys.length === 1 || (keys.length === 0);
+		return keys.length === 1 || keys.length === 0;
 	}
 
 	private validOpts(opts: unknown): boolean {
@@ -56,29 +50,49 @@ export default class QueryEngine {
 	}
 
 	private validateMSKey(key: string): boolean {
-		const validKeyRegex =
-			new RegExp("[^_]+_((avg)|(pass)|(fail)|(audit)|(year)|(dept)|(id)|(instructor)|(title)|(uuid))]");
+		const validKeyRegex = new RegExp(
+			"[^_]+_((avg)|(pass)|(fail)|(audit)|(year)|(dept)|(id)|(instructor)|(title)|(uuid))"
+		);
 		return validKeyRegex.test(key);
+	}
+
+	private validateSKey(key: string): boolean {
+		const validateSKeyRegex = new RegExp("[^_]+_((dept)|(id)|(instructor)|(title)|(uuid))");
+		return validateSKeyRegex.test(key);
+	}
+
+	private validateInputString(input: string): boolean {
+		const inputStringRegex = new RegExp("[*]{0,1}[^*]*[*]{0,1}");
+		return inputStringRegex.test(input);
+	}
+
+	private validateMKey(key: string): boolean {
+		const validateMKeyRegex = new RegExp("[^_]+_((avg)|(pass)|(fail)|(audit)|(year))");
+		return validateMKeyRegex.test(key);
+	}
+
+	private validateSComp(obj: unknown): boolean {
+		let keys = this.getKeysHelper(obj);
+		return keys.length === 1;
 	}
 
 	private extractField(str: string): string {
 		let field = str.split("_", 2);
-		return field[0];
+		return field[1];
 	}
 
-	private extractKey(str: string): string {
+	private extractIDString(str: string): string {
 		let key = str.split("_", 2);
-		return key[1];
+		return key[0];
 	}
 
 	private getKeysHelper(obj: unknown): string[] {
 		let keys = [];
 		for (const i in obj as any) {
-        	keys.push(i);
+			keys.push(i);
 		}
 		return keys;
 	}
-
 
 	public handleWhere(obj: unknown): Where {
 		if (!this.validWhere(obj)) {
@@ -91,10 +105,14 @@ export default class QueryEngine {
 		let w = obj as any;
 		let id: string;
 		let filters;
+		let type;
+		let value;
 		try {
 			switch (keys[0]) {
 				case "IS":
-					[id, filters] = this.handleSComp(w[keys[0]], "");
+					[id, type, value] = this.handleSComp(w[keys[0]], "");
+					filters = new FieldFilters();
+					filters.addSField(type, value, Logic.OR);
 					break;
 				case "NOT":
 					[id, filters] = this.handleNot(w[keys[0]], "");
@@ -116,7 +134,6 @@ export default class QueryEngine {
 		} catch {
 			throw new InsightError("problems in the filters");
 		}
-
 	}
 
 	private handleOptions(opts: unknown) {
@@ -133,19 +150,18 @@ export default class QueryEngine {
 				if (!this.validateMSKey(o[keys[1]])) {
 					throw new InsightError("the key provided in order is incorrectly formatted");
 				}
-				let orderKey = this.extractKey(o[keys[1]]);
+				let orderKey = this.extractIDString(o[keys[1]]);
 				let orderField = this.extractField(o[keys[1]]);
 				if (orderKey !== id) {
 					throw new InsightError("multiple order keys found");
 				}
 				// options has the id already, just need to add fields
-            	return new Options(id, cols, orderField);
+				return new Options(id, cols, orderField);
 			}
 			return new Options(id, cols);
 		} catch {
 			throw new InsightError("part of columns or order incorrect");
 		}
-
 	}
 
 	private handleCols(obj: unknown): [string, string[]] {
@@ -157,7 +173,7 @@ export default class QueryEngine {
 		}
 		for (let i of strs) {
 			this.validateMSKey(i);
-			let currId = this.extractKey(i);
+			let currId = this.extractIDString(i);
 			if (id !== "" && id !== currId) {
 				throw new InsightError("more than one dataset specified in columns");
 			}
@@ -168,20 +184,36 @@ export default class QueryEngine {
 		return [id, cols];
 	}
 
+	private handleSComp(obj: unknown, idString: string): [string, string, string] {
+		if (!this.validateSComp(obj)) {
+			throw new InsightError("incorrectly formatted string comparison");
+		}
+		let key = this.getKeysHelper(obj);
+		if (!this.validateSKey(key[0])) {
+			throw new InsightError("incorrectly formatted s key");
+		}
+		let id: string = this.extractIDString(key[0]);
+		if (idString !== "" && idString !== id) {
+			throw new InsightError("too many datasets referenced");
+		}
+		let s = obj as any;
+		if (!this.validateInputString(s[key[0]])) {
+			throw new InsightError("invalid input string");
+		}
+		let field = this.extractField(key[0]);
 
-	private handleSComp(obj: unknown, idString: string): [string, FieldFilters] {
-    	return ["", new FieldFilters()];
+		return [id, field, s[key[0]]];
 	}
 
 	private handleLogic(obj: unknown, idString: string): [string, FieldFilters] {
-        	return ["", new FieldFilters()];
+		return ["", new FieldFilters()];
 	}
 
 	private handleMComp(obj: unknown, idString: string): [string, FieldFilters] {
-        	return ["", new FieldFilters()];
+		return ["", new FieldFilters()];
 	}
 
 	private handleNot(obj: unknown, idString: string): [string, FieldFilters] {
-        	return ["", new FieldFilters()];
+		return ["", new FieldFilters()];
 	}
 }

@@ -1,5 +1,9 @@
 import * as fs from "fs-extra";
-
+export enum Logic {
+	OR = "OR",
+	AND = "AND",
+	NOT = "NOT",
+}
 export class Range {
 	private min: number;
 	private max: number;
@@ -62,17 +66,78 @@ export class MField {
 }
 
 export class SField {
-	private dept: string[];
-	private id: string[];
-	private instructor: string[];
-	private title: string[];
-	private uuid: string[];
+	private sFields: Map<string, string>;
+
 	constructor() {
-		this.dept = [];
-		this.id = [];
-		this.instructor = [];
-		this.title = [];
-		this.uuid = [];
+		this.sFields = new Map();
+	}
+
+	public setSField(type: string, value: string, logic: Logic) {
+		if (logic === Logic.NOT) {
+			this.setNot(type, value);
+		} else if (logic === Logic.AND) {
+			this.setAnd(type, value);
+		} else {
+			this.setOr(type, value);
+		}
+	}
+
+	private getRegex(value: string): string {
+		let regex: string = "(";
+        	for (let i = 1; i < value.length; i++) {
+        		if (value[i] === "*") {
+        			regex = regex + ".*";
+        		} else {
+        			regex = regex + value[i];
+        		}
+        	}
+        		regex = regex + ")";
+		return regex;
+	}
+
+	private setOr(type: string, value: string) {
+		let regex: string = "(";
+		for (let i = 1; i < value.length; i++) {
+			if (value[i] === "*") {
+				regex = regex + ".*";
+			} else {
+				regex = regex + value[i];
+			}
+		}
+		regex = regex + ")";
+		let old = this.sFields.get(type);
+		if (!old) {
+			this.sFields.set(type, regex);
+		} else {
+			this.sFields.set(type, old + "|" + regex);
+		}
+	}
+
+	private setAnd(type: string, value: string) {
+		let old = this.sFields.get(type);
+		if (!old) {
+			let regex = this.getRegex(value);
+			this.sFields.set(type, regex);
+			return;
+		}
+		// help for "anding" regex expressions from:
+		// https://stackoverflow.com/questions/469913/regular-expressions-is-there-an-and-operator
+		let regex = this.getRegex(value);
+		regex = "^(^" + old + "|^" + regex + ")";
+		this.sFields.set(type, regex);
+	}
+
+	private setNot(type: string, value: string) {
+		// like the and operator, but without the extra not in front of the current regex!
+		let old = this.sFields.get(type);
+		if (!old) {
+        	let regex = this.getRegex(value);
+        	this.sFields.set(type, regex);
+        	return;
+		}
+		let regex = this.getRegex(value);
+		regex = "^(^" + old + "|" + regex + ")";
+		this.sFields.set(type, regex);
 	}
 }
 
@@ -88,8 +153,8 @@ export class FieldFilters {
 	public setMField(m: MField) {
 		this.mField = m;
 	}
-	public setSField(s: SField) {
-		this.sField = s;
+	public addSField(type: string, value: string, logic: Logic) {
+		this.sField.setSField(type, value, logic);
 	}
 
 	public getMField(): MField {
@@ -99,7 +164,6 @@ export class FieldFilters {
 	public getSField(): SField {
 		return this.sField;
 	}
-
 }
 
 export default class Where {

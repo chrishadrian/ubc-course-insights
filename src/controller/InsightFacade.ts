@@ -3,6 +3,7 @@ import Adder from "../usecase/Adder";
 import Validator from "../util/validator";
 import Remover from "../usecase/Remover";
 import Viewer from "../usecase/Viewer";
+import QueryEngine from "../usecase/QueryEngine";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -66,6 +67,8 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public performQuery(query: unknown): Promise<InsightResult[]> {
+		const queryEngine = new QueryEngine();
+		const parsedQuery = queryEngine.parseQuery(query);
 		return Promise.reject("Not implemented.");
 	}
 

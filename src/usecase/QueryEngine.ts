@@ -94,7 +94,7 @@ export default class QueryEngine {
 		return keys;
 	}
 
-	public handleWhere(obj: unknown): Where {
+	private handleWhere(obj: unknown): Where {
 		if (!this.validWhere(obj)) {
 			throw new InsightError("WHERE has too many keys");
 		}

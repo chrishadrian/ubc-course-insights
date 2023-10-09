@@ -3,7 +3,7 @@ import Adder from "../usecase/Adder";
 import Validator from "../util/validator";
 import Remover from "../usecase/Remover";
 import Viewer from "../usecase/Viewer";
-import QueryEngine from "../usecase/QueryEngine";
+import Section from "../model/Section";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -67,8 +67,10 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public performQuery(query: unknown): Promise<InsightResult[]> {
-		const queryEngine = new QueryEngine();
-		const parsedQuery = queryEngine.parseQuery(query);
+		const viewer = new Viewer();
+		const indexes = viewer.getSectionIndexesByDatasetID("sections");
+		const filteredSections = viewer.filterByField("average", "87.83", indexes);
+
 		return Promise.reject("Not implemented.");
 	}
 

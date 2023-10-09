@@ -69,7 +69,7 @@ export default class InsightFacade implements IInsightFacade {
 	public performQuery(query: unknown): Promise<InsightResult[]> {
 		const viewer = new Viewer();
 		const indexes = viewer.getSectionIndexesByDatasetID("sections");
-		const filteredSections = viewer.filterByField("average", "87.83", indexes);
+		const filteredSections = viewer.filterByField("average", ["87", "99"], indexes);
 
 		return Promise.reject("Not implemented.");
 	}

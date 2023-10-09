@@ -58,11 +58,31 @@ export default class Viewer {
 
 	public filterByField(
 		fieldName: string,
-		value: string,
+		values: string[],
 		indexes: Record<string, Map<string | number, Section[]>>
 	): Section[] {
-		const result = indexes[fieldName]?.get(value);
-		return result || [];
+		const result: Section[] = [];
+
+		if (!values || values.length === 0) {
+			return result;
+		}
+
+		if (values.length === 1) {
+			const sections = indexes[fieldName]?.get(values[0]) || [];
+			result.push(...sections);
+			return result;
+		}
+
+		if (values.length === 2) {
+			// https://www.codingninjas.com/studio/library/typescript-map
+			for (const [key, value] of indexes[fieldName]) {
+				if (key >= values[0] && key <= values[1]) {
+					result.push(...value);
+				}
+			}
+		}
+
+		return result;
 	}
 
 	private jsonToMap(json: Record<string | number, Section[]>): Map<string | number, Section[]> {

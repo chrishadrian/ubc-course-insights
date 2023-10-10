@@ -125,15 +125,3 @@ function mapToJSON(map: Map<string | number, Section[]>): Record<string | number
 	return json;
 }
 
-// Perform a filter operation using the index
-// function filterByField(fieldName: string, value: string | number): Section[] {
-// 	return indexes[fieldName]?.get(value) || [];
-// }
-
-// function jsonToMap(json: Record<string | number, Section[]>): Map<string | number, Section[]> {
-// 	const map = new Map<string | number, Section[]>();
-// 	for (const key in json) {
-// 		map.set(key as string | number, json[key]);
-// 	}
-// 	return map;
-// }

@@ -3,6 +3,8 @@ import Adder from "../usecase/Adder";
 import Validator from "../util/validator";
 import Remover from "../usecase/Remover";
 import Viewer from "../usecase/Viewer";
+import QueryEngine from "../usecase/QueryEngine";
+import {FieldFilters, Logic} from "../model/Where";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -66,7 +68,39 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public performQuery(query: unknown): Promise<InsightResult[]> {
-		return Promise.reject("Not implemented.");
+		const queryEngine = new QueryEngine();
+		let datasetID = "", orderField = "";
+		let columns = [""];
+		let filters = new FieldFilters();
+
+		try {
+			const queryResult = queryEngine.parseQuery(query);
+			const where = queryResult.whereBlock;
+			datasetID = where.getSetId();
+			filters = where.getFilters();
+
+			const options = queryResult.optionsBlock;
+			columns = options.getColumns();
+			orderField = options.getOrder();
+		} catch (err) {
+			Promise.reject(err);
+		}
+
+		try {
+			const viewer = new Viewer();
+			const indexes = viewer.getSectionIndexesByDatasetID("sections");
+			const filteredSections = viewer.filterByFields(
+				[Logic.AND],
+				[["avg", "dept"]],
+				[[["GT", "97"], ["math"]]],
+				indexes);
+			const result = viewer.filterByColumnsAndOrder(filteredSections, columns, orderField, "sections");
+			return Promise.resolve(result);
+		} catch (err) {
+			Promise.reject(`Perform query error: ${err}`);
+		}
+
+		return Promise.reject("Perform query error");
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {

@@ -35,7 +35,4 @@ export default class Section {
 		this.audit = content ? content.Audit : 0;
 		this.instructor = content ? content.Professor : "";
 	}
-
-	// option:
-	// 1. create a function to transform current section structure to query structure
 }

@@ -56,7 +56,22 @@ export default class Viewer {
 		return result;
 	}
 
-	public filterByField(
+	public filterByFields(
+		fieldNames: string[],
+		values: string[][],
+		indexes: Record<string, Map<string | number, Section[]>>
+	): Section[] {
+		const result: Section[] = [];
+
+		for (const i in fieldNames) {
+			const filteredData = this.filterByField(fieldNames[i], values[i], indexes);
+			result.push(...filteredData);
+		}
+
+		return result;
+	}
+
+	private filterByField(
 		fieldName: string,
 		values: string[],
 		indexes: Record<string, Map<string | number, Section[]>>
@@ -83,6 +98,28 @@ export default class Viewer {
 		}
 
 		return result;
+	}
+
+	public filterByColumnsAndOrder(data: Section[], columns: string[], orderField: string) {
+		const filteredData = data.map((section) => {
+			const filteredItem: any = {};
+			columns.forEach((column) => {
+				const sectionKey = column as keyof Section;
+				filteredItem[sectionKey] = section[sectionKey];
+			});
+			return filteredItem;
+		});
+
+		return filteredData.sort((a, b) => {
+			const order = orderField as keyof Section;
+			if (a[order] < b[order]) {
+				return -1;
+			}
+			if (a[order] > b[order]) {
+				return 1;
+			}
+			return 0;
+		});
 	}
 
 	private jsonToMap(json: Record<string | number, Section[]>): Map<string | number, Section[]> {

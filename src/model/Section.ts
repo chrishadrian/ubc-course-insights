@@ -12,28 +12,28 @@ export interface ContentSection {
 }
 
 export default class Section {
-	private readonly uuid: number;
-	private readonly department: string;
-	private readonly id: number;
-	private readonly title: string;
-	private readonly year: number;
-	private readonly average: number;
-	private readonly pass: number;
-	private readonly fail: number;
-	private readonly audit: number;
-	private readonly instructor: string;
+	public readonly uuid: number;
+	public readonly dept: string;
+	public readonly id: number;
+	public readonly title: string;
+	public readonly year: number;
+	public readonly avg: number;
+	public readonly pass: number;
+	public readonly fail: number;
+	public readonly audit: number;
+	public readonly instructor: string;
 
-	constructor(content: ContentSection) {
-		this.uuid = content.id || 0;
-		this.department = content.Subject || "";
-		this.id = content.Course || 0;
-		this.title = content.Title || "";
-		this.year = content.Year || 0;
-		this.average = content.Avg || 0;
-		this.pass = content.Pass || 0;
-		this.fail = content.Fail || 0;
-		this.audit = content.Audit || 0;
-		this.instructor = content.Professor || "";
+	constructor(content?: ContentSection) {
+		this.uuid = content ? content.id : 0;
+		this.dept = content ? content.Subject : "";
+		this.id = content ? content.Course : 0;
+		this.title = content ? content.Title : "";
+		this.year = content ? content.Year : 0;
+		this.avg = content ? content.Avg : 0;
+		this.pass = content ? content.Pass : 0;
+		this.fail = content ? content.Fail : 0;
+		this.audit = content ? content.Audit : 0;
+		this.instructor = content ? content.Professor : "";
 	}
 
 	// option:

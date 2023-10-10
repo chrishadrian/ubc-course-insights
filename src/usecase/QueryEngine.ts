@@ -4,8 +4,8 @@ import Options from "../model/Options";
 import {InsightError, InsightResult, NotFoundError, ResultTooLargeError} from "../controller/IInsightFacade";
 
 export class Query {
-	private whereBlock;
-	private optionsBlock;
+	public whereBlock;
+	public optionsBlock;
 	constructor(w: Where, o: Options) {
 		this.whereBlock = w;
 		this.optionsBlock = o;

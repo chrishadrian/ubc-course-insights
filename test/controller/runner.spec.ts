@@ -3,7 +3,7 @@ import InsightFacade from "../../src/controller/InsightFacade";
 import {expect, use} from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {clearDisk, getContentFromArchives} from "../TestUtil";
-import { simpleQuery } from "../resources/queries/performQueryData";
+import { complexQuery, simpleQuery } from "../resources/queries/performQueryData";
 
 use(chaiAsPromised);
 
@@ -12,7 +12,7 @@ describe("InsightFacade", function () {
 	let sections: string;
 
 	before(function () {
-		sections = getContentFromArchives("leastPair.zip");
+		sections = getContentFromArchives("lessPair.zip");
 
 		clearDisk();
 	});
@@ -29,7 +29,8 @@ describe("InsightFacade", function () {
 				try {
 					const result = await facade.addDataset(datasetID, sections, InsightDatasetKind.Sections);
 					expect(result).to.deep.equal([datasetID]);
-					const query = await facade.performQuery(simpleQuery.input);
+					const queryResult = await facade.performQuery(simpleQuery.input);
+					expect(queryResult).have.deep.members(simpleQuery.output);
 				} catch (err) {
 					console.error("Found error: ", err);
 				}

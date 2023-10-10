@@ -3,7 +3,7 @@ import InsightFacade from "../../src/controller/InsightFacade";
 import {expect, use} from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {clearDisk, getContentFromArchives} from "../TestUtil";
-import { complexQuery, simpleQuery } from "../resources/queries/performQueryData";
+import {simpleQuery } from "../resources/queries/performQueryData";
 
 use(chaiAsPromised);
 

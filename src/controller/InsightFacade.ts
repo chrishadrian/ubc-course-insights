@@ -4,7 +4,7 @@ import Validator from "../util/validator";
 import Remover from "../usecase/Remover";
 import Viewer from "../usecase/Viewer";
 import QueryEngine from "../usecase/QueryEngine";
-import { FieldFilters, Logic } from "../model/Where";
+import {FieldFilters, Logic} from "../model/Where";
 
 /**
  * This is the main programmatic entry point for the project.

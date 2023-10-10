@@ -1,6 +1,7 @@
 import * as fs from "fs-extra";
 import {InsightDataset} from "../controller/IInsightFacade";
 import Section from "../model/Section";
+import {Logic} from "../model/Where";
 const persistDir = "./data";
 
 export default class Viewer {
@@ -57,18 +58,43 @@ export default class Viewer {
 	}
 
 	public filterByFields(
-		fieldNames: string[],
-		values: string[][],
+		operations: Logic[],
+		fields: string[][],
+		values: string[][][],
 		indexes: Record<string, Map<string | number, Section[]>>
 	): Section[] {
-		const result: Section[] = [];
+		let resultSet: Set<Section> = new Set();
 
-		for (const i in fieldNames) {
-			const filteredData = this.filterByField(fieldNames[i], values[i], indexes);
-			result.push(...filteredData);
+		const isSectionEqual = (a: Section, b: Section): boolean => {
+			return a.uuid === b.uuid;
+		};
+
+		for (let i = 0; i < operations.length; i++) {
+			const fieldNames = fields[i];
+			const fieldValues = values[i];
+
+			for (let j = 0; j < fieldNames.length; j++) {
+				const fieldName = fieldNames[j];
+				const valueArray = fieldValues[j];
+				const filteredData = this.filterByField(fieldName, valueArray, indexes);
+
+				if (operations[i] === Logic.AND) {
+					if (resultSet.size === 0) {
+						resultSet = new Set(filteredData); // Initialize resultSet with the first result
+					} else {
+						resultSet = new Set(
+							[...resultSet].filter((section) =>
+								filteredData.some((filteredSection) => isSectionEqual(section, filteredSection))
+							)
+						);
+					}
+				} else if (operations[i] === Logic.OR) {
+					resultSet = new Set([...resultSet, ...filteredData]);
+				}
+			}
 		}
 
-		return result;
+		return Array.from(resultSet);
 	}
 
 	private filterByField(
@@ -77,22 +103,45 @@ export default class Viewer {
 		indexes: Record<string, Map<string | number, Section[]>>
 	): Section[] {
 		const result: Section[] = [];
-
 		if (!values || values.length === 0) {
 			return result;
 		}
 
 		if (values.length === 1) {
-			const sections = indexes[fieldName]?.get(values[0]) || [];
-			result.push(...sections);
-			return result;
+			if (values[0].indexOf("*") > -1) {
+				for (const [key, value] of indexes[fieldName]) {
+					const regex = new RegExp(values[0]);
+					if (regex.test(key.toString())) {
+						result.push(...value);
+					}
+				}
+				return result;
+			} else {
+				const sections = indexes[fieldName]?.get(values[0]) || [];
+				result.push(...sections);
+				return result;
+			}
 		}
 
 		if (values.length === 2) {
 			// https://www.codingninjas.com/studio/library/typescript-map
 			for (const [key, value] of indexes[fieldName]) {
-				if (key >= values[0] && key <= values[1]) {
-					result.push(...value);
+				switch (values[0]){
+					case "GT":
+						if (key > values[1]) {
+							result.push(...value);
+						}
+						continue;
+					case "LT":
+						if (key < values[1]) {
+							result.push(...value);
+						}
+						continue;
+					case "NOT":
+						if (key !== values[1]) {
+							result.push(...value);
+						}
+						continue;
 				}
 			}
 		}
@@ -100,12 +149,12 @@ export default class Viewer {
 		return result;
 	}
 
-	public filterByColumnsAndOrder(data: Section[], columns: string[], orderField: string) {
+	public filterByColumnsAndOrder(data: Section[], columns: string[], orderField: string, datasetID: string) {
 		const filteredData = data.map((section) => {
 			const filteredItem: any = {};
 			columns.forEach((column) => {
 				const sectionKey = column as keyof Section;
-				filteredItem[sectionKey] = section[sectionKey];
+				filteredItem[`${datasetID}_${sectionKey}`] = section[sectionKey];
 			});
 			return filteredItem;
 		});

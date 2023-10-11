@@ -68,7 +68,7 @@ export default class Adder {
 		}
 	}
 
-	public writeToDisk(sections: Sections, datasetID: string, kind: InsightDatasetKind): InsightDataset {
+	public async writeToDisk(sections: Sections, datasetID: string, kind: InsightDatasetKind): Promise<InsightDataset> {
 		const data = sections.getSections();
 
 		const rows = data.length;
@@ -95,13 +95,13 @@ export default class Adder {
 		const jsonData = JSON.stringify(datasetJSON, null, 2);
 
 		if (!fs.existsSync(persistDir)) {
-			fs.mkdirSync(persistDir);
+			await fs.mkdir(persistDir);
 		}
 
 		const filePath = `${persistDir}/${datasetID}.json`;
-		fs.writeFileSync(filePath, jsonData);
+		await fs.writeFile(filePath, jsonData);
 
-		return datasetJSON.insightDataset;
+		return Promise.resolve(datasetJSON.insightDataset);
 	}
 
 	private createIndex(fieldName: keyof Section, data: Section[]): void {

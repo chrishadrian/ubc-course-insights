@@ -12,10 +12,15 @@ export default class Viewer {
 			return result;
 		}
 
-		fs.readdirSync(persistDir).forEach((file) => {
+		const files = fs.readdirSync(persistDir);
+
+		files.forEach((file) => {
 			const fileContent = fs.readFileSync(`${persistDir}/${file}`).toString();
-			const obj = JSON.parse(fileContent);
-			result.push(obj.insight);
+			const obj: {
+				insightDataset: InsightDataset,
+				MappedSection: Record<string, Record<string | number, Section[]>>
+			} = JSON.parse(fileContent);
+			result.push(obj.insightDataset);
 		});
 
 		return result;

@@ -14,30 +14,31 @@ import {FieldFilters, Logic} from "../model/Where";
 
 export default class InsightFacade implements IInsightFacade {
 	private validator;
+	private datasetIDs: string[];
 	private datasets: InsightDataset[];
 
 	constructor() {
 		const viewer = new Viewer();
 
 		this.validator = new Validator();
+		this.datasetIDs = [];
 		this.datasets = viewer.getInsightDatasets();
 	}
 
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
 		const adder = new Adder();
-		let datasetIDs: string[];
 
 		try {
-			datasetIDs = this.validator.validateID(id, "add");
+			this.validator.validateID(id, "add", this.datasetIDs);
 		} catch (error) {
 			return Promise.reject(error);
 		}
 
 		try {
 			const result = await adder.parseContentSection(content);
-			const datasetInsight = adder.writeToDisk(result, id, kind);
+			const datasetInsight = await adder.writeToDisk(result, id, kind);
 			this.datasets.push(datasetInsight);
-			datasetIDs.push(id);
+			this.datasetIDs.push(id);
 		} catch (error) {
 			return Promise.reject(error);
 		}
@@ -46,13 +47,13 @@ export default class InsightFacade implements IInsightFacade {
 			return Promise.reject(new InsightError("Dataset is invalid"));
 		}
 
-		return Promise.resolve(datasetIDs);
+		return Promise.resolve(this.datasetIDs);
 	}
 
 	public removeDataset(id: string): Promise<string> {
 		const remover = new Remover();
 		try {
-			this.validator.validateID(id, "remove");
+			this.validator.validateID(id, "remove", this.datasetIDs);
 		} catch (error) {
 			return Promise.reject(error);
 		}
@@ -68,37 +69,37 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public performQuery(query: unknown): Promise<InsightResult[]> {
-		const queryEngine = new QueryEngine();
-		let datasetID = "", orderField = "";
-		let columns = [""];
-		let filters = new FieldFilters();
+		// const queryEngine = new QueryEngine();
+		// let datasetID = "", orderField = "";
+		// let columns = [""];
+		// let filters = new FieldFilters();
 
-		try {
-			const queryResult = queryEngine.parseQuery(query);
-			const where = queryResult.whereBlock;
-			datasetID = where.getSetId();
-			filters = where.getFilters();
+		// try {
+		// 	const queryResult = queryEngine.parseQuery(query);
+		// 	const where = queryResult.whereBlock;
+		// 	datasetID = where.getSetId();
+		// 	filters = where.getFilters();
 
-			const options = queryResult.optionsBlock;
-			columns = options.getColumns();
-			orderField = options.getOrder();
-		} catch (err) {
-			Promise.reject(err);
-		}
+		// 	const options = queryResult.optionsBlock;
+		// 	columns = options.getColumns();
+		// 	orderField = options.getOrder();
+		// } catch (err) {
+		// 	Promise.reject(err);
+		// }
 
-		try {
-			const viewer = new Viewer();
-			const indexes = viewer.getSectionIndexesByDatasetID("sections");
-			const filteredSections = viewer.filterByFields(
-				[Logic.AND],
-				[["avg", "dept"]],
-				[[["GT", "97"], ["math"]]],
-				indexes);
-			const result = viewer.filterByColumnsAndOrder(filteredSections, columns, orderField, "sections");
-			return Promise.resolve(result);
-		} catch (err) {
-			Promise.reject(`Perform query error: ${err}`);
-		}
+		// try {
+		// 	const viewer = new Viewer();
+		// 	const indexes = viewer.getSectionIndexesByDatasetID("sections");
+		// 	const filteredSections = viewer.filterByFields(
+		// 		[Logic.AND],
+		// 		[["avg", "dept"]],
+		// 		[[["GT", "97"], ["math"]]],
+		// 		indexes);
+		// 	const result = viewer.filterByColumnsAndOrder(filteredSections, columns, orderField, "sections");
+		// 	return Promise.resolve(result);
+		// } catch (err) {
+		// 	Promise.reject(`Perform query error: ${err}`);
+		// }
 
 		return Promise.reject("Perform query error");
 	}

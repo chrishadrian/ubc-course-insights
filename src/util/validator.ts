@@ -6,14 +6,12 @@ export default class Validator {
 		// console.log("InsightFacadeImpl::init()");
 	}
 
-	public validateID(id: string, source: string): string[] {
+	public validateID(id: string, source: string, datasetIDs: string[]): string[] {
 		const invalidIdRegex = new RegExp("^\\s*$|.*_.*");
 		if (invalidIdRegex.test(id)) {
 			throw new InsightError("ID is invalid");
 		}
 
-		const viewer = new Viewer();
-		const datasetIDs = viewer.getExistingDatasetIDs();
 		if (source === "add" && datasetIDs.includes(id)) {
 			throw new InsightError("ID already exists");
 		}

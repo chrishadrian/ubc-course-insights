@@ -1,4 +1,7 @@
 import * as fs from "fs-extra";
+import Section from "./Section";
+import { Query } from "../usecase/QueryEngine";
+
 export enum Logic {
 	OR = "OR",
 	AND = "AND",
@@ -118,14 +121,63 @@ export class SField {
 	}
 }
 
+export class QueryTree {
+	private logic: Logic[];
+	private keys: string [][];
+	private values: string[][][];
+
+	constructor() {
+		this.logic = [];
+		this.keys = [];
+		this.values = [];
+	}
+
+	public getLogic(): Logic[] {
+		return this.logic;
+	}
+
+	public getKeys(): string[][] {
+		return this.keys;
+	}
+
+	public getValues(): string[][][] {
+		return this.values;
+	}
+
+	public addLogic(l: Logic) {
+		this.logic.push(l);
+	}
+
+	public addKeys(k: string[]) {
+		this.keys.push(k);
+	}
+
+	public addValues(v: string[][]) {
+		this.values.push(v);
+	}
+}
+
 export class FieldFilters {
 	private mField: MField;
 	private sField: SField;
+	private queryTree: QueryTree;
 
 	constructor() {
 		this.mField = new MField();
 		this.sField = new SField();
+		this.queryTree = new QueryTree();
 	}
+
+	public addToQueryTree(logic: Logic, keys: string[], values: string[][]) {
+		this.queryTree.addLogic(logic);
+		this.queryTree.addKeys(keys);
+		this.queryTree.addValues(values);
+	}
+
+	public getQueryTree(): QueryTree {
+		return this.queryTree;
+	}
+
 
 	public addSField(type: string, value: string, logic: Logic) {
 		this.sField.setSField(type, value, logic);

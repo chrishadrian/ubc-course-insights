@@ -71,7 +71,7 @@ export default class QueryEngine {
 		return validateMKeyRegex.test(key);
 	}
 
-	private validateSComp(obj: unknown): boolean {
+	private validateMSComp(obj: unknown): boolean {
 		let keys = this.getKeysHelper(obj);
 		return keys.length === 1;
 	}
@@ -105,14 +105,15 @@ export default class QueryEngine {
 		let w = obj as any;
 		let id: string;
 		let filters;
-		let type;
+		let field;
 		let value;
 		try {
 			switch (keys[0]) {
 				case "IS":
-					[id, type, value] = this.handleSComp(w[keys[0]], "");
+					[id, field, value] = this.handleSComp(w[keys[0]], "");
 					filters = new FieldFilters();
-					filters.addSField(type, value, Logic.OR);
+					filters.addToQueryTree(Logic.AND, [field], [[value]]);
+					// filters.addSField(field, value, Logic.OR);
 					break;
 				case "NOT":
 					[id, filters] = this.handleNot(w[keys[0]], "");
@@ -124,9 +125,10 @@ export default class QueryEngine {
 				case "LT":
 				case "GT":
 				case "EQ":
-					[id, type, value] = this.handleMComp(w[keys[0]], "");
+					[id, field, value] = this.handleMComp(w[keys[0]], "");
 					filters = new FieldFilters();
-					filters.addMField(type, value, Logic.OR);
+					filters.addToQueryTree(Logic.AND, [field], [[keys[0], value]]);
+					// filters.addMField(field, value, Logic.OR);
 					break;
 				default:
 					throw new InsightError("Where clause has invalid filter");
@@ -187,7 +189,7 @@ export default class QueryEngine {
 	}
 
 	private handleSComp(obj: unknown, idString: string): [string, string, string] {
-		if (!this.validateSComp(obj)) {
+		if (!this.validateMSComp(obj)) {
 			throw new InsightError("incorrectly formatted string comparison");
 		}
 		let key = this.getKeysHelper(obj);
@@ -203,16 +205,46 @@ export default class QueryEngine {
 			throw new InsightError("invalid input string");
 		}
 		let field = this.extractField(key[0]);
+		let value = this.getRegex(s[key[0]]);
+		return [id, field, value];
+	}
 
-		return [id, field, s[key[0]]];
+	private getRegex(value: string): string {
+		let regex: string = "(";
+		let length = value.length;
+        	for (let i = 0; i < length; i++) {
+        		if (value[i] === "*") {
+        			regex = regex + ".*";
+        		} else {
+        			regex = regex + value[i];
+        		}
+        	}
+        		regex = regex + ")";
+		return regex;
 	}
 
 	private handleLogic(obj: unknown, idString: string): [string, FieldFilters] {
 		return ["", new FieldFilters()];
 	}
 
-	private handleMComp(obj: unknown, idString: string): [string, string, Range] {
-		return ["", "", new Range(0, 0)];
+	private handleMComp(obj: unknown, idString: string): [string, string, string] {
+		if (!this.validateMSComp(obj)) {
+			throw new InsightError("incorrectly formatted math comparison");
+		}
+		let key = this.getKeysHelper(obj);
+		if (!this.validateMKey(key[0])) {
+			throw new InsightError("incorrectly formatted s key");
+		}
+		let id: string = this.extractIDString(key[0]);
+		if (idString !== "" && idString !== id) {
+			throw new InsightError("too many datasets referenced");
+		}
+		let s = obj as any;
+		if (!this.validateInputString(s[key[0]])) {
+			throw new InsightError("invalid input string");
+		}
+		let field = this.extractField(key[0]);
+		return [id, field, s[key[0]]];
 	}
 
 	private handleNot(obj: unknown, idString: string): [string, FieldFilters] {

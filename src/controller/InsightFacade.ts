@@ -68,38 +68,38 @@ export default class InsightFacade implements IInsightFacade {
 		return Promise.resolve(id);
 	}
 
-	public performQuery(query: unknown): Promise<InsightResult[]> {
-		// const queryEngine = new QueryEngine();
-		// let datasetID = "", orderField = "";
-		// let columns = [""];
-		// let filters = new FieldFilters();
+	public async performQuery(query: unknown): Promise<InsightResult[]> {
+		const queryEngine = new QueryEngine();
+		let datasetID = "", orderField = "";
+		let columns = [""];
+		let filters = new FieldFilters();
 
-		// try {
-		// 	const queryResult = queryEngine.parseQuery(query);
-		// 	const where = queryResult.whereBlock;
-		// 	datasetID = where.getSetId();
-		// 	filters = where.getFilters();
+		try {
+			const queryResult = queryEngine.parseQuery(query);
+			const where = queryResult.whereBlock;
+			datasetID = where.getSetId();
+			filters = where.getFilters();
 
-		// 	const options = queryResult.optionsBlock;
-		// 	columns = options.getColumns();
-		// 	orderField = options.getOrder();
-		// } catch (err) {
-		// 	Promise.reject(err);
-		// }
+			const options = queryResult.optionsBlock;
+			columns = options.getColumns();
+			orderField = options.getOrder();
+		} catch (err) {
+			Promise.reject(err);
+		}
 
-		// try {
-		// 	const viewer = new Viewer();
-		// 	const indexes = viewer.getSectionIndexesByDatasetID("sections");
-		// 	const filteredSections = viewer.filterByFields(
-		// 		[Logic.AND],
-		// 		[["avg", "dept"]],
-		// 		[[["GT", "97"], ["math"]]],
-		// 		indexes);
-		// 	const result = viewer.filterByColumnsAndOrder(filteredSections, columns, orderField, "sections");
-		// 	return Promise.resolve(result);
-		// } catch (err) {
-		// 	Promise.reject(`Perform query error: ${err}`);
-		// }
+		try {
+			const viewer = new Viewer();
+			const indexes = await viewer.getSectionIndexesByDatasetID("sections");
+			const filteredSections = viewer.filterByFields(
+				[Logic.AND],
+				[["avg", "dept"]],
+				[[["GT", "97"], ["math"]]],
+				indexes);
+			const result = viewer.filterByColumnsAndOrder(filteredSections, columns, orderField, "sections");
+			return Promise.resolve(result);
+		} catch (err) {
+			Promise.reject(`Perform query error: ${err}`);
+		}
 
 		return Promise.reject("Perform query error");
 	}

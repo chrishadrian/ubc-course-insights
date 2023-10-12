@@ -32,21 +32,21 @@ export default class Viewer {
 		let result: Record<string, Map<string | number, Section[]>> = {};
 
 		if (!fs.existsSync(persistDir)) {
-			return result;
+			return Promise.resolve(result);
 		}
 
-		const fileContent = await fs.readFile(`${persistDir}/${datasetID}.json`).toString();
+		const fileContent = await fs.readFile(`${persistDir}/${datasetID}.json`);
 		const datasetJSON: {
 			insightDataset: InsightDataset;
 			MappedSection: Record<string, Record<string | number, Section[]>>;
-		} = JSON.parse(fileContent);
+		} = JSON.parse(fileContent.toString());
 
 		for (const key in datasetJSON.MappedSection) {
 			const fieldName: keyof Section = key as keyof Section;
 			result[fieldName] = this.jsonToMap(datasetJSON.MappedSection[fieldName]);
 		}
 
-		return result;
+		return Promise.resolve(result);
 	}
 
 	public filterByFields(

@@ -31,6 +31,10 @@ export default class WhereRe {
 	}
 
 	private getRegex(value: string): string {
+		let checkWildcard = new RegExp("[*]");
+		if (!checkWildcard.test(value)) {
+			return value;
+		}
 		let regex: string = "^(";
 		let length = value.length;
 		for (let i = 0; i < length; i++) {

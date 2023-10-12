@@ -94,10 +94,12 @@ export default class WhereRe {
 			throw new InsightError("empty logic");
 		}
 		let nodes: Node[] = [];
+		let idPrev: string;
 		let id: string = "";
 		let child: Node;
 		let children: Node[];
 		for (let i of logic) {
+			idPrev = id;
 			switch (i.key) {
 				case "IS":
 					[child, id] = this.handleSComp(i.value as Node);
@@ -120,13 +122,15 @@ export default class WhereRe {
 				default:
 					throw new InsightError("Logic Node has invalid filter");
 			}
+			if (idPrev !== "" && idPrev !== id) {
+				throw new InsightError("multiple ids found");
+			}
 		}
 		return [nodes, id];
 	}
 
 	// returns the root where node as well as the common id
 	public handleWhere(obj: unknown): [Node, string] {
-		let idString = "";
 		let where = obj as Node;
 		let keys = this.getKeysHelper(where);
 		if (keys.length > 1) {
@@ -136,7 +140,7 @@ export default class WhereRe {
 			return [where, ""];
 		}
 		let newWhere: Node = {};
-		let id: string;
+		let id: string = "";
 		let child: Node = {};
 		let children: Node[] = [];
 		switch (keys[0]) {
@@ -161,6 +165,6 @@ export default class WhereRe {
 			default:
 				throw new InsightError("Where clause has invalid filter");
 		}
-		return [newWhere, ""];
+		return [newWhere, id];
 	}
 }

@@ -1,4 +1,3 @@
-/* eslint-disable max-lines-per-function */
 import * as fs from "fs-extra";
 import {InsightDataset} from "../controller/IInsightFacade";
 import Section from "../model/Section";
@@ -145,14 +144,9 @@ export default class Viewer {
 	}
 
 	public filterByNode(root: Node, indexes: Record<string, Map<string | number, Section[]>>): Section[] {
-		let operation: Logic = Logic.AND;
 		let fields: string[] = [];
 		let values: string[][] = [];
 		let result: Section[] = [];
-
-		const isSectionEqual = (a: Section, b: Section): boolean => {
-			return a.uuid === b.uuid;
-		};
 
 		const filterSections = (node: Node): Section[] => {
 			for (const key in node) {
@@ -161,38 +155,25 @@ export default class Viewer {
 						const value = node[key] as Node[];
 						let tempResult: Section[] = [];
 						for (const i in value) {
-							tempResult = filterSections(value[i]);
-							if (key === Logic.AND) {
-								if (result.length === 0) {
-									result.push(...tempResult);
-								} else {
-									result.push(...[...result].filter((section) =>
-										tempResult.some((filteredSection) =>
-											isSectionEqual(section, filteredSection))
-									));
-								};
-							} else if (key === Logic.OR) {
-								result.push(...tempResult);
+							const curr = value[i];
+							tempResult = filterSections(curr);
+							for (const currKey in curr) {
+								if ((currKey === Logic.AND) || (currKey === Logic.OR))  {
+									const newResult = (i === "0");
+									result = this.handleLogicMerge(Logic[key], result, tempResult, newResult);
+								}
 							}
 						}
-						operation = Logic[key];
-						const tempResult2 = this.filterByFields(operation, fields, values, indexes, tempResult);
+						const tempResult2 = this.filterByFields(Logic[key], fields, values, indexes, tempResult);
 						fields = [];
 						values = [];
 
 						return tempResult2;
 					} else {
-						const value = node[key] as Node;
-						let field: string = "";
-						let fieldValue: string[] = [];
-						for (const valueKey in value) {
-							field = valueKey;
-							if (key === "EQ" || key === "IS") {
-								fieldValue = [value[valueKey]] as string[];
-							} else {
-								fieldValue = [key, value[valueKey]] as string[];
-							}
-						}
+						let { field, fieldValue }: {
+							field: string,
+							fieldValue: string[];
+						} = this.handleComp(node, key);
 						fields.push(field);
 						values.push(fieldValue);
 					}
@@ -202,18 +183,56 @@ export default class Viewer {
 		};
 
 		for (const key in root) {
-			const tempResult = filterSections(root);
-			if (key === Logic.AND) {
-				result.push(...[...result].filter((section) =>
-					tempResult.some((filteredSection) =>
-						isSectionEqual(section, filteredSection))
-				));
-			} else if (key === Logic.OR) {
-				result.push(...tempResult);
+			if (key !== Logic.AND && key !== Logic.OR) {
+				const { field, fieldValue }: { field: string; fieldValue: string[]; } = this.handleComp(root, key);
+				return this.filterByField(field, fieldValue, indexes);
 			}
+			const tempResult = filterSections(root);
+			result = this.handleLogicMerge(key, result, tempResult, false);
 		}
 
 		return result;
+	}
+
+	private handleLogicMerge(logic: Logic, currResult: Section[], result: Section[], newResult: boolean): Section[]{
+		const isSectionEqual = (a: Section, b: Section): boolean => {
+			return a.uuid === b.uuid;
+		};
+
+		let resultSet: Set<Section>;
+
+		if (newResult) {
+			resultSet = new Set(result);
+		} else {
+			resultSet = new Set([...currResult]);
+		}
+
+		if (logic === Logic.AND) {
+			resultSet = new Set(
+				[...resultSet].filter((section) =>
+					result.some((filteredSection) => isSectionEqual(section, filteredSection))
+				)
+			);
+		} else if (logic === Logic.OR) {
+			resultSet = new Set([...resultSet, ...result]);
+		}
+
+		return Array.from(resultSet);
+	}
+
+	private handleComp(node: Node, key: string) {
+		const value = node[key] as Node;
+		let field: string = "";
+		let fieldValue: string[] = [];
+		for (const valueKey in value) {
+			field = valueKey;
+			if (key === "EQ" || key === "IS") {
+				fieldValue = [value[valueKey]] as string[];
+			} else {
+				fieldValue = [key, value[valueKey]] as string[];
+			}
+		}
+		return { field, fieldValue };
 	}
 
 	public filterByColumnsAndOrder(data: Section[], columns: string[], orderField: string, datasetID: string) {
@@ -227,7 +246,7 @@ export default class Viewer {
 		});
 
 		return filteredData.sort((a, b) => {
-			const order = orderField as keyof Section;
+			const order = `${datasetID}_${orderField as keyof Section}`;
 			if (a[order] < b[order]) {
 				return -1;
 			}

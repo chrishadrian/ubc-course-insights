@@ -6,12 +6,6 @@ import Viewer, {Node} from "../usecase/Viewer";
 import QueryEngine from "../usecase/QueryEngine";
 import {FieldFilters, Logic} from "../model/Where";
 
-/**
- * This is the main programmatic entry point for the project.
- * Method documentation is in IInsightFacade
- *
- */
-
 export default class InsightFacade implements IInsightFacade {
 	private validator;
 	private datasetIDs: string[];
@@ -92,9 +86,18 @@ export default class InsightFacade implements IInsightFacade {
 			const viewer = new Viewer();
 			const indexes = await viewer.getSectionIndexesByDatasetID("sections");
 
-
 			const node: Node = {
-				AND: [{AND: [{GT: {avg: 45}}, {IS: {id: "101"}}]}, {IS: {dept: "math"}}]
+				OR: [
+					{
+						AND: [{GT: {fail: 96}},{IS: {instructor: "^a.*"}}],
+					},
+					{
+						AND: [{LT: {audit: 1}},{IS: {title: ".*media 1.*"}}]
+					},
+					{
+						AND: [{EQ: {year: 2023}}, {IS: {uuid: ".*123.*"}}],
+					},
+				],
 			};
 
 			const filteredSections = viewer.filterByNode(node, indexes);

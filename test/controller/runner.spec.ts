@@ -3,8 +3,8 @@ import InsightFacade from "../../src/controller/InsightFacade";
 import {expect, use} from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {clearDisk, getContentFromArchives} from "../TestUtil";
-import { veryComplexQuery } from "../resources/queries/abc";
-import { performance } from "perf_hooks";
+import {veryComplexQuery} from "../resources/queries/abc";
+import {performance} from "perf_hooks";
 
 
 use(chaiAsPromised);

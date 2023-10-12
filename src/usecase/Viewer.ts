@@ -170,7 +170,7 @@ export default class Viewer {
 
 						return tempResult2;
 					} else {
-						let { field, fieldValue }: {
+						let {field, fieldValue}: {
 							field: string,
 							fieldValue: string[];
 						} = this.handleComp(node, key);
@@ -184,7 +184,7 @@ export default class Viewer {
 
 		for (const key in root) {
 			if (key !== Logic.AND && key !== Logic.OR) {
-				const { field, fieldValue }: { field: string; fieldValue: string[]; } = this.handleComp(root, key);
+				const {field, fieldValue}: {field: string; fieldValue: string[];} = this.handleComp(root, key);
 				return this.filterByField(field, fieldValue, indexes);
 			}
 			const tempResult = filterSections(root);
@@ -232,7 +232,7 @@ export default class Viewer {
 				fieldValue = [key, value[valueKey]] as string[];
 			}
 		}
-		return { field, fieldValue };
+		return {field, fieldValue};
 	}
 
 	public filterByColumnsAndOrder(data: Section[], columns: string[], orderField: string, datasetID: string) {

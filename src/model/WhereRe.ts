@@ -31,7 +31,7 @@ export default class WhereRe {
 	}
 
 	private getRegex(value: string): string {
-		let regex: string = "(";
+		let regex: string = "^(";
 		let length = value.length;
 		for (let i = 0; i < length; i++) {
 			if (value[i] === "*") {
@@ -77,7 +77,7 @@ export default class WhereRe {
 		}
 		let id: string = this.extractIDString(keys[0]);
 		let field = this.extractField(keys[0]);
-		let value = "^(" + this.getRegex(scomp[keys[0]] as string) + ")";
+		let value = "[^(" + this.getRegex(scomp[keys[0]] as string) + ")]";
 		let newNode: Node = {[field]: value};
 		return [newNode, id];
 	}

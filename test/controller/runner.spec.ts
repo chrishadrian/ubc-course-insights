@@ -19,7 +19,7 @@ describe("InsightFacade", function () {
 		clearDisk();
 	});
 
-	describe("Add/Remove/List Dataset", function () {
+	describe("Add/Remove/List/ Dataset and PerformQuery", function () {
 		const start = performance.now();
 		describe("Add Dataset", function () {
 			beforeEach(function () {

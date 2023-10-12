@@ -1,4 +1,3 @@
-import * as fs from "fs-extra";
 export enum Logic {
 	OR = "OR",
 	AND = "AND",
@@ -39,7 +38,6 @@ export class MField {
 	public setMField(type: string, value: Range, logic: Logic) {
 		return;
 	}
-
 }
 
 export class SField {
@@ -61,14 +59,15 @@ export class SField {
 
 	private getRegex(value: string): string {
 		let regex: string = "(";
-        	for (let i = 1; i < value.length; i++) {
-        		if (value[i] === "*") {
-        			regex = regex + ".*";
-        		} else {
-        			regex = regex + value[i];
-        		}
-        	}
-        		regex = regex + ")";
+		let j = value.length;
+		for (let i = 0; i < j; i++) {
+			if (value[i] === "*") {
+				regex = regex + ".*";
+			} else {
+				regex = regex + value[i];
+			}
+		}
+		regex = regex + ")";
 		return regex;
 	}
 
@@ -108,9 +107,9 @@ export class SField {
 		// like the and operator, but without the extra not in front of the current regex!
 		let old = this.sFields.get(type);
 		if (!old) {
-        	let regex = this.getRegex(value);
-        	this.sFields.set(type, regex);
-        	return;
+			let regex = this.getRegex(value);
+			this.sFields.set(type, regex);
+			return;
 		}
 		let regex = this.getRegex(value);
 		regex = "^(^" + old + "|" + regex + ")";
@@ -118,13 +117,61 @@ export class SField {
 	}
 }
 
+export class QueryTree {
+	private logic: Logic[];
+	private keys: string[][];
+	private values: string[][][];
+
+	constructor() {
+		this.logic = [];
+		this.keys = [];
+		this.values = [];
+	}
+
+	public getLogic(): Logic[] {
+		return this.logic;
+	}
+
+	public getKeys(): string[][] {
+		return this.keys;
+	}
+
+	public getValues(): string[][][] {
+		return this.values;
+	}
+
+	public addLogic(l: Logic) {
+		this.logic.push(l);
+	}
+
+	public addKeys(k: string[]) {
+		this.keys.push(k);
+	}
+
+	public addValues(v: string[][]) {
+		this.values.push(v);
+	}
+}
+
 export class FieldFilters {
 	private mField: MField;
 	private sField: SField;
+	private queryTree: QueryTree;
 
 	constructor() {
 		this.mField = new MField();
 		this.sField = new SField();
+		this.queryTree = new QueryTree();
+	}
+
+	public addToQueryTree(logic: Logic, keys: string[], values: string[][]) {
+		this.queryTree.addLogic(logic);
+		this.queryTree.addKeys(keys);
+		this.queryTree.addValues(values);
+	}
+
+	public getQueryTree(): QueryTree {
+		return this.queryTree;
 	}
 
 	public addSField(type: string, value: string, logic: Logic) {

@@ -67,15 +67,15 @@ export default class InsightFacade implements IInsightFacade {
 		let datasetID = "";
 		let orderField = "";
 		let columns = [""];
-		let filters = new FieldFilters();
+		let filters: Node;
 
 		try {
 			const queryResult = queryEngine.parseQuery(query);
 			const where = queryResult.whereBlock;
-			datasetID = where.getSetId();
-			filters = where.getFilters();
+			filters = where;
 
 			const options = queryResult.optionsBlock;
+			datasetID = options.getDatasetID();
 			columns = options.getColumns();
 			orderField = options.getOrder();
 		} catch (err) {

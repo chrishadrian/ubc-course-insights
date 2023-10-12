@@ -17,8 +17,8 @@ export default class Viewer {
 		files.forEach((file) => {
 			const fileContent = fs.readFileSync(`${persistDir}/${file}`).toString();
 			const obj: {
-				insightDataset: InsightDataset,
-				MappedSection: Record<string, Record<string | number, Section[]>>
+				insightDataset: InsightDataset;
+				MappedSection: Record<string, Record<string | number, Section[]>>;
 			} = JSON.parse(fileContent);
 			result.push(obj.insightDataset);
 		});
@@ -26,14 +26,16 @@ export default class Viewer {
 		return result;
 	}
 
-	public getSectionIndexesByDatasetID(datasetID: string): Record<string, Map<string | number, Section[]>> {
+	public async getSectionIndexesByDatasetID(
+		datasetID: string
+	): Promise<Record<string, Map<string | number, Section[]>>> {
 		let result: Record<string, Map<string | number, Section[]>> = {};
 
 		if (!fs.existsSync(persistDir)) {
 			return result;
 		}
 
-		const fileContent = fs.readFileSync(`${persistDir}/${datasetID}.json`).toString();
+		const fileContent = await fs.readFile(`${persistDir}/${datasetID}.json`).toString();
 		const datasetJSON: {
 			insightDataset: InsightDataset;
 			MappedSection: Record<string, Record<string | number, Section[]>>;
@@ -116,7 +118,7 @@ export default class Viewer {
 		if (values.length === 2) {
 			// https://www.codingninjas.com/studio/library/typescript-map
 			for (const [key, value] of indexes[fieldName]) {
-				switch (values[0]){
+				switch (values[0]) {
 					case "GT":
 						if (key > values[1]) {
 							result.push(...value);

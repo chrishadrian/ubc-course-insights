@@ -4,6 +4,10 @@ import Section from "../model/Section";
 import {Logic} from "../model/Where";
 const persistDir = "./data";
 
+export interface Node {
+	[key: string]: string | number | Node[] | Node;
+}
+
 export default class Viewer {
 	public getInsightDatasets(): InsightDataset[] {
 		const result: InsightDataset[] = [];
@@ -50,9 +54,9 @@ export default class Viewer {
 	}
 
 	public filterByFields(
-		operations: Logic[],
-		fields: string[][],
-		values: string[][][],
+		operation: Logic,
+		fieldNames: string[],
+		values: string[][],
 		indexes: Record<string, Map<string | number, Section[]>>
 	): Section[] {
 		let resultSet: Set<Section> = new Set();
@@ -61,28 +65,23 @@ export default class Viewer {
 			return a.uuid === b.uuid;
 		};
 
-		for (let i = 0; i < operations.length; i++) {
-			const fieldNames = fields[i];
-			const fieldValues = values[i];
+		for (let j = 0; j < fieldNames.length; j++) {
+			const fieldName = fieldNames[j];
+			const valueArray = values[j];
+			const filteredData = this.filterByField(fieldName, valueArray, indexes);
 
-			for (let j = 0; j < fieldNames.length; j++) {
-				const fieldName = fieldNames[j];
-				const valueArray = fieldValues[j];
-				const filteredData = this.filterByField(fieldName, valueArray, indexes);
-
-				if (operations[i] === Logic.AND) {
-					if (resultSet.size === 0) {
-						resultSet = new Set(filteredData); // Initialize resultSet with the first result
-					} else {
-						resultSet = new Set(
-							[...resultSet].filter((section) =>
-								filteredData.some((filteredSection) => isSectionEqual(section, filteredSection))
-							)
-						);
-					}
-				} else if (operations[i] === Logic.OR) {
-					resultSet = new Set([...resultSet, ...filteredData]);
+			if (operation === Logic.AND) {
+				if (resultSet.size === 0) {
+					resultSet = new Set(filteredData); // Initialize resultSet with the first result
+				} else {
+					resultSet = new Set(
+						[...resultSet].filter((section) =>
+							filteredData.some((filteredSection) => isSectionEqual(section, filteredSection))
+						)
+					);
 				}
+			} else if (operation === Logic.OR) {
+				resultSet = new Set([...resultSet, ...filteredData]);
 			}
 		}
 
@@ -162,6 +161,38 @@ export default class Viewer {
 			return 0;
 		});
 	}
+
+	// public filterByNode(root: Node, indexes: Record<string, Map<string | number, Section[]>>): Section[] {
+	// 	const operations: Logic[] = [];
+	// 	const fields: string[][] = [];
+	// 	const values: string[][][] = [];
+
+	// 	// Recursive function to traverse the Node structure and build the arrays
+	// 	const buildArrays = (node: Node) => {
+	// 		for (const operation in node) {
+	// 			// eslint-disable-next-line no-prototype-builtins
+	// 			if (node.hasOwnProperty(operation)) {
+	// 				const value = node[operation] as Node;
+	// 				// add more if statements --> IF it's logics do something, if it's SCOMP / MCOMP do something
+	// 				if (typeof value === "object") {
+	// 					// Recursively process nested objects
+	// 					buildArrays(value);
+	// 				} else {
+	// 					const field = operation;
+	// 					const fieldValue = value;
+	// 					operations.push(Logic.AND);
+	// 					fields.push([field]);
+	// 					values.push([fieldValue]); // Convert value to a string
+	// 				}
+	// 			}
+	// 		}
+	// 	};
+
+	// 	buildArrays(root);
+
+	// 	// Call the existing filterByFields function with the generated arrays
+	// 	return this.filterByFields(operations, fields, values, indexes);
+	// }
 
 	private jsonToMap(json: Record<string | number, Section[]>): Map<string | number, Section[]> {
 		const map = new Map<string | number, Section[]>();

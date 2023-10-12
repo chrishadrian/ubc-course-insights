@@ -20,17 +20,13 @@ export default class QueryEngine {
 			throw new InsightError("Initial structure of query is incorrect");
 		}
 		let q = query as any;
-		try {
-			let [whereBlock, id] = this.whereDeveloper.handleWhere(q["WHERE"]);
-			let optionsBlock = this.handleOptions(q["OPTIONS"]);
-			if (id !== "" && optionsBlock.getDatasetID() !== id) {
-				throw new InsightError("two different dataset ideas in WHERE and OPTIONS");
-			}
-			let parsed = new Query(whereBlock, optionsBlock);
-			return parsed;
-		} catch {
-			throw new InsightError("invalid structure");
+		let [whereBlock, id] = this.whereDeveloper.handleWhere(q["WHERE"]);
+		let optionsBlock = this.handleOptions(q["OPTIONS"]);
+		if (id !== "" && optionsBlock.getDatasetID() !== id) {
+			throw new InsightError("two different dataset ideas in WHERE and OPTIONS");
 		}
+		let parsed = new Query(whereBlock, optionsBlock);
+		return parsed;
 	}
 
 	// return false if first query node does not have WHERE or Options, or more than one
@@ -78,28 +74,24 @@ export default class QueryEngine {
 		if (!this.validOpts(opts)) {
 			throw new InsightError("Options structure invalid");
 		}
-		try {
-			let keys = this.getKeysHelper(opts);
-			let o = opts as any;
-			let cols: string[];
-			let id: string;
-			[id, cols] = this.handleCols(o[keys[0]]);
-			if (keys.length === 2) {
-				if (!this.validateMSKey(o[keys[1]])) {
-					throw new InsightError("the key provided in order is incorrectly formatted");
-				}
-				let orderKey = this.extractIDString(o[keys[1]]);
-				let orderField = this.extractField(o[keys[1]]);
-				if (orderKey !== id) {
-					throw new InsightError("multiple order keys found");
-				}
-				// options has the id already, just need to add fields
-				return new Options(id, cols, orderField);
+		let keys = this.getKeysHelper(opts);
+		let o = opts as any;
+		let cols: string[];
+		let id: string;
+		[id, cols] = this.handleCols(o[keys[0]]);
+		if (keys.length === 2) {
+			if (!this.validateMSKey(o[keys[1]])) {
+				throw new InsightError("the key provided in order is incorrectly formatted");
 			}
-			return new Options(id, cols);
-		} catch {
-			throw new InsightError("part of columns or order incorrect");
+			let orderKey = this.extractIDString(o[keys[1]]);
+			let orderField = this.extractField(o[keys[1]]);
+			if (orderKey !== id) {
+				throw new InsightError("multiple order keys found");
+			}
+				// options has the id already, just need to add fields
+			return new Options(id, cols, orderField);
 		}
+		return new Options(id, cols);
 	}
 
 	private handleCols(obj: unknown): [string, string[]] {

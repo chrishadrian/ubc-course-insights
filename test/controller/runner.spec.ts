@@ -17,7 +17,7 @@ describe("InsightFacade", function () {
 		clearDisk();
 	});
 
-	describe("Add/Remove/List Dataset", function () {
+	describe("Add/Remove/List/ Dataset and PerformQuery", function () {
 		describe("Add Dataset", function () {
 			beforeEach(function () {
 				clearDisk();

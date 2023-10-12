@@ -5,6 +5,7 @@ import Remover from "../usecase/Remover";
 import Viewer from "../usecase/Viewer";
 import QueryEngine from "../usecase/QueryEngine";
 import {FieldFilters, Logic} from "../model/Where";
+import {Node} from "../model/WhereRe";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -71,15 +72,15 @@ export default class InsightFacade implements IInsightFacade {
 		const queryEngine = new QueryEngine();
 		let datasetID = "", orderField = "";
 		let columns = [""];
-		let filters = new FieldFilters();
+		let filters: Node;
 
 		try {
 			const queryResult = queryEngine.parseQuery(query);
 			const where = queryResult.whereBlock;
-			datasetID = where.getSetId();
-			filters = where.getFilters();
+			filters = where;
 
 			const options = queryResult.optionsBlock;
+			datasetID = options.getDatasetID();
 			columns = options.getColumns();
 			orderField = options.getOrder();
 		} catch (err) {

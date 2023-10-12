@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 import * as fs from "fs-extra";
 import {InsightDataset} from "../controller/IInsightFacade";
 import Section from "../model/Section";
@@ -57,9 +58,11 @@ export default class Viewer {
 		operation: Logic,
 		fieldNames: string[],
 		values: string[][],
-		indexes: Record<string, Map<string | number, Section[]>>
+		indexes: Record<string, Map<string | number, Section[]>>,
+		currentResult: Section[]
 	): Section[] {
-		let resultSet: Set<Section> = new Set();
+		let resultSet: Set<Section> = new Set([...currentResult]);
+		let newResult: boolean = true;
 
 		const isSectionEqual = (a: Section, b: Section): boolean => {
 			return a.uuid === b.uuid;
@@ -71,8 +74,9 @@ export default class Viewer {
 			const filteredData = this.filterByField(fieldName, valueArray, indexes);
 
 			if (operation === Logic.AND) {
-				if (resultSet.size === 0) {
-					resultSet = new Set(filteredData); // Initialize resultSet with the first result
+				if (newResult && resultSet.size === 0) {
+					resultSet = new Set(filteredData);
+					newResult = false;
 				} else {
 					resultSet = new Set(
 						[...resultSet].filter((section) =>
@@ -99,7 +103,7 @@ export default class Viewer {
 		}
 
 		if (values.length === 1) {
-			if (values[0].indexOf("*") > -1) {
+			if (values[0].toString().indexOf("*") > -1) {
 				for (const [key, value] of indexes[fieldName]) {
 					const regex = new RegExp(values[0]);
 					if (regex.test(key.toString())) {
@@ -108,7 +112,7 @@ export default class Viewer {
 				}
 				return result;
 			} else {
-				const sections = indexes[fieldName]?.get(values[0]) || [];
+				const sections = indexes[fieldName]?.get(values[0].toString()) || [];
 				result.push(...sections);
 				return result;
 			}
@@ -140,6 +144,78 @@ export default class Viewer {
 		return result;
 	}
 
+	public filterByNode(root: Node, indexes: Record<string, Map<string | number, Section[]>>): Section[] {
+		let operation: Logic = Logic.AND;
+		let fields: string[] = [];
+		let values: string[][] = [];
+		let result: Section[] = [];
+
+		const isSectionEqual = (a: Section, b: Section): boolean => {
+			return a.uuid === b.uuid;
+		};
+
+		const filterSections = (node: Node): Section[] => {
+			for (const key in node) {
+				if (Object.prototype.hasOwnProperty.call(node, key)) {
+					if (key === "AND" || key === "OR") {
+						const value = node[key] as Node[];
+						let tempResult: Section[] = [];
+						for (const i in value) {
+							tempResult = filterSections(value[i]);
+							if (key === Logic.AND) {
+								if (result.length === 0) {
+									result.push(...tempResult);
+								} else {
+									result.push(...[...result].filter((section) =>
+										tempResult.some((filteredSection) =>
+											isSectionEqual(section, filteredSection))
+									));
+								};
+							} else if (key === Logic.OR) {
+								result.push(...tempResult);
+							}
+						}
+						operation = Logic[key];
+						const tempResult2 = this.filterByFields(operation, fields, values, indexes, tempResult);
+						fields = [];
+						values = [];
+
+						return tempResult2;
+					} else {
+						const value = node[key] as Node;
+						let field: string = "";
+						let fieldValue: string[] = [];
+						for (const valueKey in value) {
+							field = valueKey;
+							if (key === "EQ" || key === "IS") {
+								fieldValue = [value[valueKey]] as string[];
+							} else {
+								fieldValue = [key, value[valueKey]] as string[];
+							}
+						}
+						fields.push(field);
+						values.push(fieldValue);
+					}
+				}
+			}
+			return [];
+		};
+
+		for (const key in root) {
+			const tempResult = filterSections(root);
+			if (key === Logic.AND) {
+				result.push(...[...result].filter((section) =>
+					tempResult.some((filteredSection) =>
+						isSectionEqual(section, filteredSection))
+				));
+			} else if (key === Logic.OR) {
+				result.push(...tempResult);
+			}
+		}
+
+		return result;
+	}
+
 	public filterByColumnsAndOrder(data: Section[], columns: string[], orderField: string, datasetID: string) {
 		const filteredData = data.map((section) => {
 			const filteredItem: any = {};
@@ -161,38 +237,6 @@ export default class Viewer {
 			return 0;
 		});
 	}
-
-	// public filterByNode(root: Node, indexes: Record<string, Map<string | number, Section[]>>): Section[] {
-	// 	const operations: Logic[] = [];
-	// 	const fields: string[][] = [];
-	// 	const values: string[][][] = [];
-
-	// 	// Recursive function to traverse the Node structure and build the arrays
-	// 	const buildArrays = (node: Node) => {
-	// 		for (const operation in node) {
-	// 			// eslint-disable-next-line no-prototype-builtins
-	// 			if (node.hasOwnProperty(operation)) {
-	// 				const value = node[operation] as Node;
-	// 				// add more if statements --> IF it's logics do something, if it's SCOMP / MCOMP do something
-	// 				if (typeof value === "object") {
-	// 					// Recursively process nested objects
-	// 					buildArrays(value);
-	// 				} else {
-	// 					const field = operation;
-	// 					const fieldValue = value;
-	// 					operations.push(Logic.AND);
-	// 					fields.push([field]);
-	// 					values.push([fieldValue]); // Convert value to a string
-	// 				}
-	// 			}
-	// 		}
-	// 	};
-
-	// 	buildArrays(root);
-
-	// 	// Call the existing filterByFields function with the generated arrays
-	// 	return this.filterByFields(operations, fields, values, indexes);
-	// }
 
 	private jsonToMap(json: Record<string | number, Section[]>): Map<string | number, Section[]> {
 		const map = new Map<string | number, Section[]>();

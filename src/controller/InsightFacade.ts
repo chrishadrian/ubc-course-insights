@@ -2,7 +2,7 @@ import {IInsightFacade, InsightDataset, InsightDatasetKind, InsightError, Insigh
 import Adder from "../usecase/Adder";
 import Validator from "../util/validator";
 import Remover from "../usecase/Remover";
-import Viewer from "../usecase/Viewer";
+import Viewer, {Node} from "../usecase/Viewer";
 import QueryEngine from "../usecase/QueryEngine";
 import {FieldFilters, Logic} from "../model/Where";
 
@@ -70,7 +70,8 @@ export default class InsightFacade implements IInsightFacade {
 
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
 		const queryEngine = new QueryEngine();
-		let datasetID = "", orderField = "";
+		let datasetID = "";
+		let orderField = "";
 		let columns = [""];
 		let filters = new FieldFilters();
 
@@ -90,11 +91,13 @@ export default class InsightFacade implements IInsightFacade {
 		try {
 			const viewer = new Viewer();
 			const indexes = await viewer.getSectionIndexesByDatasetID("sections");
-			const filteredSections = viewer.filterByFields(
-				[Logic.AND],
-				[["avg", "dept"]],
-				[[["GT", "97"], ["math"]]],
-				indexes);
+
+
+			const node: Node = {
+				AND: [{AND: [{GT: {avg: 45}}, {IS: {id: "101"}}]}, {IS: {dept: "math"}}]
+			};
+
+			const filteredSections = viewer.filterByNode(node, indexes);
 			const result = viewer.filterByColumnsAndOrder(filteredSections, columns, orderField, "sections");
 			return Promise.resolve(result);
 		} catch (err) {

@@ -67,7 +67,7 @@ export default class InsightFacade implements IInsightFacade {
 		let datasetID = "";
 		let orderField = "";
 		let columns = [""];
-		let filters: Node;
+		let filters: Node = {};
 
 		try {
 			const queryResult = queryEngine.parseQuery(query);
@@ -86,22 +86,8 @@ export default class InsightFacade implements IInsightFacade {
 			const viewer = new Viewer();
 			const indexes = await viewer.getSectionIndexesByDatasetID("sections");
 
-			const node: Node = {
-				OR: [
-					{
-						AND: [{GT: {fail: 96}},{IS: {instructor: "^a.*"}}],
-					},
-					{
-						AND: [{LT: {audit: 1}},{IS: {title: ".*media 1.*"}}]
-					},
-					{
-						AND: [{EQ: {year: 2023}}, {IS: {uuid: ".*123.*"}}],
-					},
-				],
-			};
-
-			const filteredSections = viewer.filterByNode(node, indexes);
-			const result = viewer.filterByColumnsAndOrder(filteredSections, columns, orderField, "sections");
+			const filteredSections = viewer.filterByNode(filters, indexes);
+			const result = viewer.filterByColumnsAndOrder(filteredSections, columns, orderField, datasetID);
 			return Promise.resolve(result);
 		} catch (err) {
 			Promise.reject(`Perform query error: ${err}`);

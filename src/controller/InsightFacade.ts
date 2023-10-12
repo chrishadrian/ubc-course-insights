@@ -5,6 +5,7 @@ import Remover from "../usecase/Remover";
 import Viewer from "../usecase/Viewer";
 import QueryEngine from "../usecase/QueryEngine";
 import {FieldFilters, Logic} from "../model/Where";
+import {Node} from "../model/WhereRe";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -69,17 +70,18 @@ export default class InsightFacade implements IInsightFacade {
 
 	public performQuery(query: unknown): Promise<InsightResult[]> {
 		const queryEngine = new QueryEngine();
-		let datasetID = "", orderField = "";
+		let datasetID = "",
+			orderField = "";
 		let columns = [""];
-		let filters = new FieldFilters();
+		let filters: Node;
 
 		try {
 			const queryResult = queryEngine.parseQuery(query);
 			const where = queryResult.whereBlock;
-			datasetID = where.getSetId();
-			filters = where.getFilters();
+			filters = where;
 
 			const options = queryResult.optionsBlock;
+			datasetID = options.getDatasetID();
 			columns = options.getColumns();
 			orderField = options.getOrder();
 		} catch (err) {
@@ -93,7 +95,8 @@ export default class InsightFacade implements IInsightFacade {
 				[Logic.AND],
 				[["avg", "dept"]],
 				[[["GT", "97"], ["math"]]],
-				indexes);
+				indexes
+			);
 			const result = viewer.filterByColumnsAndOrder(filteredSections, columns, orderField, "sections");
 			return Promise.resolve(result);
 		} catch (err) {

@@ -126,7 +126,7 @@ export default class Viewer {
 		if (values.length === 2) {
 			// https://www.codingninjas.com/studio/library/typescript-map
 			for (const [key, value] of indexes[fieldName]) {
-				switch (values[0]){
+				switch (values[0]) {
 					case "GT":
 						if (key > values[1]) {
 							result.push(...value);

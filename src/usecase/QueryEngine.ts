@@ -1,11 +1,12 @@
 import * as fs from "fs-extra";
+import {Node} from "../model/WhereRe";
 import Where, {FieldFilters, Range, MField, SField, Logic} from "../model/Where";
 import Options from "../model/Options";
 import {InsightError, InsightResult, NotFoundError, ResultTooLargeError} from "../controller/IInsightFacade";
 
 export class Query {
 	public whereBlock;
-	public optionsBlock;
+	public optionsBlock: Options;
 	constructor(w: Where, o: Options) {
 		this.whereBlock = w;
 		this.optionsBlock = o;

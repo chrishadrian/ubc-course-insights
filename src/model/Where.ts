@@ -1,7 +1,3 @@
-import * as fs from "fs-extra";
-import Section from "./Section";
-import { Query } from "../usecase/QueryEngine";
-
 export enum Logic {
 	OR = "OR",
 	AND = "AND",
@@ -42,7 +38,6 @@ export class MField {
 	public setMField(type: string, value: Range, logic: Logic) {
 		return;
 	}
-
 }
 
 export class SField {
@@ -64,14 +59,14 @@ export class SField {
 
 	private getRegex(value: string): string {
 		let regex: string = "(";
-        	for (let i = 1; i < value.length; i++) {
-        		if (value[i] === "*") {
-        			regex = regex + ".*";
-        		} else {
-        			regex = regex + value[i];
-        		}
-        	}
-        		regex = regex + ")";
+		for (let i = 1; i < value.length; i++) {
+			if (value[i] === "*") {
+				regex = regex + ".*";
+			} else {
+				regex = regex + value[i];
+			}
+		}
+		regex = regex + ")";
 		return regex;
 	}
 
@@ -111,9 +106,9 @@ export class SField {
 		// like the and operator, but without the extra not in front of the current regex!
 		let old = this.sFields.get(type);
 		if (!old) {
-        	let regex = this.getRegex(value);
-        	this.sFields.set(type, regex);
-        	return;
+			let regex = this.getRegex(value);
+			this.sFields.set(type, regex);
+			return;
 		}
 		let regex = this.getRegex(value);
 		regex = "^(^" + old + "|" + regex + ")";
@@ -123,7 +118,7 @@ export class SField {
 
 export class QueryTree {
 	private logic: Logic[];
-	private keys: string [][];
+	private keys: string[][];
 	private values: string[][][];
 
 	constructor() {
@@ -177,7 +172,6 @@ export class FieldFilters {
 	public getQueryTree(): QueryTree {
 		return this.queryTree;
 	}
-
 
 	public addSField(type: string, value: string, logic: Logic) {
 		this.sField.setSField(type, value, logic);

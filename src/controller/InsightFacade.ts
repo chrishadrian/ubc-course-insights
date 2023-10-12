@@ -70,7 +70,8 @@ export default class InsightFacade implements IInsightFacade {
 
 	public performQuery(query: unknown): Promise<InsightResult[]> {
 		const queryEngine = new QueryEngine();
-		let datasetID = "", orderField = "";
+		let datasetID = "",
+			orderField = "";
 		let columns = [""];
 		let filters: Node;
 
@@ -94,7 +95,8 @@ export default class InsightFacade implements IInsightFacade {
 				[Logic.AND],
 				[["avg", "dept"]],
 				[[["GT", "97"], ["math"]]],
-				indexes);
+				indexes
+			);
 			const result = viewer.filterByColumnsAndOrder(filteredSections, columns, orderField, "sections");
 			return Promise.resolve(result);
 		} catch (err) {

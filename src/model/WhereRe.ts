@@ -1,12 +1,10 @@
-import { InsightError } from "../controller/IInsightFacade";
-
+import {InsightError} from "../controller/IInsightFacade";
 
 export interface Node {
 	[key: string]: string | number | Node[] | Node;
 }
 
 export default class WhereRe {
-
 	private validateSKey(key: string): boolean {
 		const validateSKeyRegex = new RegExp("[^_]+_((dept)|(id)|(instructor)|(title)|(uuid))");
 		return validateSKeyRegex.test(key);
@@ -35,14 +33,14 @@ export default class WhereRe {
 	private getRegex(value: string): string {
 		let regex: string = "(";
 		let length = value.length;
-        	for (let i = 0; i < length; i++) {
-        		if (value[i] === "*") {
-        			regex = regex + ".*";
-        		} else {
-        			regex = regex + value[i];
-        		}
-        	}
-        		regex = regex + ")";
+		for (let i = 0; i < length; i++) {
+			if (value[i] === "*") {
+				regex = regex + ".*";
+			} else {
+				regex = regex + value[i];
+			}
+		}
+		regex = regex + ")";
 		return regex;
 	}
 
@@ -151,14 +149,14 @@ export default class WhereRe {
 		let value = mcomp[keys[0]] as number;
 		let nodes: Node[] = [];
 		if (comp === "LT") {
-			nodes.push({GT: {[field]:value}});
-			nodes.push({EQ: {[field]:value}});
+			nodes.push({GT: {[field]: value}});
+			nodes.push({EQ: {[field]: value}});
 		} else if (comp === "GT") {
-			nodes.push({LT: {[field]:value}});
-			nodes.push({EQ: {[field]:value}});
+			nodes.push({LT: {[field]: value}});
+			nodes.push({EQ: {[field]: value}});
 		} else {
 			nodes.push({GT: value});
-			nodes.push({LT: {[field]:value}});
+			nodes.push({LT: {[field]: value}});
 		}
 		return [{OR: nodes}, id];
 	}

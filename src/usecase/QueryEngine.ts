@@ -88,7 +88,7 @@ export default class QueryEngine {
 			if (orderKey !== id) {
 				throw new InsightError("multiple order keys found");
 			}
-				// options has the id already, just need to add fields
+			// options has the id already, just need to add fields
 			return new Options(id, cols, orderField);
 		}
 		return new Options(id, cols);
@@ -113,5 +113,4 @@ export default class QueryEngine {
 		}
 		return [id, cols];
 	}
-
 }

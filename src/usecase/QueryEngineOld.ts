@@ -212,14 +212,14 @@ export default class QueryEngineOld {
 	private getRegex(value: string): string {
 		let regex: string = "(";
 		let length = value.length;
-        	for (let i = 0; i < length; i++) {
-        		if (value[i] === "*") {
-        			regex = regex + ".*";
-        		} else {
-        			regex = regex + value[i];
-        		}
-        	}
-        		regex = regex + ")";
+		for (let i = 0; i < length; i++) {
+			if (value[i] === "*") {
+				regex = regex + ".*";
+			} else {
+				regex = regex + value[i];
+			}
+		}
+		regex = regex + ")";
 		return regex;
 	}
 
@@ -228,7 +228,7 @@ export default class QueryEngineOld {
 		if (keys.length < 1) {
 			throw new InsightError("empty AND/OR");
 		}
-		let w =  obj as any;
+		let w = obj as any;
 		let id: string = "";
 		let fields: string[] = [];
 		let values: string[][] = [];

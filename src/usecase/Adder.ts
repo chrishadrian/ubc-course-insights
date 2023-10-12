@@ -124,4 +124,3 @@ function mapToJSON(map: Map<string | number, Section[]>): Record<string | number
 	});
 	return json;
 }
-

@@ -6,12 +6,12 @@ export interface Node {
 
 export default class WhereRe {
 	private validateSKey(key: string): boolean {
-		const validateSKeyRegex = new RegExp("[^_]+_((dept)|(id)|(instructor)|(title)|(uuid))");
+		const validateSKeyRegex = new RegExp("^[^_]+_((dept)|(id)|(instructor)|(title)|(uuid))");
 		return validateSKeyRegex.test(key);
 	}
 
 	private validateMKey(key: string): boolean {
-		const validateMKeyRegex = new RegExp("[^_]+_((avg)|(pass)|(fail)|(audit)|(year))");
+		const validateMKeyRegex = new RegExp("^[^_]+_((avg)|(pass)|(fail)|(audit)|(year))");
 		return validateMKeyRegex.test(key);
 	}
 
@@ -26,7 +26,7 @@ export default class WhereRe {
 	}
 
 	private validateInputString(input: string): boolean {
-		const inputStringRegex = new RegExp("[*]?[^*]*[*]?");
+		const inputStringRegex = new RegExp("^[*]?[^*]*[*]?");
 		return inputStringRegex.test(input);
 	}
 

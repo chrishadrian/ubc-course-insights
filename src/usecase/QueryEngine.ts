@@ -104,31 +104,30 @@ export default class QueryEngine {
 		}
 		let w = obj as any;
 		let id: string;
-		let filters;
-		let field;
-		let value;
+		let filters = new FieldFilters();
+		let fields, values, field, value;
+		let logic: Logic = Logic.AND;
 		try {
 			switch (keys[0]) {
 				case "IS":
 					[id, field, value] = this.handleSComp(w[keys[0]], "");
-					filters = new FieldFilters();
 					filters.addToQueryTree(Logic.AND, [field], [[value]]);
-					// filters.addSField(field, value, Logic.OR);
 					break;
 				case "NOT":
-					[id, filters] = this.handleNot(w[keys[0]], "");
+					[id, field, value] = this.handleNot(w[keys[0]], "");
+					filters.addToQueryTree(Logic.NOT, [field], [value]);
 					break;
-				case "AND":
 				case "OR":
-					[id, filters] = this.handleLogic(w[keys[0]], "");
+					logic = Logic.OR;
+				case "AND":
+					[id, fields, values] = this.handleLogic(w[keys[0]], "");
+					filters.addToQueryTree(logic, fields, values);
 					break;
 				case "LT":
 				case "GT":
 				case "EQ":
 					[id, field, value] = this.handleMComp(w[keys[0]], "");
-					filters = new FieldFilters();
 					filters.addToQueryTree(Logic.AND, [field], [[keys[0], value]]);
-					// filters.addMField(field, value, Logic.OR);
 					break;
 				default:
 					throw new InsightError("Where clause has invalid filter");
@@ -223,8 +222,16 @@ export default class QueryEngine {
 		return regex;
 	}
 
-	private handleLogic(obj: unknown, idString: string): [string, FieldFilters] {
-		return ["", new FieldFilters()];
+	private handleLogic(obj: unknown, idString: string): [string, string[], string[][]] {
+		let keys = this.getKeysHelper(obj);
+		if (keys.length < 1) {
+			throw new InsightError("empty AND/OR");
+		}
+		let w =  obj as any;
+		let id: string = "";
+		let fields: string[] = [];
+		let values: string[][] = [];
+		return [id, fields, values];
 	}
 
 	private handleMComp(obj: unknown, idString: string): [string, string, string] {
@@ -247,7 +254,7 @@ export default class QueryEngine {
 		return [id, field, s[key[0]]];
 	}
 
-	private handleNot(obj: unknown, idString: string): [string, FieldFilters] {
-		return ["", new FieldFilters()];
+	private handleNot(obj: unknown, idString: string): [string, string, string[]] {
+		return ["", "", []];
 	}
 }

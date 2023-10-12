@@ -14,7 +14,7 @@ describe("InsightFacade", function () {
 	let sections: string;
 
 	before(function () {
-		sections = getContentFromArchives("pair.zip");
+		sections = getContentFromArchives("halfPair.zip");
 
 		clearDisk();
 	});

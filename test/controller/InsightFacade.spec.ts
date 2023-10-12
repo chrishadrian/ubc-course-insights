@@ -405,7 +405,7 @@ describe("InsightFacade", function () {
 	describe("PerformQuery", function () {
 		before(async function () {
 			clearDisk();
-			sections = getContentFromArchives("pair.zip");
+			sections = getContentFromArchives("halfPair.zip");
 			facade = new InsightFacade();
 			try {
 				await facade.addDataset("sections", sections, InsightDatasetKind.Sections);
@@ -533,7 +533,7 @@ describe("InsightFacade", function () {
 
 		it("should reject queries that exceed the result limit", async function () {
 			try {
-				const largeContent = getContentFromArchives("pair.zip");
+				const largeContent = getContentFromArchives("halfPair.zip");
 				try {
 					await facade.addDataset("large", largeContent, InsightDatasetKind.Sections);
 				} catch (err) {
@@ -752,15 +752,10 @@ describe("InsightFacade", function () {
 		});
 	});
 
-	/*
-	 * This test suite dynamically generates tests from the JSON files in test/resources/queries.
-	 * You should not need to modify it; instead, add additional files to the queries directory.
-	 * You can still make tests the normal way, this is just a convenient tool for a majority of queries.
-	 */
 	describe("PerformQuery with foldertest", () => {
 		before(async function () {
 			clearDisk();
-			sections = getContentFromArchives("pair.zip");
+			sections = getContentFromArchives("halfPair.zip");
 			facade = new InsightFacade();
 			try {
 				await facade.addDataset("sections", sections, InsightDatasetKind.Sections);

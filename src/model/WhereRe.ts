@@ -3,15 +3,16 @@ import {InsightError} from "../controller/IInsightFacade";
 export interface Node {
 	[key: string]: string | number | Node[] | Node;
 }
-
 export default class WhereRe {
+	// validator
 	private validateSKey(key: string): boolean {
-		const validateSKeyRegex = new RegExp("^[^_]+_((dept)|(id)|(instructor)|(title)|(uuid))");
+		const validateSKeyRegex = new RegExp("^[^_]+_((dept)|(id)|(instructor)|(title)|(uuid))$");
 		return validateSKeyRegex.test(key);
 	}
 
+	// validator
 	private validateMKey(key: string): boolean {
-		const validateMKeyRegex = new RegExp("^[^_]+_((avg)|(pass)|(fail)|(audit)|(year))");
+		const validateMKeyRegex = new RegExp("^[^_]+_((avg)|(pass)|(fail)|(audit)|(year))$");
 		return validateMKeyRegex.test(key);
 	}
 
@@ -25,8 +26,9 @@ export default class WhereRe {
 		return field[1];
 	}
 
+	// validator
 	private validateInputString(input: string): boolean {
-		const inputStringRegex = new RegExp("^[*]?[^*]*[*]?");
+		const inputStringRegex = new RegExp("^[*]?[^*]*[*]?$");
 		return inputStringRegex.test(input);
 	}
 
@@ -44,7 +46,7 @@ export default class WhereRe {
 				regex = regex + value[i];
 			}
 		}
-		regex = regex + ")";
+		regex = regex + ")$";
 		return regex;
 	}
 

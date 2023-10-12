@@ -59,7 +59,8 @@ export class SField {
 
 	private getRegex(value: string): string {
 		let regex: string = "(";
-		for (let i = 1; i < value.length; i++) {
+		let j = value.length;
+		for (let i = 0; i < j; i++) {
 			if (value[i] === "*") {
 				regex = regex + ".*";
 			} else {

@@ -103,7 +103,7 @@ export default class WhereRe {
 		if (logic.length < 1) {
 			throw new InsightError("empty logic");
 		}
-		let orNodes: Node[] = [];
+		let orAndNodes: Node[] = [];
 		let nodes: Node[] = [];
 		let idPrev: string;
 		let id: string = "";
@@ -121,14 +121,14 @@ export default class WhereRe {
 					break;
 				case "NOT": [child, id] = this.handleNot(i[keys[0]] as Node);
 					if ("OR" in child || "AND" in child) {
-						orNodes.push(child);
+						orAndNodes.push(child);
 						break;
 					}
 					nodes.push(child);
 					break;
 				case "OR":
 				case "AND": [children, id] = this.handleLogic(i[keys[0]] as Node[]);
-					orNodes.push({[keys[0]]: children} as Node);
+					orAndNodes.push({[keys[0]]: children} as Node);
 					break;
 				case "LT":
 				case "GT":
@@ -142,7 +142,7 @@ export default class WhereRe {
 				throw new InsightError("multiple ids found");
 			}
 		}
-		return [orNodes.concat(nodes), id];
+		return [orAndNodes.concat(nodes), id];
 	}
 	private handleNotMComp(mcomp: Node, comp: string): [Node, string] {
 		let keys = this.getKeysHelper(mcomp);
@@ -171,6 +171,7 @@ export default class WhereRe {
 		if (logic.length < 1) {
 			throw new InsightError("empty logic");
 		}
+		let orAndNodes: Node[] = [];
 		let nodes: Node[] = [];
 		let idPrev: string;
 		let id: string = "";
@@ -181,12 +182,16 @@ export default class WhereRe {
 			if (idPrev !== "" && idPrev !== id) {
 				throw new InsightError("multiple ids found");
 			}
-			nodes.push(child);
+			if ("OR" in child || "AND" in child) {
+				orAndNodes.push(child);
+			} else {
+				nodes.push(child);
+			}
 		}
 		if (key === "AND") {
-			return [{OR: nodes}, id];
+			return [{OR: orAndNodes.concat(nodes)}, id];
 		} else {
-			return [{AND: nodes}, id];
+			return [{AND: orAndNodes.concat(nodes)}, id];
 		}
 	}
 	private handleDoubleNegative(obj: Node): [Node, string] {

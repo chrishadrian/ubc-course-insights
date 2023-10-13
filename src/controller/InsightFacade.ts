@@ -1,5 +1,5 @@
 import {IInsightFacade, InsightDataset, InsightDatasetKind, InsightError, InsightResult} from "./IInsightFacade";
-import Adder, { DatasetIndexes } from "../usecase/Adder";
+import Adder, {DatasetIndexes} from "../usecase/Adder";
 import Validator from "../util/validator";
 import Remover from "../usecase/Remover";
 import Viewer, {Node} from "../usecase/Viewer";

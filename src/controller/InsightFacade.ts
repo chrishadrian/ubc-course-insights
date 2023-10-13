@@ -87,15 +87,11 @@ export default class InsightFacade implements IInsightFacade {
 		try {
 			const viewer = new Viewer();
 			let indexes = this.indexes[datasetID];
-
 			if (Object.keys(this.indexes).length === 0) {
 				indexes = await viewer.getSectionIndexesByDatasetID(datasetID);
 			}
 
 			const filteredSections = viewer.filterByNode(filters, indexes);
-			if (filteredSections.length > 5000) {
-				return Promise.reject(new ResultTooLargeError());
-			}
 			const result = viewer.filterByColumnsAndOrder(filteredSections, columns, orderField, datasetID);
 
 			return Promise.resolve(result);

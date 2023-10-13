@@ -1,7 +1,8 @@
 import * as fs from "fs-extra";
-import {InsightDataset} from "../controller/IInsightFacade";
+import {InsightDataset, InsightError, ResultTooLargeError} from "../controller/IInsightFacade";
 import Section from "../model/Section";
 import {Logic} from "../model/Where";
+import {DatasetJSON} from "./Adder";
 const persistDir = "./data";
 
 export interface Node {
@@ -20,11 +21,8 @@ export default class Viewer {
 
 		files.forEach((file) => {
 			const fileContent = fs.readFileSync(`${persistDir}/${file}`).toString();
-			const obj: {
-				insightDataset: InsightDataset;
-				MappedSection: Record<string, Record<string | number, Section[]>>;
-			} = JSON.parse(fileContent);
-			result.push(obj.insightDataset);
+			const obj: DatasetJSON = JSON.parse(fileContent);
+			result.push(obj.InsightDataset);
 		});
 
 		return result;
@@ -36,7 +34,7 @@ export default class Viewer {
 		let result: Record<string, Map<string | number, Section[]>> = {};
 
 		if (!fs.existsSync(persistDir)) {
-			return Promise.resolve(result);
+			return Promise.reject(new InsightError("dataset does not exist"));
 		}
 
 		const fileContent = await fs.readFile(`${persistDir}/${datasetID}.json`);
@@ -60,12 +58,8 @@ export default class Viewer {
 		indexes: Record<string, Map<string | number, Section[]>>,
 		currentResult: Section[]
 	): Section[] {
-		let resultSet: Set<Section> = new Set([...currentResult]);
+		let resultSet: Section[] = currentResult;
 		let newResult: boolean = true;
-
-		const isSectionEqual = (a: Section, b: Section): boolean => {
-			return a.uuid === b.uuid;
-		};
 
 		for (let j = 0; j < fieldNames.length; j++) {
 			const fieldName = fieldNames[j];
@@ -73,22 +67,18 @@ export default class Viewer {
 			const filteredData = this.filterByField(fieldName, valueArray, indexes);
 
 			if (operation === Logic.AND) {
-				if (newResult && resultSet.size === 0) {
-					resultSet = new Set(filteredData);
+				if (newResult && resultSet.length === 0) {
+					resultSet = filteredData;
 					newResult = false;
 				} else {
-					resultSet = new Set(
-						[...resultSet].filter((section) =>
-							filteredData.some((filteredSection) => isSectionEqual(section, filteredSection))
-						)
-					);
+					resultSet = resultSet.filter((section) => filteredData.includes(section));
 				}
 			} else if (operation === Logic.OR) {
-				resultSet = new Set([...resultSet, ...filteredData]);
+				resultSet = [...new Set([...resultSet, ...filteredData])];
 			}
 		}
 
-		return Array.from(resultSet);
+		return resultSet;
 	}
 
 	private filterByField(
@@ -111,7 +101,7 @@ export default class Viewer {
 				}
 				return result;
 			} else {
-				const sections = indexes[fieldName]?.get(values[0].toString()) || [];
+				const sections = indexes[fieldName].get(values[0]) || [];
 				result.push(...sections);
 				return result;
 			}
@@ -144,9 +134,7 @@ export default class Viewer {
 	}
 
 	public filterByNode(root: Node, indexes: Record<string, Map<string | number, Section[]>>): Section[] {
-		let fields: string[] = [];
-		let values: string[][] = [];
-		let result: Section[] = [];
+		let fields: string[] = [], values: string[][] = [], result: Section[] = [], counter = 0;
 
 		const filterSections = (node: Node): Section[] => {
 			for (const key in node) {
@@ -161,19 +149,16 @@ export default class Viewer {
 								if ((currKey === Logic.AND) || (currKey === Logic.OR))  {
 									const newResult = (i === "0");
 									result = this.handleLogicMerge(Logic[key], result, tempResult, newResult);
+									counter += 1;
 								}
 							}
 						}
 						const tempResult2 = this.filterByFields(Logic[key], fields, values, indexes, tempResult);
 						fields = [];
 						values = [];
-
 						return tempResult2;
 					} else {
-						let {field, fieldValue}: {
-							field: string,
-							fieldValue: string[];
-						} = this.handleComp(node, key);
+						let {field, fieldValue}: {field: string, fieldValue: string[]} = this.handleComp(node, key);
 						fields.push(field);
 						values.push(fieldValue);
 					}
@@ -185,39 +170,36 @@ export default class Viewer {
 		for (const key in root) {
 			if (key !== Logic.AND && key !== Logic.OR) {
 				const {field, fieldValue}: {field: string; fieldValue: string[];} = this.handleComp(root, key);
-				return this.filterByField(field, fieldValue, indexes);
+				result = this.filterByField(field, fieldValue, indexes);
+			} else {
+				const tempResult = filterSections(root);
+				const newResult = counter === 0;
+				result = this.handleLogicMerge(key, result, tempResult, newResult);
 			}
-			const tempResult = filterSections(root);
-			result = this.handleLogicMerge(key, result, tempResult, false);
+		}
+		if (result.length > 5000) {
+			throw new ResultTooLargeError();
 		}
 
 		return result;
 	}
 
 	private handleLogicMerge(logic: Logic, currResult: Section[], result: Section[], newResult: boolean): Section[]{
-		const isSectionEqual = (a: Section, b: Section): boolean => {
-			return a.uuid === b.uuid;
-		};
-
-		let resultSet: Set<Section>;
+		let resultSet: Section[] = [];
 
 		if (newResult) {
-			resultSet = new Set(result);
+			resultSet = result;
 		} else {
-			resultSet = new Set([...currResult]);
+			resultSet = currResult;
 		}
 
 		if (logic === Logic.AND) {
-			resultSet = new Set(
-				[...resultSet].filter((section) =>
-					result.some((filteredSection) => isSectionEqual(section, filteredSection))
-				)
-			);
+			resultSet = resultSet.filter((section) => result.includes(section));
 		} else if (logic === Logic.OR) {
-			resultSet = new Set([...resultSet, ...result]);
+			resultSet = [...new Set([...resultSet, ...result])];
 		}
 
-		return Array.from(resultSet);
+		return resultSet;
 	}
 
 	private handleComp(node: Node, key: string) {

@@ -9,6 +9,15 @@ interface ZipFile {
 	rank: number;
 }
 
+export interface DatasetJSON {
+	InsightDataset: InsightDataset;
+	MappedSection: Record<string, Record<string | number, Section[]>>;
+}
+
+export interface DatasetIndexes {
+	[datasetID: string]: Record<string, Map<string | number, Section[]>>
+}
+
 const persistDir = "./data";
 
 export default class Adder {
@@ -68,7 +77,8 @@ export default class Adder {
 		}
 	}
 
-	public async writeToDisk(sections: Sections, datasetID: string, kind: InsightDatasetKind): Promise<InsightDataset> {
+	public async writeToDisk(sections: Sections, datasetID: string, kind: InsightDatasetKind):
+	Promise<{insightDataset: InsightDataset, datasetIndex: DatasetIndexes}> {
 		const data = sections.getSections();
 
 		const rows = data.length;
@@ -78,11 +88,8 @@ export default class Adder {
 			numRows: rows,
 		};
 
-		const datasetJSON: {
-			insightDataset: InsightDataset;
-			MappedSection: Record<string, Record<string | number, Section[]>>;
-		} = {
-			insightDataset: insight,
+		const datasetJSON: DatasetJSON = {
+			InsightDataset: insight,
 			MappedSection: {},
 		};
 
@@ -101,7 +108,15 @@ export default class Adder {
 		const filePath = `${persistDir}/${datasetID}.json`;
 		await fs.writeFile(filePath, jsonData);
 
-		return Promise.resolve(datasetJSON.insightDataset);
+		const datasetIndex: DatasetIndexes = {};
+		datasetIndex[datasetID] = this.indexes;
+
+		const result: {insightDataset: InsightDataset, datasetIndex: DatasetIndexes} = {
+			insightDataset: datasetJSON.InsightDataset,
+			datasetIndex: datasetIndex
+		};
+
+		return Promise.resolve(result);
 	}
 
 	private createIndex(fieldName: keyof Section, data: Section[]): void {

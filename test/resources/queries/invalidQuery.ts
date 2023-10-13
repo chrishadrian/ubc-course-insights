@@ -1,8 +1,8 @@
 const exceedLimitQuery = {
-	WHERE: {GT: {large_avg: 0}},
+	WHERE: {GT: {sections_avg: 87}},
 	OPTIONS: {
-		COLUMNS: ["large_avg"],
-		ORDER: "large_avg",
+		COLUMNS: ["sections_avg"],
+		ORDER: "sections_avg",
 	},
 };
 
@@ -129,7 +129,7 @@ const invalidEBNFFilterKey = {
 
 const invalidMultipleIDsQuery = {
 	WHERE: {
-		AND: [{GT: {sections_avg: 97}}, {IS: {ubc_dept: "math"}}],
+		AND: [{GT: {sections_avg: 97}}, {IS: {large_dept: "math"}}],
 	},
 	OPTIONS: {
 		COLUMNS: ["sections_dept", "sections_avg"],

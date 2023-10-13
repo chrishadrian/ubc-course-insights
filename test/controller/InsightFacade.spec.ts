@@ -767,7 +767,7 @@ describe("InsightFacade", function () {
 
 		folderTest<unknown, Promise<InsightResult[]>, PQErrorKind>(
 			"Dynamic InsightFacade PerformQuery tests",
-			(input) => facade.performQuery(input),
+			async (input) => await facade.performQuery(input),
 			"./test/resources/queries",
 			{
 				assertOnResult: async (actual, expected) => {

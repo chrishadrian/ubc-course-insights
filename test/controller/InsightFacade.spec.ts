@@ -25,6 +25,7 @@ import {
 	MoreComplexQuery,
 	MoreComplexQueryReturn0,
 	NegationQuery,
+	SimpleNegationQuery
 } from "../resources/queries/performQueryData";
 
 import {
@@ -405,7 +406,7 @@ describe("InsightFacade", function () {
 	describe("PerformQuery", function () {
 		before(async function () {
 			clearDisk();
-			sections = getContentFromArchives("halfPair.zip");
+			sections = getContentFromArchives("pair.zip");
 			facade = new InsightFacade();
 			try {
 				await facade.addDataset("sections", sections, InsightDatasetKind.Sections);
@@ -445,6 +446,15 @@ describe("InsightFacade", function () {
 			try {
 				const result = await facade.performQuery(LTOperatorQuery.input);
 				expect(result).have.deep.members(LTOperatorQuery.output);
+			} catch (err) {
+				expect.fail("Should not be rejected!");
+			}
+		});
+
+		it("should perform a very simple query with negation operator and return results", async function () {
+			try {
+				const result = await facade.performQuery(SimpleNegationQuery.input);
+				expect(result).have.deep.members(SimpleNegationQuery.output);
 			} catch (err) {
 				expect.fail("Should not be rejected!");
 			}

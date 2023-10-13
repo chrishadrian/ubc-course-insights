@@ -148,6 +148,9 @@ export default class WhereRe {
 			throw new InsightError();
 		}
 		let [id, field]: [string, string] = this.extractFieldIDString(keys[0]);
+		if (typeof mcomp[keys[0]] !== "number") {
+			throw new InsightError();
+		}
 		let value = mcomp[keys[0]] as number;
 		let nodes: Node[] = [];
 		if (comp === "LT") {
@@ -157,7 +160,7 @@ export default class WhereRe {
 			nodes.push({LT: {[field]: value}});
 			nodes.push({EQ: {[field]: value}});
 		} else {
-			nodes.push({GT: value});
+			nodes.push({GT: {[field]: value}});
 			nodes.push({LT: {[field]: value}});
 		}
 		return [{OR: nodes}, id];
@@ -185,7 +188,6 @@ export default class WhereRe {
 			return [{AND: nodes}, id];
 		}
 	}
-
 	private handleDoubleNegative(obj: Node): [Node, string] {
 		let keys = this.getKeysHelper(obj);
 		if (keys.length !== 1) {

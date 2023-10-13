@@ -82,7 +82,7 @@ export default class WhereRe {
 		if (typeof scomp[keys[0]] !== "string") {
 			throw new InsightError();
 		}
-		let value = "^(?!^(" + this.getRegex(scomp[keys[0]] as string) + ")$)";
+		let value = "^(?!^(" + this.getRegex(scomp[keys[0]] as string) + ")$)[*]{0,0}";
 		let newNode: Node = {[field]: value};
 		return [newNode, id];
 	}

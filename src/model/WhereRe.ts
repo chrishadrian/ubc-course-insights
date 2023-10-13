@@ -3,33 +3,35 @@ import {InsightError} from "../controller/IInsightFacade";
 export interface Node {
 	[key: string]: string | number | Node[] | Node;
 }
-
 export default class WhereRe {
 	private validateSKey(key: string): boolean {
-		const validateSKeyRegex = new RegExp("^[^_]+_((dept)|(id)|(instructor)|(title)|(uuid))");
+		const validateSKeyRegex = new RegExp("^[^_]+_((dept)|(id)|(instructor)|(title)|(uuid))$");
 		return validateSKeyRegex.test(key);
 	}
-
 	private validateMKey(key: string): boolean {
-		const validateMKeyRegex = new RegExp("^[^_]+_((avg)|(pass)|(fail)|(audit)|(year))");
+		const validateMKeyRegex = new RegExp("^[^_]+_((avg)|(pass)|(fail)|(audit)|(year))$");
 		return validateMKeyRegex.test(key);
 	}
-
-	private extractIDString(str: string): string {
-		let key = str.split("_", 2);
-		return key[0];
+	private extractFieldIDString(str: string): [string,string] {
+		let l = str.length;
+		let id: string = "";
+		let field: string = "";
+		let seen: boolean = false;
+		for (let i = 0; i < l; i++) {
+			if (seen === true) {
+				field = field + str[i];
+			} else if (str[i] === "_") {
+				seen = true;
+			} else if (seen === false) {
+				id = id + str[i];
+			}
+		}
+		return [id, field];
 	}
-
-	private extractField(str: string): string {
-		let field = str.split("_", 2);
-		return field[1];
-	}
-
 	private validateInputString(input: string): boolean {
-		const inputStringRegex = new RegExp("^[*]?[^*]*[*]?");
+		const inputStringRegex = new RegExp("^[*]?[^*]*[*]?$");
 		return inputStringRegex.test(input);
 	}
-
 	private getRegex(value: string): string {
 		let checkWildcard = new RegExp("[*]");
 		if (!checkWildcard.test(value)) {
@@ -44,8 +46,7 @@ export default class WhereRe {
 				regex = regex + value[i];
 			}
 		}
-		regex = regex + ")";
-		return regex;
+		return regex + ")$";;
 	}
 
 	private getKeysHelper(obj: unknown): string[] {
@@ -55,7 +56,6 @@ export default class WhereRe {
 		}
 		return keys;
 	}
-
 	private handleSComp(scomp: Node): [Node, string] {
 		let keys = this.getKeysHelper(scomp);
 		if (keys.length !== 1 || !this.validateSKey(keys[0])) {
@@ -64,8 +64,7 @@ export default class WhereRe {
 		if (!this.validateInputString(scomp[keys[0]] as string)) {
 			throw new InsightError();
 		}
-		let id: string = this.extractIDString(keys[0]);
-		let field = this.extractField(keys[0]);
+		let [id, field]: [string, string] = this.extractFieldIDString(keys[0]);
 		let value = this.getRegex(scomp[keys[0]] as string);
 		let newNode: Node = {[field]: value};
 		return [newNode, id];
@@ -79,8 +78,7 @@ export default class WhereRe {
 		if (!this.validateInputString(scomp[keys[0]] as string)) {
 			throw new InsightError();
 		}
-		let id: string = this.extractIDString(keys[0]);
-		let field = this.extractField(keys[0]);
+		let [id, field]: [string, string] = this.extractFieldIDString(keys[0]);
 		let value = "[^(" + this.getRegex(scomp[keys[0]] as string) + ")]";
 		let newNode: Node = {[field]: value};
 		return [newNode, id];
@@ -91,8 +89,10 @@ export default class WhereRe {
 		if (keys.length !== 1 || !this.validateMKey(keys[0])) {
 			throw new InsightError();
 		}
-		let id: string = this.extractIDString(keys[0]);
-		let field = this.extractField(keys[0]);
+		let [id, field]: [string, string] = this.extractFieldIDString(keys[0]);
+		if (!(mcomp[keys[0]] as number)) {
+			throw new InsightError("Not a node");
+		}
 		let value = mcomp[keys[0]] as number;
 		let newNode: Node = {[field]: value};
 		return [newNode, id];
@@ -148,8 +148,7 @@ export default class WhereRe {
 		if (keys.length !== 1 || !this.validateMKey(keys[0])) {
 			throw new InsightError();
 		}
-		let id: string = this.extractIDString(keys[0]);
-		let field = this.extractField(keys[0]);
+		let [id, field]: [string, string] = this.extractFieldIDString(keys[0]);
 		let value = mcomp[keys[0]] as number;
 		let nodes: Node[] = [];
 		if (comp === "LT") {
@@ -255,8 +254,10 @@ export default class WhereRe {
 		return [node, id];
 	}
 
-	// returns the root where node as well as the common id
 	public handleWhere(obj: unknown): [Node, string] {
+		if (!(obj as Node)) {
+			throw new InsightError("Not a node");
+		}
 		let where = obj as Node;
 		let keys = this.getKeysHelper(where);
 		if (keys.length > 1) {

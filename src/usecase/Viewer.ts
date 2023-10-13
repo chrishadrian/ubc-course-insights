@@ -1,5 +1,5 @@
 import * as fs from "fs-extra";
-import {InsightDataset, ResultTooLargeError} from "../controller/IInsightFacade";
+import {InsightDataset, InsightError, ResultTooLargeError} from "../controller/IInsightFacade";
 import Section from "../model/Section";
 import {Logic} from "../model/Where";
 import {DatasetJSON} from "./Adder";
@@ -34,7 +34,7 @@ export default class Viewer {
 		let result: Record<string, Map<string | number, Section[]>> = {};
 
 		if (!fs.existsSync(persistDir)) {
-			return Promise.resolve(result);
+			return Promise.reject(new InsightError("dataset does not exist"));
 		}
 
 		const fileContent = await fs.readFile(`${persistDir}/${datasetID}.json`);

@@ -13,9 +13,16 @@ export class Query {
 	}
 }
 
+interface IQuery {
+	WHERE: object;
+	OPTIONS: object;
+}
+
 export default class QueryEngine {
+
 	private whereDeveloper = new WhereRe();
 	public parseQuery(query: unknown): Query {
+		// throw new InsightError();
 		if (!this.validRoot(query)) {
 			throw new InsightError("Initial structure of query is incorrect");
 		}
@@ -53,13 +60,29 @@ export default class QueryEngine {
 	}
 
 	private extractField(str: string): string {
-		let field = str.split("_", 2);
-		return field[1];
+		let l = str.length;
+		let field: string = "";
+		let seen: boolean = false;
+		for (let i = 0; i < l; i++) {
+			if (seen === true) {
+				field = field + str[i];
+			} else if (str[i] === "_") {
+				seen = true;
+			}
+		}
+		return field;
 	}
 
 	private extractIDString(str: string): string {
-		let key = str.split("_", 2);
-		return key[0];
+		let l = str.length;
+		let id: string = "";
+		for (let i = 0; i < l; i++) {
+			if (str[i] === "_") {
+				break;
+			}
+			id = id + str[i];
+		}
+		return id;
 	}
 
 	private getKeysHelper(obj: unknown): string[] {
@@ -87,6 +110,16 @@ export default class QueryEngine {
 			let orderField = this.extractField(o[keys[1]]);
 			if (orderKey !== id) {
 				throw new InsightError("multiple order keys found");
+			}
+			let invalidOrderField: boolean = true;
+			for (let i of cols) {
+				if (i === orderField) {
+					invalidOrderField = false;
+					break;
+				}
+			}
+			if (invalidOrderField) {
+				throw new InsightError("invalid order field");
 			}
 			// options has the id already, just need to add fields
 			return new Options(id, cols, orderField);

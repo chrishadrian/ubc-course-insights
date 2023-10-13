@@ -209,7 +209,7 @@ const SimpleNegationQuery = {
 
 const NegationQuery = {
 	input: {
-		WHERE: {AND: [{NOT: {LT: {sections_avg: 98}}}, {GT: {sections_avg: 96}}, {IS: {sections_dept: "math"}}]},
+		WHERE: {AND: [{GT: {sections_avg: 96}}, {IS: {sections_dept: "math"}}, {NOT: {LT: {sections_avg: 98}}}]},
 		OPTIONS: {COLUMNS: ["sections_dept", "sections_id", "sections_avg"], ORDER: "sections_avg"},
 	},
 	output: [

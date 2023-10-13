@@ -144,9 +144,7 @@ export default class Viewer {
 	}
 
 	public filterByNode(root: Node, indexes: Record<string, Map<string | number, Section[]>>): Section[] {
-		let fields: string[] = [];
-		let values: string[][] = [];
-		let result: Section[] = [];
+		let fields: string[] = [], values: string[][] = [], result: Section[] = [], counter = 0;
 
 		const filterSections = (node: Node): Section[] => {
 			for (const key in node) {
@@ -161,6 +159,7 @@ export default class Viewer {
 								if ((currKey === Logic.AND) || (currKey === Logic.OR))  {
 									const newResult = (i === "0");
 									result = this.handleLogicMerge(Logic[key], result, tempResult, newResult);
+									counter += 1;
 								}
 							}
 						}
@@ -170,10 +169,7 @@ export default class Viewer {
 
 						return tempResult2;
 					} else {
-						let {field, fieldValue}: {
-							field: string,
-							fieldValue: string[];
-						} = this.handleComp(node, key);
+						let {field, fieldValue}: {field: string, fieldValue: string[]} = this.handleComp(node, key);
 						fields.push(field);
 						values.push(fieldValue);
 					}
@@ -188,7 +184,8 @@ export default class Viewer {
 				return this.filterByField(field, fieldValue, indexes);
 			}
 			const tempResult = filterSections(root);
-			result = this.handleLogicMerge(key, result, tempResult, false);
+			const newResult = counter === 0;
+			result = this.handleLogicMerge(key, result, tempResult, newResult);
 		}
 
 		return result;

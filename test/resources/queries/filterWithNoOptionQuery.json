@@ -14,11 +14,25 @@
 				"sections_instructor",
 				"sections_fail"
 			],
-			"ORDER": "sections_fail"
+			"ORDER": "sections_uuid"
 		}
 	},
 	"errorExpected": false,
 	"expected": [
+		{
+			"sections_uuid": "21789",
+			"sections_year": 1900,
+			"sections_title": "eval src evidenc",
+			"sections_instructor": "",
+			"sections_fail": 0
+		},
+		{
+			"sections_uuid": "21801",
+			"sections_year": 1900,
+			"sections_title": "meas in practice",
+			"sections_instructor": "",
+			"sections_fail": 0
+		},
 		{
 			"sections_uuid": "62474",
 			"sections_year": 2015,
@@ -34,23 +48,16 @@
 			"sections_fail": 0
 		},
 		{
-			"sections_uuid": "97727",
-			"sections_year": 2013,
-			"sections_title": "mult regres meth",
-			"sections_instructor": "lemay, valerie;tait, david e n",
-			"sections_fail": 0
-		},
-		{
-			"sections_uuid": "97728",
+			"sections_uuid": "71600",
 			"sections_year": 1900,
-			"sections_title": "mult regres meth",
+			"sections_title": "reas & dec-mking",
 			"sections_instructor": "",
-			"sections_fail": 0
+			"sections_fail": 1
 		},
 		{
-			"sections_uuid": "21789",
+			"sections_uuid": "71604",
 			"sections_year": 1900,
-			"sections_title": "eval src evidenc",
+			"sections_title": "meas in practice",
 			"sections_instructor": "",
 			"sections_fail": 0
 		},
@@ -69,20 +76,6 @@
 			"sections_fail": 0
 		},
 		{
-			"sections_uuid": "21801",
-			"sections_year": 1900,
-			"sections_title": "meas in practice",
-			"sections_instructor": "",
-			"sections_fail": 0
-		},
-		{
-			"sections_uuid": "71604",
-			"sections_year": 1900,
-			"sections_title": "meas in practice",
-			"sections_instructor": "",
-			"sections_fail": 0
-		},
-		{
 			"sections_uuid": "76505",
 			"sections_year": 1900,
 			"sections_title": "dev rehab prog",
@@ -97,11 +90,18 @@
 			"sections_fail": 0
 		},
 		{
-			"sections_uuid": "71600",
+			"sections_uuid": "97727",
+			"sections_year": 2013,
+			"sections_title": "mult regres meth",
+			"sections_instructor": "lemay, valerie;tait, david e n",
+			"sections_fail": 0
+		},
+		{
+			"sections_uuid": "97728",
 			"sections_year": 1900,
-			"sections_title": "reas & dec-mking",
+			"sections_title": "mult regres meth",
 			"sections_instructor": "",
-			"sections_fail": 1
+			"sections_fail": 0
 		}
 	]
 }

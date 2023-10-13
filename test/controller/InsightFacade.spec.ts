@@ -760,43 +760,43 @@ describe("InsightFacade", function () {
 		});
 	});
 
-	// describe("PerformQuery with foldertest", () => {
-	// 	before(async function () {
-	// 		clearDisk();
-	// 		sections = getContentFromArchives("halfPair.zip");
-	// 		facade = new InsightFacade();
-	// 		try {
-	// 			await facade.addDataset("sections", sections, InsightDatasetKind.Sections);
-	// 		} catch (err) {
-	// 			expect.fail("Should not be rejected!");
-	// 		}
-	// 	});
+	describe("PerformQuery with foldertest", () => {
+		before(async function () {
+			clearDisk();
+			sections = getContentFromArchives("halfPair.zip");
+			facade = new InsightFacade();
+			try {
+				await facade.addDataset("sections", sections, InsightDatasetKind.Sections);
+			} catch (err) {
+				expect.fail("Should not be rejected!");
+			}
+		});
 
-	// 	after(function () {
-	// 		clearDisk();
-	// 	});
+		after(function () {
+			clearDisk();
+		});
 
-	// 	type PQErrorKind = "ResultTooLargeError" | "InsightError";
+		type PQErrorKind = "ResultTooLargeError" | "InsightError";
 
-	// 	folderTest<unknown, Promise<InsightResult[]>, PQErrorKind>(
-	// 		"Dynamic InsightFacade PerformQuery tests",
-	// 		async (input) => await facade.performQuery(input),
-	// 		"./test/resources/queries",
-	// 		{
-	// 			assertOnResult: async (actual, expected) => {
-	// 				const expectedResult = await expected;
-	// 				expect(actual).have.deep.members(expectedResult);
-	// 			},
-	// 			errorValidator: (error): error is PQErrorKind =>
-	// 				error === "ResultTooLargeError" || error === "InsightError",
-	// 			assertOnError: (actual, expected) => {
-	// 				if (expected === "ResultTooLargeError") {
-	// 					expect(actual).to.be.instanceof(ResultTooLargeError);
-	// 				} else {
-	// 					expect(actual).to.be.instanceof(InsightError);
-	// 				}
-	// 			},
-	// 		}
-	// 	);
-	// });
+		folderTest<unknown, Promise<InsightResult[]>, PQErrorKind>(
+			"Dynamic InsightFacade PerformQuery tests",
+			async (input) => await facade.performQuery(input),
+			"./test/resources/queries",
+			{
+				assertOnResult: async (actual, expected) => {
+					const expectedResult = await expected;
+					expect(actual).have.deep.members(expectedResult);
+				},
+				errorValidator: (error): error is PQErrorKind =>
+					error === "ResultTooLargeError" || error === "InsightError",
+				assertOnError: (actual, expected) => {
+					if (expected === "ResultTooLargeError") {
+						expect(actual).to.be.instanceof(ResultTooLargeError);
+					} else {
+						expect(actual).to.be.instanceof(InsightError);
+					}
+				},
+			}
+		);
+	});
 });

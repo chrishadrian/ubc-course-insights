@@ -178,12 +178,31 @@ const LTOperatorQuery = {
 				"sections_title",
 				"sections_audit",
 				"sections_instructor",
-				"sections_fail",
+				"sections_fail"
 			],
 			ORDER: "sections_fail",
 		},
 	},
 	output: [],
+};
+
+const SimpleNegationQuery = {
+	input: {
+		WHERE: {
+		 NOT: {GT: {sections_avg: 10}}
+		},
+		OPTIONS: {
+		  COLUMNS: ["sections_dept","sections_avg"],
+		  ORDER: "sections_avg"
+		}
+	  },
+	output: [
+		{sections_dept:"frst",sections_avg:0},
+		{sections_dept:"lfs",sections_avg:0},
+		{sections_dept:"lfs",sections_avg:0},
+		{sections_dept:"wood",sections_avg:1},
+		{sections_dept:"busi",sections_avg:4},{sections_dept:"busi",sections_avg:4},
+		{sections_dept:"fopr",sections_avg:4.5}]
 };
 
 const NegationQuery = {
@@ -255,13 +274,8 @@ const MoreComplexQueryReturn0 = {
 			],
 		},
 		OPTIONS: {
-			COLUMNS: [
-				"sections_uuid",
-				"sections_year",
-				"sections_title",
-				"sections_audit",
-				"sections_instructor",
-				"sections_fail",
+			COLUMNS: ["sections_uuid","sections_year","sections_title",
+				"sections_audit","sections_instructor","sections_fail",
 			],
 			ORDER: "sections_fail",
 		},
@@ -280,6 +294,7 @@ export {
 	wildCardQueryD,
 	LTOperatorQuery,
 	NegationQuery,
+	SimpleNegationQuery,
 	MoreComplexQuery,
 	MoreComplexQueryReturn0,
 };

@@ -103,7 +103,7 @@ export default class WhereRe {
 		if (logic.length < 1) {
 			throw new InsightError("empty logic");
 		}
-		let orNodes: Node[] = [];
+		let orAndNodes: Node[] = [];
 		let nodes: Node[] = [];
 		let idPrev: string;
 		let id: string = "";
@@ -120,12 +120,15 @@ export default class WhereRe {
 					nodes.push({IS: child} as Node);
 					break;
 				case "NOT": [child, id] = this.handleNot(i[keys[0]] as Node);
+					if ("OR" in child || "AND" in child) {
+						orAndNodes.push(child);
+						break;
+					}
 					nodes.push(child);
 					break;
-				case "OR": [children, id] = this.handleLogic(i[keys[0]] as Node[]);
-					orNodes.push({[keys[0]]: children} as Node);
+				case "OR":
 				case "AND": [children, id] = this.handleLogic(i[keys[0]] as Node[]);
-					nodes.push({[keys[0]]: children} as Node);
+					orAndNodes.push({[keys[0]]: children} as Node);
 					break;
 				case "LT":
 				case "GT":
@@ -139,7 +142,7 @@ export default class WhereRe {
 				throw new InsightError("multiple ids found");
 			}
 		}
-		return [orNodes.concat(nodes), id];
+		return [orAndNodes.concat(nodes), id];
 	}
 	private handleNotMComp(mcomp: Node, comp: string): [Node, string] {
 		let keys = this.getKeysHelper(mcomp);
@@ -168,6 +171,7 @@ export default class WhereRe {
 		if (logic.length < 1) {
 			throw new InsightError("empty logic");
 		}
+		let orAndNodes: Node[] = [];
 		let nodes: Node[] = [];
 		let idPrev: string;
 		let id: string = "";
@@ -178,12 +182,16 @@ export default class WhereRe {
 			if (idPrev !== "" && idPrev !== id) {
 				throw new InsightError("multiple ids found");
 			}
-			nodes.push(child);
+			if ("OR" in child || "AND" in child) {
+				orAndNodes.push(child);
+			} else {
+				nodes.push(child);
+			}
 		}
 		if (key === "AND") {
-			return [{OR: nodes}, id];
+			return [{OR: orAndNodes.concat(nodes)}, id];
 		} else {
-			return [{AND: nodes}, id];
+			return [{AND: orAndNodes.concat(nodes)}, id];
 		}
 	}
 	private handleDoubleNegative(obj: Node): [Node, string] {
@@ -196,8 +204,7 @@ export default class WhereRe {
 		let child: Node = {};
 		let children: Node[] = [];
 		switch (keys[0]) {
-			case "IS":
-				[child, id] = this.handleSComp(obj[keys[0]] as Node);
+			case "IS": [child, id] = this.handleSComp(obj[keys[0]] as Node);
 				node = {[keys[0]]: child};
 				break;
 			case "NOT": [node, id] = this.handleNot(obj[keys[0]] as Node);
@@ -232,7 +239,6 @@ export default class WhereRe {
 				[node, id] = this.handleDoubleNegative(not[keys[0]] as Node);
 				break;
 			case "OR":
-				break;
 			case "AND": [node, id] = this.handleNotLogic(not[keys[0]] as Node[], keys[0]);
 				break;
 			case "LT":

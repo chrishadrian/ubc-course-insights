@@ -4,6 +4,7 @@ import {expect, use} from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {clearDisk, getContentFromArchives} from "../TestUtil";
 import {veryComplexQuery} from "../resources/queries/abc";
+import { SimpleNegationQuery } from "../resources/queries/performQueryData";
 
 use(chaiAsPromised);
 
@@ -12,7 +13,7 @@ describe("InsightFacade", function () {
 	let sections: string;
 
 	before(function () {
-		sections = getContentFromArchives("halfPair.zip");
+		sections = getContentFromArchives("pair.zip");
 
 		clearDisk();
 	});
@@ -29,9 +30,9 @@ describe("InsightFacade", function () {
 				try {
 					const result = await facade.addDataset(datasetID, sections, InsightDatasetKind.Sections);
 					expect(result).to.deep.equal([datasetID]);
-					const queryResult = await facade.performQuery(veryComplexQuery.input);
+					const queryResult = await facade.performQuery(SimpleNegationQuery.input);
 
-					expect(queryResult).have.deep.members(veryComplexQuery.expected);
+					expect(queryResult).have.deep.members(SimpleNegationQuery.output);
 				} catch (err) {
 					console.error("Found error: ", err);
 				}

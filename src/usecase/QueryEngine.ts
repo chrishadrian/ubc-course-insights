@@ -59,6 +59,23 @@ export default class QueryEngine {
 		return validKeyRegex.test(key);
 	}
 
+	private extractFieldIDString(str: string): [string,string] {
+		let l = str.length;
+		let id: string = "";
+		let field: string = "";
+		let seen: boolean = false;
+		for (let i = 0; i < l; i++) {
+			if (seen === true) {
+				field = field + str[i];
+			} else if (str[i] === "_") {
+				seen = true;
+			} else if (seen === false) {
+				id = id + str[i];
+			}
+		}
+		return [id, field];
+	}
+
 	private extractField(str: string): string {
 		let l = str.length;
 		let field: string = "";
@@ -106,8 +123,9 @@ export default class QueryEngine {
 			if (!this.validateMSKey(o[keys[1]])) {
 				throw new InsightError("the key provided in order is incorrectly formatted");
 			}
-			let orderKey = this.extractIDString(o[keys[1]]);
-			let orderField = this.extractField(o[keys[1]]);
+			let [orderKey, orderField] = this.extractFieldIDString(o[keys[1]]);
+			// let orderKey = this.extractIDString(o[keys[1]]);
+			// let orderField = this.extractField(o[keys[1]]);
 			if (orderKey !== id) {
 				throw new InsightError("multiple order keys found");
 			}

@@ -189,41 +189,32 @@ const LTOperatorQuery = {
 const SimpleNegationQuery = {
 	input: {
 		WHERE: {
-		 NOT: {GT: {sections_avg: 10}}
+			NOT: {GT: {sections_avg: 10}},
 		},
 		OPTIONS: {
-		  COLUMNS: ["sections_dept","sections_avg"],
-		  ORDER: "sections_avg"
-		}
-	  },
+			COLUMNS: ["sections_dept", "sections_avg"],
+			ORDER: "sections_avg",
+		},
+	},
 	output: [
-		{sections_dept:"frst",sections_avg:0},
-		{sections_dept:"lfs",sections_avg:0},
-		{sections_dept:"lfs",sections_avg:0},
-		{sections_dept:"wood",sections_avg:1},
-		{sections_dept:"busi",sections_avg:4},{sections_dept:"busi",sections_avg:4},
-		{sections_dept:"fopr",sections_avg:4.5}]
+		{sections_dept: "frst", sections_avg: 0},
+		{sections_dept: "lfs", sections_avg: 0},
+		{sections_dept: "lfs", sections_avg: 0},
+		{sections_dept: "wood", sections_avg: 1},
+		{sections_dept: "busi", sections_avg: 4},
+		{sections_dept: "busi", sections_avg: 4},
+		{sections_dept: "fopr", sections_avg: 4.5},
+	],
 };
 
 const NegationQuery = {
 	input: {
-		WHERE: {AND: [{GT: {sections_avg: 96}}, {IS: {sections_dept: "math"}}, {NOT: {GT: {sections_avg: 98}}}]},
+		WHERE: {AND: [{NOT: {LT: {sections_avg: 98}}}, {GT: {sections_avg: 96}}, {IS: {sections_dept: "math"}}]},
 		OPTIONS: {COLUMNS: ["sections_dept", "sections_id", "sections_avg"], ORDER: "sections_avg"},
 	},
 	output: [
-		{sections_dept: "math", sections_id: "516", sections_avg: 96.25},
-		{sections_dept: "math", sections_id: "516", sections_avg: 96.25},
-		{sections_dept: "math", sections_id: "589", sections_avg: 96.33},
-		{sections_dept: "math", sections_id: "502", sections_avg: 96.44},
-		{sections_dept: "math", sections_id: "502", sections_avg: 96.44},
-		{sections_dept: "math", sections_id: "545", sections_avg: 96.83},
-		{sections_dept: "math", sections_id: "545", sections_avg: 96.83},
-		{sections_dept: "math", sections_id: "541", sections_avg: 97.09},
-		{sections_dept: "math", sections_id: "541", sections_avg: 97.09},
-		{sections_dept: "math", sections_id: "525", sections_avg: 97.25},
-		{sections_dept: "math", sections_id: "525", sections_avg: 97.25},
-		{sections_dept: "math", sections_id: "532", sections_avg: 97.48},
-		{sections_dept: "math", sections_id: "532", sections_avg: 97.48},
+		{sections_dept: "math", sections_id: "527", sections_avg: 99.78},
+		{sections_dept: "math", sections_id: "527", sections_avg: 99.78},
 	],
 };
 
@@ -274,8 +265,13 @@ const MoreComplexQueryReturn0 = {
 			],
 		},
 		OPTIONS: {
-			COLUMNS: ["sections_uuid","sections_year","sections_title",
-				"sections_audit","sections_instructor","sections_fail",
+			COLUMNS: [
+				"sections_uuid",
+				"sections_year",
+				"sections_title",
+				"sections_audit",
+				"sections_instructor",
+				"sections_fail",
 			],
 			ORDER: "sections_fail",
 		},

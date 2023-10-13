@@ -58,12 +58,8 @@ export default class Viewer {
 		indexes: Record<string, Map<string | number, Section[]>>,
 		currentResult: Section[]
 	): Section[] {
-		let resultSet: Set<Section> = new Set([...currentResult]);
+		let resultSet: Section[] = currentResult;
 		let newResult: boolean = true;
-
-		const isSectionEqual = (a: Section, b: Section): boolean => {
-			return a.uuid === b.uuid;
-		};
 
 		for (let j = 0; j < fieldNames.length; j++) {
 			const fieldName = fieldNames[j];
@@ -71,22 +67,18 @@ export default class Viewer {
 			const filteredData = this.filterByField(fieldName, valueArray, indexes);
 
 			if (operation === Logic.AND) {
-				if (newResult && resultSet.size === 0) {
-					resultSet = new Set(filteredData);
+				if (newResult && resultSet.length === 0) {
+					resultSet = filteredData;
 					newResult = false;
 				} else {
-					resultSet = new Set(
-						[...resultSet].filter((section) =>
-							filteredData.some((filteredSection) => isSectionEqual(section, filteredSection))
-						)
-					);
+					resultSet = resultSet.filter((section) => filteredData.includes(section));
 				}
 			} else if (operation === Logic.OR) {
-				resultSet = new Set([...resultSet, ...filteredData]);
+				resultSet = [...new Set([...resultSet, ...filteredData])];
 			}
 		}
 
-		return Array.from(resultSet);
+		return resultSet;
 	}
 
 	private filterByField(
@@ -193,29 +185,21 @@ export default class Viewer {
 	}
 
 	private handleLogicMerge(logic: Logic, currResult: Section[], result: Section[], newResult: boolean): Section[]{
-		const isSectionEqual = (a: Section, b: Section): boolean => {
-			return a.uuid === b.uuid;
-		};
-
-		let resultSet: Set<Section>;
+		let resultSet: Section[] = [];
 
 		if (newResult) {
-			resultSet = new Set(result);
+			resultSet = result;
 		} else {
-			resultSet = new Set([...currResult]);
+			resultSet = currResult;
 		}
 
 		if (logic === Logic.AND) {
-			resultSet = new Set(
-				[...resultSet].filter((section) =>
-					result.some((filteredSection) => isSectionEqual(section, filteredSection))
-				)
-			);
+			resultSet = resultSet.filter((section) => result.includes(section));
 		} else if (logic === Logic.OR) {
-			resultSet = new Set([...resultSet, ...result]);
+			resultSet = [...new Set([...resultSet, ...result])];
 		}
 
-		return Array.from(resultSet);
+		return resultSet;
 	}
 
 	private handleComp(node: Node, key: string) {

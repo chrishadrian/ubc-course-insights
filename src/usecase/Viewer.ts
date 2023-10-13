@@ -1,7 +1,8 @@
 import * as fs from "fs-extra";
-import {InsightDataset} from "../controller/IInsightFacade";
+import {InsightDataset, ResultTooLargeError} from "../controller/IInsightFacade";
 import Section from "../model/Section";
 import {Logic} from "../model/Where";
+import { DatasetJSON } from "./Adder";
 const persistDir = "./data";
 
 export interface Node {
@@ -20,11 +21,8 @@ export default class Viewer {
 
 		files.forEach((file) => {
 			const fileContent = fs.readFileSync(`${persistDir}/${file}`).toString();
-			const obj: {
-				insightDataset: InsightDataset;
-				MappedSection: Record<string, Record<string | number, Section[]>>;
-			} = JSON.parse(fileContent);
-			result.push(obj.insightDataset);
+			const obj: DatasetJSON = JSON.parse(fileContent);
+			result.push(obj.InsightDataset);
 		});
 
 		return result;
@@ -186,6 +184,9 @@ export default class Viewer {
 			const tempResult = filterSections(root);
 			const newResult = counter === 0;
 			result = this.handleLogicMerge(key, result, tempResult, newResult);
+		}
+		if (result.length > 5000) {
+			throw ResultTooLargeError;
 		}
 
 		return result;

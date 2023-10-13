@@ -1,5 +1,5 @@
 const exceedLimitQuery = {
-	WHERE: {GT: {large_avg: 0}},
+	WHERE: {GT: {large_avg: 87}},
 	OPTIONS: {
 		COLUMNS: ["large_avg"],
 		ORDER: "large_avg",

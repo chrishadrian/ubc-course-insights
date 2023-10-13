@@ -1,4 +1,7 @@
-import {IInsightFacade, InsightDataset, InsightDatasetKind, InsightError, InsightResult} from "./IInsightFacade";
+import {
+	IInsightFacade, InsightDataset, InsightDatasetKind,
+	InsightError, InsightResult, ResultTooLargeError
+} from "./IInsightFacade";
 import Adder, {DatasetIndexes} from "../usecase/Adder";
 import Validator from "../util/validator";
 import Remover from "../usecase/Remover";
@@ -96,7 +99,10 @@ export default class InsightFacade implements IInsightFacade {
 
 			return Promise.resolve(result);
 		} catch (err) {
-			return Promise.reject(err);
+			if (err instanceof ResultTooLargeError) {
+				return Promise.reject(new ResultTooLargeError());
+			}
+			return Promise.reject(`Perform query error: ${err}`);
 		}
 	}
 

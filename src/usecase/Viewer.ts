@@ -176,19 +176,29 @@ export default class Viewer {
 			return [];
 		};
 
+		result = this.startFilterByNode(root, result, indexes, filterSections, counter);
+
+		return result;
+	}
+
+	private startFilterByNode (
+		root: Node, result: Section[],
+		indexes: Record<string, Map<string | number, Section[]>>,
+		filterSections: (node: Node) => Section[], counter: number
+	) {
 		for (const key in root) {
 			if (key !== Logic.AND && key !== Logic.OR) {
-				const {field, fieldValue}: {field: string; fieldValue: string[];} = this.handleComp(root, key);
-				return this.filterByField(field, fieldValue, indexes);
+				const { field, fieldValue }: { field: string; fieldValue: string[]; } = this.handleComp(root, key);
+				result = this.filterByField(field, fieldValue, indexes);
+			} else {
+				const tempResult = filterSections(root);
+				const newResult = counter === 0;
+				result = this.handleLogicMerge(key, result, tempResult, newResult);
 			}
-			const tempResult = filterSections(root);
-			const newResult = counter === 0;
-			result = this.handleLogicMerge(key, result, tempResult, newResult);
 		}
 		if (result.length > 5000) {
-			throw ResultTooLargeError;
+			throw new ResultTooLargeError();
 		}
-
 		return result;
 	}
 

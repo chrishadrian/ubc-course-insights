@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 export const veryComplexQuery = {
 	input: {
 		WHERE: {
@@ -6,170 +7,312 @@ export const veryComplexQuery = {
 					AND: [
 						{
 							GT: {
-								sections_fail: 96,
-							},
+								sections_avg: 90
+							}
 						},
 						{
 							IS: {
-								sections_instructor: "a*",
-							},
-						},
-					],
+								sections_dept: "adhe"
+							}
+						}
+					]
 				},
 				{
-					AND: [
-						{
-							LT: {
-								sections_audit: 1,
-							},
-						},
-						{
-							IS: {
-								sections_title: "*media 1*",
-							},
-						},
-					],
-				},
-				{
-					AND: [
-						{
-							EQ: {
-								sections_year: 2023,
-							},
-						},
-						{
-							IS: {
-								sections_uuid: "*123*",
-							},
-						},
-					],
-				},
-			],
+					EQ: {
+						sections_avg: 95
+					}
+				}
+			]
 		},
 		OPTIONS: {
 			COLUMNS: [
-				"sections_uuid",
-				"sections_year",
-				"sections_title",
-				"sections_audit",
-				"sections_instructor",
-				"sections_fail",
+				"sections_dept",
+				"sections_id",
+				"sections_avg"
 			],
-			ORDER: "sections_uuid",
-		},
+			ORDER: "sections_avg"
+		}
 	},
 	expected: [
 		{
-			sections_uuid: "10508",
-			sections_year: 2010,
-			sections_title: "design media 1",
-			sections_audit: 0,
-			sections_instructor: "beca, bryan",
-			sections_fail: 1,
+			sections_dept: "adhe",
+			sections_id: "329",
+			sections_avg: 90.02
 		},
 		{
-			sections_uuid: "10509",
-			sections_year: 1900,
-			sections_title: "design media 1",
-			sections_audit: 0,
-			sections_instructor: "",
-			sections_fail: 1,
+			sections_dept: "adhe",
+			sections_id: "412",
+			sections_avg: 90.16
 		},
 		{
-			sections_uuid: "11232",
-			sections_year: 2012,
-			sections_title: "design media 1",
-			sections_audit: 0,
-			sections_instructor: "beca, bryan",
-			sections_fail: 0,
+			sections_dept: "adhe",
+			sections_id: "330",
+			sections_avg: 90.17
 		},
 		{
-			sections_uuid: "11233",
-			sections_year: 1900,
-			sections_title: "design media 1",
-			sections_audit: 0,
-			sections_instructor: "",
-			sections_fail: 0,
+			sections_dept: "adhe",
+			sections_id: "412",
+			sections_avg: 90.18
 		},
 		{
-			sections_uuid: "28474",
-			sections_year: 2009,
-			sections_title: "design media 1",
-			sections_audit: 0,
-			sections_instructor: "bass, john;soules, matthew",
-			sections_fail: 0,
+			sections_dept: "adhe",
+			sections_id: "330",
+			sections_avg: 90.5
 		},
 		{
-			sections_uuid: "28475",
-			sections_year: 1900,
-			sections_title: "design media 1",
-			sections_audit: 0,
-			sections_instructor: "",
-			sections_fail: 0,
+			sections_dept: "adhe",
+			sections_id: "330",
+			sections_avg: 90.72
 		},
 		{
-			sections_uuid: "36811",
-			sections_year: 2007,
-			sections_title: "design media 1",
-			sections_audit: 0,
-			sections_instructor: "bass, john;lewis, martin",
-			sections_fail: 0,
+			sections_dept: "adhe",
+			sections_id: "329",
+			sections_avg: 90.82
 		},
 		{
-			sections_uuid: "36812",
-			sections_year: 1900,
-			sections_title: "design media 1",
-			sections_audit: 0,
-			sections_instructor: "",
-			sections_fail: 0,
+			sections_dept: "adhe",
+			sections_id: "330",
+			sections_avg: 90.85
 		},
 		{
-			sections_uuid: "59291",
-			sections_year: 2011,
-			sections_title: "design media 1",
-			sections_audit: 0,
-			sections_instructor: "bass, john",
-			sections_fail: 0,
+			sections_dept: "adhe",
+			sections_id: "330",
+			sections_avg: 91.29
 		},
 		{
-			sections_uuid: "59292",
-			sections_year: 1900,
-			sections_title: "design media 1",
-			sections_audit: 0,
-			sections_instructor: "",
-			sections_fail: 0,
+			sections_dept: "adhe",
+			sections_id: "330",
+			sections_avg: 91.33
 		},
 		{
-			sections_uuid: "65766",
-			sections_year: 2008,
-			sections_title: "design media 1",
-			sections_audit: 0,
-			sections_instructor: "",
-			sections_fail: 0,
+			sections_dept: "adhe",
+			sections_id: "330",
+			sections_avg: 91.33
 		},
 		{
-			sections_uuid: "65767",
-			sections_year: 1900,
-			sections_title: "design media 1",
-			sections_audit: 0,
-			sections_instructor: "",
-			sections_fail: 0,
+			sections_dept: "adhe",
+			sections_id: "330",
+			sections_avg: 91.48
 		},
 		{
-			sections_uuid: "77513",
-			sections_year: 2013,
-			sections_title: "design media 1",
-			sections_audit: 0,
-			sections_instructor: "bass, john",
-			sections_fail: 0,
+			sections_dept: "adhe",
+			sections_id: "329",
+			sections_avg: 92.54
 		},
 		{
-			sections_uuid: "77514",
-			sections_year: 1900,
-			sections_title: "design media 1",
-			sections_audit: 0,
-			sections_instructor: "",
-			sections_fail: 0,
+			sections_dept: "adhe",
+			sections_id: "329",
+			sections_avg: 93.33
 		},
+		{
+			sections_dept: "sowk",
+			sections_id: "570",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "rhsc",
+			sections_id: "501",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "psyc",
+			sections_id: "501",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "psyc",
+			sections_id: "501",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "obst",
+			sections_id: "549",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "nurs",
+			sections_id: "424",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "nurs",
+			sections_id: "424",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "musc",
+			sections_id: "553",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "musc",
+			sections_id: "553",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "musc",
+			sections_id: "553",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "musc",
+			sections_id: "553",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "musc",
+			sections_id: "553",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "musc",
+			sections_id: "553",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "mtrl",
+			sections_id: "599",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "mtrl",
+			sections_id: "564",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "mtrl",
+			sections_id: "564",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "math",
+			sections_id: "532",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "math",
+			sections_id: "532",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "kin",
+			sections_id: "500",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "kin",
+			sections_id: "500",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "kin",
+			sections_id: "499",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "epse",
+			sections_id: "682",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "epse",
+			sections_id: "682",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "epse",
+			sections_id: "606",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "edcp",
+			sections_id: "473",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "edcp",
+			sections_id: "473",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "econ",
+			sections_id: "516",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "econ",
+			sections_id: "516",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "crwr",
+			sections_id: "599",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "crwr",
+			sections_id: "599",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "crwr",
+			sections_id: "599",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "crwr",
+			sections_id: "599",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "crwr",
+			sections_id: "599",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "crwr",
+			sections_id: "599",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "crwr",
+			sections_id: "599",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "cpsc",
+			sections_id: "589",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "cpsc",
+			sections_id: "589",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "cnps",
+			sections_id: "535",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "cnps",
+			sections_id: "535",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "bmeg",
+			sections_id: "597",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "bmeg",
+			sections_id: "597",
+			sections_avg: 95
+		},
+		{
+			sections_dept: "adhe",
+			sections_id: "329",
+			sections_avg: 96.11
+		}
 	],
 };

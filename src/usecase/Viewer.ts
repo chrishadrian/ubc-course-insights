@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 import * as fs from "fs-extra";
 import {InsightDataset, InsightError, ResultTooLargeError} from "../controller/IInsightFacade";
 import Section from "../model/Section";
@@ -109,7 +110,7 @@ export default class Viewer {
 				}
 				return result;
 			} else {
-				const sections = indexes[fieldName]?.get(values[0].toString()) || [];
+				const sections = indexes[fieldName].get(values[0]) || [];
 				result.push(...sections);
 				return result;
 			}
@@ -176,19 +177,9 @@ export default class Viewer {
 			return [];
 		};
 
-		result = this.startFilterByNode(root, result, indexes, filterSections, counter);
-
-		return result;
-	}
-
-	private startFilterByNode (
-		root: Node, result: Section[],
-		indexes: Record<string, Map<string | number, Section[]>>,
-		filterSections: (node: Node) => Section[], counter: number
-	) {
 		for (const key in root) {
 			if (key !== Logic.AND && key !== Logic.OR) {
-				const { field, fieldValue }: { field: string; fieldValue: string[]; } = this.handleComp(root, key);
+				const {field, fieldValue}: {field: string; fieldValue: string[];} = this.handleComp(root, key);
 				result = this.filterByField(field, fieldValue, indexes);
 			} else {
 				const tempResult = filterSections(root);
@@ -199,6 +190,7 @@ export default class Viewer {
 		if (result.length > 5000) {
 			throw new ResultTooLargeError();
 		}
+
 		return result;
 	}
 

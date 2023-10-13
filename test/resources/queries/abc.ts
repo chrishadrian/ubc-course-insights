@@ -1,37 +1,9 @@
-/* eslint-disable max-lines */
 export const veryComplexQuery = {
 	input: {
 		WHERE: {
-			OR: [
-				{
-					AND: [
-						{
-							GT: {
-								sections_avg: 90
-							}
-						},
-						{
-							IS: {
-								sections_dept: "adhe"
-							}
-						}
-					]
-				},
-				{
-					EQ: {
-						sections_avg: 95
-					}
-				}
-			]
+			OR: [{AND: [{GT: {sections_avg: 90}},{IS: {sections_dept: "adhe"}}]},{EQ: {sections_avg: 95}}]
 		},
-		OPTIONS: {
-			COLUMNS: [
-				"sections_dept",
-				"sections_id",
-				"sections_avg"
-			],
-			ORDER: "sections_avg"
-		}
+		OPTIONS: {COLUMNS: ["sections_dept","sections_id","sections_avg"], ORDER: "sections_avg"}
 	},
 	expected: [
 		{

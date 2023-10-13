@@ -141,7 +141,6 @@ export default class Viewer {
 		return result;
 	}
 
-	// eslint-disable-next-line max-lines-per-function
 	public filterByNode(root: Node, indexes: Record<string, Map<string | number, Section[]>>): Section[] {
 		let fields: string[] = [], values: string[][] = [], result: Section[] = [], counter = 0;
 
@@ -165,7 +164,6 @@ export default class Viewer {
 						const tempResult2 = this.filterByFields(Logic[key], fields, values, indexes, tempResult);
 						fields = [];
 						values = [];
-
 						return tempResult2;
 					} else {
 						let {field, fieldValue}: {field: string, fieldValue: string[]} = this.handleComp(node, key);

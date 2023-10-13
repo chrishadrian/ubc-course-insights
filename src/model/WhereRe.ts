@@ -1,5 +1,4 @@
 import {InsightError} from "../controller/IInsightFacade";
-
 export interface Node {
 	[key: string]: string | number | Node[] | Node;
 }
@@ -48,7 +47,6 @@ export default class WhereRe {
 		}
 		return regex + ")$";;
 	}
-
 	private getKeysHelper(obj: unknown): string[] {
 		let keys = [];
 		for (const i in obj as any) {
@@ -65,11 +63,13 @@ export default class WhereRe {
 			throw new InsightError();
 		}
 		let [id, field]: [string, string] = this.extractFieldIDString(keys[0]);
+		if (typeof scomp[keys[0]] !== "string") {
+			throw new InsightError();
+		}
 		let value = this.getRegex(scomp[keys[0]] as string);
 		let newNode: Node = {[field]: value};
 		return [newNode, id];
 	}
-
 	private handleNotSComp(scomp: Node): [Node, string] {
 		let keys = this.getKeysHelper(scomp);
 		if (keys.length !== 1 || !this.validateSKey(keys[0])) {
@@ -83,15 +83,14 @@ export default class WhereRe {
 		let newNode: Node = {[field]: value};
 		return [newNode, id];
 	}
-
 	private handleMComp(mcomp: Node): [Node, string] {
 		let keys = this.getKeysHelper(mcomp);
 		if (keys.length !== 1 || !this.validateMKey(keys[0])) {
 			throw new InsightError();
 		}
 		let [id, field]: [string, string] = this.extractFieldIDString(keys[0]);
-		if (!(mcomp[keys[0]] as number)) {
-			throw new InsightError("Not a node");
+		if (typeof mcomp[keys[0]] !== "number") {
+			throw new InsightError();
 		}
 		let value = mcomp[keys[0]] as number;
 		let newNode: Node = {[field]: value};

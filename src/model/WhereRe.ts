@@ -4,11 +4,11 @@ export interface Node {
 }
 export default class WhereRe {
 	private validateSKey(key: string): boolean {
-		const validateSKeyRegex = new RegExp("^[^_]+_((dept)|(id)|(instructor)|(title)|(uuid))$");
+		const validateSKeyRegex = new RegExp("^([^_]+_((dept)|(id)|(instructor)|(title)|(uuid)))$");
 		return validateSKeyRegex.test(key);
 	}
 	private validateMKey(key: string): boolean {
-		const validateMKeyRegex = new RegExp("^[^_]+_((avg)|(pass)|(fail)|(audit)|(year))$");
+		const validateMKeyRegex = new RegExp("^([^_]+_((avg)|(pass)|(fail)|(audit)|(year)))$");
 		return validateMKeyRegex.test(key);
 	}
 	private extractFieldIDString(str: string): [string,string] {
@@ -82,7 +82,7 @@ export default class WhereRe {
 		if (typeof scomp[keys[0]] !== "string") {
 			throw new InsightError();
 		}
-		let value = "[^(" + this.getRegex(scomp[keys[0]] as string) + ")]";
+		let value = "^(?!^(" + this.getRegex(scomp[keys[0]] as string) + ")$)";
 		let newNode: Node = {[field]: value};
 		return [newNode, id];
 	}

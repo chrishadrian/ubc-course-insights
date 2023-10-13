@@ -1,4 +1,3 @@
-/* eslint-disable max-lines-per-function */
 import * as fs from "fs-extra";
 import {InsightDataset, InsightError, ResultTooLargeError} from "../controller/IInsightFacade";
 import Section from "../model/Section";
@@ -142,6 +141,7 @@ export default class Viewer {
 		return result;
 	}
 
+	// eslint-disable-next-line max-lines-per-function
 	public filterByNode(root: Node, indexes: Record<string, Map<string | number, Section[]>>): Section[] {
 		let fields: string[] = [], values: string[][] = [], result: Section[] = [], counter = 0;
 

@@ -4,7 +4,7 @@ import {expect, use} from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {clearDisk, getContentFromArchives} from "../TestUtil";
 import {veryComplexQuery} from "../resources/queries/abc";
-import { NegationQuery } from "../resources/queries/performQueryData";
+import {NegationQuery} from "../resources/queries/performQueryData";
 
 use(chaiAsPromised);
 

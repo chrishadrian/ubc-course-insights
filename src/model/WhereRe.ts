@@ -120,16 +120,15 @@ export default class WhereRe {
 					nodes.push({IS: child} as Node);
 					break;
 				case "NOT": [child, id] = this.handleNot(i[keys[0]] as Node);
-					if ("OR" in child) {
+					if ("OR" in child || "AND" in child) {
 						orNodes.push(child);
 						break;
 					}
 					nodes.push(child);
 					break;
-				case "OR": [children, id] = this.handleLogic(i[keys[0]] as Node[]);
-					orNodes.push({[keys[0]]: children} as Node);
+				case "OR":
 				case "AND": [children, id] = this.handleLogic(i[keys[0]] as Node[]);
-					nodes.push({[keys[0]]: children} as Node);
+					orNodes.push({[keys[0]]: children} as Node);
 					break;
 				case "LT":
 				case "GT":

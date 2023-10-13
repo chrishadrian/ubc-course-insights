@@ -546,8 +546,6 @@ describe("InsightFacade", function () {
 
 		it("should reject queries that exceed the result limit", async function () {
 			try {
-				// const largeContent = getContentFromArchives("halfPair.zip");
-				// await facade.addDataset("large", largeContent, InsightDatasetKind.Sections);
 				await facade.performQuery(exceedLimitQuery);
 				expect.fail("Should have rejected!");
 			} catch (err) {

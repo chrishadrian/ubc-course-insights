@@ -1,15 +1,15 @@
 import {IInsightFacade, InsightDataset, InsightDatasetKind, InsightError, InsightResult} from "./IInsightFacade";
-import Adder from "../usecase/Adder";
+import Adder, { DatasetIndexes } from "../usecase/Adder";
 import Validator from "../util/validator";
 import Remover from "../usecase/Remover";
 import Viewer, {Node} from "../usecase/Viewer";
 import QueryEngine from "../usecase/QueryEngine";
-import {FieldFilters, Logic} from "../model/Where";
 
 export default class InsightFacade implements IInsightFacade {
 	private validator;
 	private datasetIDs: string[];
 	private datasets: InsightDataset[];
+	private indexes: DatasetIndexes;
 
 	constructor() {
 		const viewer = new Viewer();
@@ -17,6 +17,7 @@ export default class InsightFacade implements IInsightFacade {
 		this.validator = new Validator();
 		this.datasetIDs = [];
 		this.datasets = viewer.getInsightDatasets();
+		this.indexes = {};
 	}
 
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
@@ -30,9 +31,10 @@ export default class InsightFacade implements IInsightFacade {
 
 		try {
 			const result = await adder.parseContentSection(content);
-			const datasetInsight = await adder.writeToDisk(result, id, kind);
-			this.datasets.push(datasetInsight);
+			const datasetJSON = await adder.writeToDisk(result, id, kind);
 			this.datasetIDs.push(id);
+			this.datasets.push(datasetJSON.insightDataset);
+			this.indexes[id] = datasetJSON.datasetIndex[id];
 		} catch (error) {
 			return Promise.reject(error);
 		}
@@ -79,21 +81,24 @@ export default class InsightFacade implements IInsightFacade {
 			columns = options.getColumns();
 			orderField = options.getOrder();
 		} catch (err) {
-			Promise.reject(err);
+			return Promise.reject(err);
 		}
 
 		try {
 			const viewer = new Viewer();
-			const indexes = await viewer.getSectionIndexesByDatasetID("sections");
+			let indexes = this.indexes[datasetID];
+
+			if (Object.keys(this.indexes).length === 0) {
+				indexes = await viewer.getSectionIndexesByDatasetID(datasetID);
+			}
 
 			const filteredSections = viewer.filterByNode(filters, indexes);
 			const result = viewer.filterByColumnsAndOrder(filteredSections, columns, orderField, datasetID);
+
 			return Promise.resolve(result);
 		} catch (err) {
-			Promise.reject(`Perform query error: ${err}`);
+			return Promise.reject(`Perform query error: ${err}`);
 		}
-
-		return Promise.reject("Perform query error");
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {

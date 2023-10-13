@@ -129,7 +129,7 @@ const invalidEBNFFilterKey = {
 
 const invalidMultipleIDsQuery = {
 	WHERE: {
-		AND: [{GT: {sections_avg: 97}}, {IS: {ubc_dept: "math"}}],
+		AND: [{GT: {sections_avg: 97}}, {IS: {large_dept: "math"}}],
 	},
 	OPTIONS: {
 		COLUMNS: ["sections_dept", "sections_avg"],

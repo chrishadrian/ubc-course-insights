@@ -55,6 +55,7 @@ use(chaiAsPromised);
 describe("InsightFacade", function () {
 	let facade: IInsightFacade;
 	let sections: string;
+	let halfSections: string;
 
 	before(function () {
 		sections = getContentFromArchives("leastPair.zip");
@@ -407,9 +408,11 @@ describe("InsightFacade", function () {
 		before(async function () {
 			clearDisk();
 			sections = getContentFromArchives("pair.zip");
+			halfSections = getContentFromArchives("halfPair.zip");
 			facade = new InsightFacade();
 			try {
 				await facade.addDataset("sections", sections, InsightDatasetKind.Sections);
+				await facade.addDataset("large", halfSections, InsightDatasetKind.Sections);
 			} catch (err) {
 				expect.fail("Should not be rejected!");
 			}
@@ -543,8 +546,8 @@ describe("InsightFacade", function () {
 
 		it("should reject queries that exceed the result limit", async function () {
 			try {
-				const largeContent = getContentFromArchives("halfPair.zip");
-				await facade.addDataset("large", largeContent, InsightDatasetKind.Sections);
+				// const largeContent = getContentFromArchives("halfPair.zip");
+				// await facade.addDataset("large", largeContent, InsightDatasetKind.Sections);
 				await facade.performQuery(exceedLimitQuery);
 				expect.fail("Should have rejected!");
 			} catch (err) {
@@ -706,11 +709,13 @@ describe("InsightFacade", function () {
 		});
 
 		it("should reject due to invalid queries — multiple datasets", async function () {
+			/*
 			try {
 				await facade.addDataset("ubc", sections, InsightDatasetKind.Sections);
 			} catch (err) {
 				expect.fail("Should not be rejected!");
 			}
+			*/
 
 			try {
 				await facade.performQuery(invalidMultipleIDsQuery);

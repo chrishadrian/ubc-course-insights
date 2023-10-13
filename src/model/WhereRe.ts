@@ -79,6 +79,9 @@ export default class WhereRe {
 			throw new InsightError();
 		}
 		let [id, field]: [string, string] = this.extractFieldIDString(keys[0]);
+		if (typeof scomp[keys[0]] !== "string") {
+			throw new InsightError();
+		}
 		let value = "[^(" + this.getRegex(scomp[keys[0]] as string) + ")]";
 		let newNode: Node = {[field]: value};
 		return [newNode, id];
@@ -96,11 +99,11 @@ export default class WhereRe {
 		let newNode: Node = {[field]: value};
 		return [newNode, id];
 	}
-
 	private handleLogic(logic: Node[]): [Node[], string] {
 		if (logic.length < 1) {
 			throw new InsightError("empty logic");
 		}
+		let orNodes: Node[] = [];
 		let nodes: Node[] = [];
 		let idPrev: string;
 		let id: string = "";
@@ -113,23 +116,20 @@ export default class WhereRe {
 			}
 			idPrev = id;
 			switch (keys[0]) {
-				case "IS":
-					[child, id] = this.handleSComp(i[keys[0]] as Node);
+				case "IS": [child, id] = this.handleSComp(i[keys[0]] as Node);
 					nodes.push({IS: child} as Node);
 					break;
-				case "NOT":
-					[child, id] = this.handleNot(i[keys[0]] as Node);
+				case "NOT": [child, id] = this.handleNot(i[keys[0]] as Node);
 					nodes.push(child);
 					break;
-				case "OR":
-				case "AND":
-					[children, id] = this.handleLogic(i[keys[0]] as Node[]);
+				case "OR": [children, id] = this.handleLogic(i[keys[0]] as Node[]);
+					orNodes.push({[keys[0]]: children} as Node);
+				case "AND": [children, id] = this.handleLogic(i[keys[0]] as Node[]);
 					nodes.push({[keys[0]]: children} as Node);
 					break;
 				case "LT":
 				case "GT":
-				case "EQ":
-					[child, id] = this.handleMComp(i[keys[0]] as Node);
+				case "EQ": [child, id] = this.handleMComp(i[keys[0]] as Node);
 					nodes.push({[keys[0]]: child});
 					break;
 				default:
@@ -139,9 +139,8 @@ export default class WhereRe {
 				throw new InsightError("multiple ids found");
 			}
 		}
-		return [nodes, id];
+		return [orNodes.concat(nodes), id];
 	}
-
 	private handleNotMComp(mcomp: Node, comp: string): [Node, string] {
 		let keys = this.getKeysHelper(mcomp);
 		if (keys.length !== 1 || !this.validateMKey(keys[0])) {
@@ -165,7 +164,6 @@ export default class WhereRe {
 		}
 		return [{OR: nodes}, id];
 	}
-
 	private handleNotLogic(logic: Node[], key: string): [Node, string] {
 		if (logic.length < 1) {
 			throw new InsightError("empty logic");
@@ -202,18 +200,15 @@ export default class WhereRe {
 				[child, id] = this.handleSComp(obj[keys[0]] as Node);
 				node = {[keys[0]]: child};
 				break;
-			case "NOT":
-				[node, id] = this.handleNot(obj[keys[0]] as Node);
+			case "NOT": [node, id] = this.handleNot(obj[keys[0]] as Node);
 				break;
 			case "OR":
-			case "AND":
-				[children, id] = this.handleLogic(obj[keys[0]] as Node[]);
+			case "AND": [children, id] = this.handleLogic(obj[keys[0]] as Node[]);
 				node = {[keys[0]]: children};
 				break;
 			case "LT":
 			case "GT":
-			case "EQ":
-				[child, id] = this.handleMComp(obj[keys[0]] as Node);
+			case "EQ": [child, id] = this.handleMComp(obj[keys[0]] as Node);
 				node = {[keys[0]]: child};
 				break;
 			default:
@@ -221,7 +216,6 @@ export default class WhereRe {
 		}
 		return [node, id];
 	}
-
 	private handleNot(not: Node): [Node, string] {
 		let keys = this.getKeysHelper(not);
 		if (keys.length !== 1) {
@@ -230,10 +224,8 @@ export default class WhereRe {
 		let node: Node = {};
 		let id: string = "";
 		let child: Node;
-		let children: Node[] = [];
 		switch (keys[0]) {
-			case "IS":
-				[child, id] = this.handleNotSComp(not[keys[0]] as Node);
+			case "IS": [child, id] = this.handleNotSComp(not[keys[0]] as Node);
 				node = {IS: child};
 				break;
 			case "NOT":
@@ -241,20 +233,17 @@ export default class WhereRe {
 				break;
 			case "OR":
 				break;
-			case "AND":
-				[node, id] = this.handleNotLogic(not[keys[0]] as Node[], keys[0]);
+			case "AND": [node, id] = this.handleNotLogic(not[keys[0]] as Node[], keys[0]);
 				break;
 			case "LT":
 			case "GT":
-			case "EQ":
-				[node, id] = this.handleNotMComp(not[keys[0]] as Node, keys[0]);
+			case "EQ": [node, id] = this.handleNotMComp(not[keys[0]] as Node, keys[0]);
 				break;
 			default:
 				throw new InsightError("Where clause has invalid filter");
 		}
 		return [node, id];
 	}
-
 	public handleWhere(obj: unknown): [Node, string] {
 		if (!(obj as Node)) {
 			throw new InsightError("Not a node");
@@ -272,23 +261,19 @@ export default class WhereRe {
 		let child: Node = {};
 		let children: Node[] = [];
 		switch (keys[0]) {
-			case "IS":
-				[child, id] = this.handleSComp(where[keys[0]] as Node);
+			case "IS": [child, id] = this.handleSComp(where[keys[0]] as Node);
 				newWhere = {[keys[0]]: child};
 				break;
-			case "NOT":
-				[child, id] = this.handleNot(where[keys[0]] as Node);
+			case "NOT": [child, id] = this.handleNot(where[keys[0]] as Node);
 				newWhere = child;
 				break;
 			case "OR":
-			case "AND":
-				[children, id] = this.handleLogic(where[keys[0]] as Node[]);
+			case "AND": [children, id] = this.handleLogic(where[keys[0]] as Node[]);
 				newWhere = {[keys[0]]: children};
 				break;
 			case "LT":
 			case "GT":
-			case "EQ":
-				[child, id] = this.handleMComp(where[keys[0]] as Node);
+			case "EQ": [child, id] = this.handleMComp(where[keys[0]] as Node);
 				newWhere = {[keys[0]]: child};
 				break;
 			default:

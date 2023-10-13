@@ -405,7 +405,7 @@ describe("InsightFacade", function () {
 	describe("PerformQuery", function () {
 		before(async function () {
 			clearDisk();
-			sections = getContentFromArchives("pair.zip");
+			sections = getContentFromArchives("halfPair.zip");
 			facade = new InsightFacade();
 			try {
 				await facade.addDataset("sections", sections, InsightDatasetKind.Sections);

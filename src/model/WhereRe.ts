@@ -120,6 +120,10 @@ export default class WhereRe {
 					nodes.push({IS: child} as Node);
 					break;
 				case "NOT": [child, id] = this.handleNot(i[keys[0]] as Node);
+					if ("OR" in child) {
+						orNodes.push(child);
+						break;
+					}
 					nodes.push(child);
 					break;
 				case "OR": [children, id] = this.handleLogic(i[keys[0]] as Node[]);
@@ -196,8 +200,7 @@ export default class WhereRe {
 		let child: Node = {};
 		let children: Node[] = [];
 		switch (keys[0]) {
-			case "IS":
-				[child, id] = this.handleSComp(obj[keys[0]] as Node);
+			case "IS": [child, id] = this.handleSComp(obj[keys[0]] as Node);
 				node = {[keys[0]]: child};
 				break;
 			case "NOT": [node, id] = this.handleNot(obj[keys[0]] as Node);
@@ -232,7 +235,6 @@ export default class WhereRe {
 				[node, id] = this.handleDoubleNegative(not[keys[0]] as Node);
 				break;
 			case "OR":
-				break;
 			case "AND": [node, id] = this.handleNotLogic(not[keys[0]] as Node[], keys[0]);
 				break;
 			case "LT":

@@ -96,7 +96,7 @@ export default class InsightFacade implements IInsightFacade {
 
 			return Promise.resolve(result);
 		} catch (err) {
-			return Promise.reject(`Perform query error: ${err}`);
+			return Promise.reject(err);
 		}
 	}
 

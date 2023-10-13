@@ -272,11 +272,11 @@ export default class WhereRe {
 		switch (keys[0]) {
 			case "IS":
 				[child, id] = this.handleSComp(where[keys[0]] as Node);
-				newWhere = {AND: [{[keys[0]]: child}]};
+				newWhere = {[keys[0]]: child};
 				break;
 			case "NOT":
 				[child, id] = this.handleNot(where[keys[0]] as Node);
-				newWhere = {AND: [child]};
+				newWhere = child;
 				break;
 			case "OR":
 			case "AND":
@@ -287,7 +287,7 @@ export default class WhereRe {
 			case "GT":
 			case "EQ":
 				[child, id] = this.handleMComp(where[keys[0]] as Node);
-				newWhere = {AND: [{[keys[0]]: child}]};
+				newWhere = {[keys[0]]: child};
 				break;
 			default:
 				throw new InsightError("Where clause has invalid filter");

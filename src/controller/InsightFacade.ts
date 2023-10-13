@@ -1,4 +1,7 @@
-import {IInsightFacade, InsightDataset, InsightDatasetKind, InsightError, InsightResult} from "./IInsightFacade";
+import {
+	IInsightFacade,
+	InsightDataset,
+	InsightDatasetKind, InsightError, InsightResult, ResultTooLargeError} from "./IInsightFacade";
 import Adder from "../usecase/Adder";
 import Validator from "../util/validator";
 import Remover from "../usecase/Remover";
@@ -79,18 +82,24 @@ export default class InsightFacade implements IInsightFacade {
 			columns = options.getColumns();
 			orderField = options.getOrder();
 		} catch (err) {
-			Promise.reject(err);
+			if (err instanceof InsightError) {
+				return Promise.reject(err);
+			}
+			return Promise.reject(err);
 		}
 
 		try {
 			const viewer = new Viewer();
 			const indexes = await viewer.getSectionIndexesByDatasetID("sections");
-
 			const filteredSections = viewer.filterByNode(filters, indexes);
+			if (filteredSections.length > 5000) {
+				return Promise.reject(new ResultTooLargeError());
+			}
 			const result = viewer.filterByColumnsAndOrder(filteredSections, columns, orderField, datasetID);
 			return Promise.resolve(result);
 		} catch (err) {
-			Promise.reject(`Perform query error: ${err}`);
+			// Promise.reject(`Perform query error: ${err}`);
+			return Promise.reject(err);
 		}
 
 		return Promise.reject("Perform query error");

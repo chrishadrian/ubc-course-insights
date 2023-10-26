@@ -1,8 +1,8 @@
 import * as fs from "fs-extra";
 import {InsightDataset, InsightError, ResultTooLargeError} from "../controller/IInsightFacade";
 import Section from "../model/Section";
-import {Logic} from "../model/Where";
 import {DatasetJSON} from "./Adder";
+import {Logic} from "./QueryEngine";
 const persistDir = "./data";
 
 export interface Node {

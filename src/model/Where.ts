@@ -11,6 +11,7 @@ export class Range {
 		this.min = min;
 		this.max = max;
 	}
+
 	public setMin(minimum: number) {
 		this.min = minimum;
 	}

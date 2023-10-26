@@ -51,10 +51,10 @@ export default class Adder {
 							const results = jsonObject.result;
 							if (results.length !== 0) {
 								count++;
-								results.forEach((result) => {
+								for (let result of results) {
 									const section = new Section(result);
 									sections.addSection(section);
-								});
+								}
 							}
 						} catch (error) {
 							throw new InsightError(`Course ${zipEntry.name} is invalid: ${error}`);

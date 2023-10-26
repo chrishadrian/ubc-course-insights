@@ -1,8 +1,13 @@
 import * as fs from "fs-extra";
 import WhereRe, {Node} from "../model/WhereRe";
-import Where, {FieldFilters, Range, MField, SField, Logic} from "../model/Where";
 import Options from "../model/Options";
 import {InsightError, InsightResult, NotFoundError, ResultTooLargeError} from "../controller/IInsightFacade";
+
+export enum Logic {
+	OR = "OR",
+	AND = "AND",
+	NOT = "NOT",
+}
 
 export class Query {
 	public whereBlock: Node;
@@ -11,11 +16,6 @@ export class Query {
 		this.whereBlock = w;
 		this.optionsBlock = o;
 	}
-}
-
-interface IQuery {
-	WHERE: object;
-	OPTIONS: object;
 }
 
 export default class QueryEngine {

@@ -2,17 +2,19 @@ import {
 	IInsightFacade, InsightDataset, InsightDatasetKind,
 	InsightError, InsightResult, ResultTooLargeError
 } from "./IInsightFacade";
-import Adder, {DatasetIndexes} from "../usecase/SectionParser";
+import SectionParser, {SectionIndexes} from "../usecase/SectionParser";
 import Validator from "../util/validator";
 import Remover from "../usecase/Remover";
 import Viewer, {Node} from "../usecase/Viewer";
 import QueryEngine from "../usecase/QueryEngine";
+import RoomParser, {RoomIndexes} from "../usecase/RoomParser";
 
 export default class InsightFacade implements IInsightFacade {
 	private validator;
 	private datasetIDs: string[];
 	private datasets: InsightDataset[];
-	private indexes: DatasetIndexes;
+	private sindexes: SectionIndexes;
+	private rindexes: RoomIndexes;
 
 	constructor() {
 		const viewer = new Viewer();
@@ -20,11 +22,13 @@ export default class InsightFacade implements IInsightFacade {
 		this.validator = new Validator();
 		this.datasetIDs = [];
 		this.datasets = viewer.getInsightDatasets();
-		this.indexes = {};
+		this.sindexes = {};
+		this.rindexes = {};
 	}
 
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
-		const adder = new Adder();
+		const sparser = new SectionParser();
+		const rparser = new RoomParser();
 
 		try {
 			this.validator.validateID(id, "add", this.datasetIDs);
@@ -32,21 +36,25 @@ export default class InsightFacade implements IInsightFacade {
 			return Promise.reject(error);
 		}
 
+
 		try {
-			const result = await adder.parseContentSection(content);
-			const datasetJSON = await adder.writeToDisk(result, id, kind);
+			if (kind === InsightDatasetKind.Sections) {
+				const sections = await sparser.parseSectionsContent(content);
+				const datasetJSON = await sparser.writeToDisk(sections, id, kind);
+				this.sindexes[id] = datasetJSON.datasetIndexes[id];
+				this.datasets.push(datasetJSON.insightDataset);
+			} else {
+				const rooms = await rparser.parseRoomsContent(content);
+				const datasetJSON = await rparser.writeToDisk(rooms, id, kind);
+				this.rindexes[id] = datasetJSON.datasetIndexes[id];
+				this.datasets.push(datasetJSON.insightDataset);
+			}
 			this.datasetIDs.push(id);
-			this.datasets.push(datasetJSON.insightDataset);
-			this.indexes[id] = datasetJSON.datasetIndex[id];
+
+			return Promise.resolve(this.datasetIDs);
 		} catch (error) {
 			return Promise.reject(error);
 		}
-
-		if (kind === InsightDatasetKind.Rooms) {
-			return Promise.reject(new InsightError("Dataset is invalid"));
-		}
-
-		return Promise.resolve(this.datasetIDs);
 	}
 
 	public removeDataset(id: string): Promise<string> {
@@ -89,8 +97,8 @@ export default class InsightFacade implements IInsightFacade {
 
 		try {
 			const viewer = new Viewer();
-			let indexes = this.indexes[datasetID];
-			if (Object.keys(this.indexes).length === 0) {
+			let indexes = this.sindexes[datasetID];
+			if (Object.keys(this.sindexes).length === 0) {
 				indexes = await viewer.getSectionIndexesByDatasetID(datasetID);
 			}
 

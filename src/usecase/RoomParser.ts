@@ -14,46 +14,27 @@ interface GeoResponse {
 	error?: string;
 }
 
-export const getGeolocation = (address: string): Promise<GeoResponse> => {
-	return new Promise<GeoResponse>((resolve, reject) => {
-		const encodedAddress = encodeURIComponent(address);
-		const url = `http://cs310.students.cs.ubc.ca:11316/api/v1/project_team246/${encodedAddress}`;
+enum RoomField {
+	shortname = "views-field-field-building-code",
+	fullname = "views-field-title",
+	address = "views-field-field-building-address",
+	number = "views-field-field-room-number",
+	seats = "views-field-field-room-capacity",
+	furniture = "views-field-field-room-furniture",
+	type = "views-field-field-room-type",
+	nothing = "views-field-nothing",
+}
 
-		http
-			.get(url, (response) => {
-				let data = "";
+const persistDir = "./data";
 
-				// A chunk of data has been received.
-				response.on("data", (chunk) => {
-					data += chunk;
-				});
-
-				// The whole response has been received.
-				response.on("end", () => {
-					try {
-						const parsedData: GeoResponse = JSON.parse(data);
-						resolve(parsedData);
-					} catch (error) {
-						reject({error: "Failed to parse response data"});
-					}
-				});
-			})
-			.on("error", (error) => {
-				reject({error: `Error: ${error.message}`});
-			});
-	});
-};
-
-export interface DatasetJSON {
+export interface RoomJSON {
 	InsightDataset: InsightDataset;
 	MappedSection: Record<string, Record<string | number, Room[]>>;
 }
 
-export interface DatasetIndexes {
+export interface RoomIndexes {
 	[datasetID: string]: Record<string, Map<string | number, Room[]>>;
 }
-
-const persistDir = "./data";
 
 export default class RoomParser {
 	private indexes: Record<string, Map<string | number, Room[]>>;
@@ -68,7 +49,7 @@ export default class RoomParser {
 		this.results = [];
 	}
 
-	public async parseContentSection(content: string): Promise<Rooms> {
+	public async parseRoomsContent(content: string): Promise<Rooms> {
 		const decode = (str: string): string => Buffer.from(str, "base64").toString("binary");
 
 		try {
@@ -84,18 +65,18 @@ export default class RoomParser {
 				throw new InsightError(`${error}`);
 			}
 
-			return this.rooms;
+			return Promise.resolve(this.rooms);
 		} catch (error) {
-			throw new InsightError(`Dataset is invalid: ${error}`);
+			return Promise.reject(`Dataset is invalid: ${error}`);
 		}
 	}
 
 	public async writeToDisk(
-		sections: Rooms,
+		rooms: Rooms,
 		datasetID: string,
 		kind: InsightDatasetKind
-	): Promise<{insightDataset: InsightDataset; datasetIndex: DatasetIndexes}> {
-		const data = sections.getRooms();
+	): Promise<{insightDataset: InsightDataset; datasetIndexes: RoomIndexes}> {
+		const data = rooms.getRooms();
 
 		const rows = data.length;
 		const insight = {
@@ -104,7 +85,7 @@ export default class RoomParser {
 			numRows: rows,
 		};
 
-		const datasetJSON: DatasetJSON = {
+		const datasetJSON: RoomJSON = {
 			InsightDataset: insight,
 			MappedSection: {},
 		};
@@ -124,12 +105,12 @@ export default class RoomParser {
 		const filePath = `${persistDir}/${datasetID}.json`;
 		await fs.writeFile(filePath, jsonData);
 
-		const datasetIndex: DatasetIndexes = {};
-		datasetIndex[datasetID] = this.indexes;
+		const datasetIndexes: RoomIndexes = {};
+		datasetIndexes[datasetID] = this.indexes;
 
-		const result: {insightDataset: InsightDataset; datasetIndex: DatasetIndexes} = {
+		const result: {insightDataset: InsightDataset; datasetIndexes: RoomIndexes} = {
 			insightDataset: datasetJSON.InsightDataset,
-			datasetIndex: datasetIndex,
+			datasetIndexes: datasetIndexes,
 		};
 
 		return Promise.resolve(result);
@@ -213,7 +194,7 @@ export default class RoomParser {
 
 			case RoomField.nothing: {
 				try {
-					const geoLocation = await getGeolocation(this.room.address);
+					const geoLocation = await this.getGeolocation(this.room.address);
 					if (!geoLocation.lat || !geoLocation.lon || geoLocation.error) {
 						throw new InsightError("Error when getting Geolocation: " + geoLocation.error);
 					}
@@ -270,18 +251,37 @@ export default class RoomParser {
 		}
 	}
 
+	private getGeolocation = (address: string): Promise<GeoResponse> => {
+		return new Promise<GeoResponse>((resolve, reject) => {
+			const encodedAddress = encodeURIComponent(address);
+			const url = `http://cs310.students.cs.ubc.ca:11316/api/v1/project_team246/${encodedAddress}`;
+
+			http
+				.get(url, (response) => {
+					let data = "";
+
+					// A chunk of data has been received.
+					response.on("data", (chunk) => {
+						data += chunk;
+					});
+
+					// The whole response has been received.
+					response.on("end", () => {
+						try {
+							const parsedData: GeoResponse = JSON.parse(data);
+							resolve(parsedData);
+						} catch (error) {
+							reject({error: "Failed to parse response data"});
+						}
+					});
+				})
+				.on("error", (error) => {
+					reject({error: `Error: ${error.message}`});
+				});
+		});
+	};
+
 	private formatValue(value: string | number): string {
 		return value.toString().trim().replace("\n", "");
 	}
-}
-
-enum RoomField {
-	shortname = "views-field-field-building-code",
-	fullname = "views-field-title",
-	address = "views-field-field-building-address",
-	number = "views-field-field-room-number",
-	seats = "views-field-field-room-capacity",
-	furniture = "views-field-field-room-furniture",
-	type = "views-field-field-room-type",
-	nothing = "views-field-nothing",
 }

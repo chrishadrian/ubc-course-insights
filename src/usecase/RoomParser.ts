@@ -1,101 +1,101 @@
 /* eslint-disable max-lines-per-function */
 import JSZip, {folder} from "jszip";
-import Sections from "../model/Sections";
-import Section, {ContentSection} from "../model/Section";
 import {InsightDataset, InsightDatasetKind, InsightError} from "../controller/IInsightFacade";
 import * as fs from "fs-extra";
 import * as parse5 from "parse5";
+import Room from "../model/Room";
+import Rooms from "../model/Rooms";
+import * as http from "http";
+import {promises} from "dns";
 
-interface ZipFile {
-	result: ContentSection[];
-	rank: number;
+interface GeoResponse {
+	lat?: number;
+	lon?: number;
+	error?: string;
 }
+
+export const getGeolocation = (address: string): Promise<GeoResponse> => {
+	return new Promise<GeoResponse>((resolve, reject) => {
+		const encodedAddress = encodeURIComponent(address);
+		const url = `http://cs310.students.cs.ubc.ca:11316/api/v1/project_team246/${encodedAddress}`;
+
+		http
+			.get(url, (response) => {
+				let data = "";
+
+				// A chunk of data has been received.
+				response.on("data", (chunk) => {
+					data += chunk;
+				});
+
+				// The whole response has been received.
+				response.on("end", () => {
+					try {
+						const parsedData: GeoResponse = JSON.parse(data);
+						resolve(parsedData);
+					} catch (error) {
+						reject({error: "Failed to parse response data"});
+					}
+				});
+			})
+			.on("error", (error) => {
+				reject({error: `Error: ${error.message}`});
+			});
+	});
+};
 
 export interface DatasetJSON {
 	InsightDataset: InsightDataset;
-	MappedSection: Record<string, Record<string | number, Section[]>>;
+	MappedSection: Record<string, Record<string | number, Room[]>>;
 }
 
 export interface DatasetIndexes {
-	[datasetID: string]: Record<string, Map<string | number, Section[]>>;
+	[datasetID: string]: Record<string, Map<string | number, Room[]>>;
 }
 
 const persistDir = "./data";
 
 export default class RoomParser {
-	private indexes: Record<string, Map<string | number, Section[]>>;
+	private indexes: Record<string, Map<string | number, Room[]>>;
+	private room: Room;
+	private rooms: Rooms;
+	private results: any[];
 
 	constructor() {
 		this.indexes = {};
+		this.room = new Room();
+		this.rooms = new Rooms();
+		this.results = [];
 	}
 
-	public async parseContentSection(content: string): Promise<Sections> {
-		let count = 0;
+	public async parseContentSection(content: string): Promise<Rooms> {
 		const decode = (str: string): string => Buffer.from(str, "base64").toString("binary");
 
 		try {
 			const data = decode(content);
 			const zip = await JSZip.loadAsync(data);
-			const folderPath = "campus/campus/discover/buildings-and-classrooms";
 
-			const sections = new Sections();
-
-			const promises: any[] = [];
-
-			zip.forEach(async function (relativePath, zipEntry) {
-				if (relativePath === "index.htm") {
-					zipEntry.async("text").then((indexContent) => {
-						try {
-							const indexObject = parse5.parse(indexContent);
-							const foundElements: any = [];
-							findElements(indexObject, foundElements);
-							console.log(foundElements); // Array of <td> elements with class "views-field"
-						} catch (error) {
-							throw new InsightError();
-						}
-					});
-				} else if (
-					relativePath.startsWith(folderPath) &&
-					relativePath !== folderPath &&
-					!relativePath.startsWith(`${folderPath}.`)
-				) {
-					// const promise = zipEntry.async("text").then((jsonContent) => {
-					// 	try {
-					// 		const jsonObject: ZipFile = JSON.parse(jsonContent);
-					// 		const results = jsonObject.result;
-					// 		if (results.length !== 0) {
-					// 			count++;
-					// 			for (let result of results) {
-					// 				const section = new Section(result);
-					// 				sections.addSection(section);
-					// 			}
-					// 		}
-					// 	} catch (error) {
-					// 		throw new InsightError(`Course ${zipEntry.name} is invalid: ${error}`);
-					// 	}
-					// });
-					// promises.push(promise);
-				}
-			});
-
-			await Promise.all(promises);
-
-			if (count === 0) {
-				throw new InsightError("There is no valid section!");
+			const zipEntry = zip.files["campus/index.htm"];
+			const indexContent = await zipEntry.async("text");
+			try {
+				const indexObject = parse5.parse(indexContent);
+				await this.findElements(indexObject, zip, true);
+			} catch (error) {
+				throw new InsightError(`${error}`);
 			}
 
-			return sections;
+			return this.rooms;
 		} catch (error) {
 			throw new InsightError(`Dataset is invalid: ${error}`);
 		}
 	}
 
 	public async writeToDisk(
-		sections: Sections,
+		sections: Rooms,
 		datasetID: string,
 		kind: InsightDatasetKind
 	): Promise<{insightDataset: InsightDataset; datasetIndex: DatasetIndexes}> {
-		const data = sections.getSections();
+		const data = sections.getRooms();
 
 		const rows = data.length;
 		const insight = {
@@ -110,7 +110,7 @@ export default class RoomParser {
 		};
 
 		for (const key in data[0]) {
-			const fieldName: keyof Section = key as keyof Section;
+			const fieldName: keyof Room = key as keyof Room;
 			this.createIndex(fieldName, data);
 			datasetJSON.MappedSection[fieldName] = this.mapToJSON(this.indexes[fieldName]);
 		}
@@ -135,8 +135,8 @@ export default class RoomParser {
 		return Promise.resolve(result);
 	}
 
-	private createIndex(fieldName: keyof Section, data: Section[]): void {
-		const index = new Map<string | number, Section[]>();
+	private createIndex(fieldName: keyof Room, data: Room[]): void {
+		const index = new Map<string | number, Room[]>();
 		for (const item of data) {
 			const value = item[fieldName];
 			if (!index.has(value)) {
@@ -147,28 +147,141 @@ export default class RoomParser {
 		this.indexes[fieldName] = index;
 	}
 
-	private mapToJSON(map: Map<string | number, Section[]>): Record<string | number, Section[]> {
-		const json: Record<string | number, Section[]> = {};
+	private mapToJSON(map: Map<string | number, Room[]>): Record<string | number, Room[]> {
+		const json: Record<string | number, Room[]> = {};
 		map.forEach((value, key) => {
 			json[key as string] = value;
 		});
 		return json;
 	}
+
+	private async findElements(node: any, zip: JSZip, processBuilding: boolean): Promise<void> {
+		if (node.tagName === "td") {
+			const classAttribute = node.attrs.find((attr: {name: string}) => attr.name === "class");
+			if (classAttribute && classAttribute.value.includes("views-field")) {
+				this.results.push(node);
+				if (processBuilding) {
+					try {
+						await this.processElement(node, zip);
+					} catch (error) {
+						throw new InsightError(`${error}`);
+					}
+				} else {
+					this.processMoreInfo(node);
+				}
+			}
+		}
+		let childPromises = [];
+		const selectedNodeNames = ["#comment", "#text", "#documentType", "head",
+			"script", "footer", "noscript", "header"];
+		if (node.childNodes) {
+			node.childNodes = node.childNodes.filter(
+				(childNode: any) => !selectedNodeNames.includes(childNode.nodeName)
+			);
+			childPromises = node.childNodes.map((child: any) => this.findElements(child, zip, processBuilding));
+			await Promise.all(childPromises);
+		}
+	}
+
+	private async processElement(node: any, zip: JSZip) {
+		const className: string = node.attrs[0].value;
+		const field: string = className.split(" ")[1];
+		if (field !== RoomField.fullname && field !== RoomField.nothing && node.childNodes.length !== 1) {
+			return;
+		}
+		const value: string | number = node.childNodes[0].value;
+
+		switch (field) {
+			case RoomField.shortname:
+				this.room.shortname = this.formatValue(value);
+				break;
+
+			case RoomField.fullname: {
+				const fullname = node.childNodes[1].childNodes[0].value;
+				this.room.fullname = fullname;
+				break;
+			}
+
+			case RoomField.address: {
+				this.room.address = this.formatValue(value);
+				try {
+					const geoLocation = await getGeolocation(this.room.address);
+					if (!geoLocation.lat || !geoLocation.lon || geoLocation.error) {
+						throw new InsightError();
+					}
+					this.room.lat = geoLocation.lat;
+					this.room.lon = geoLocation.lon;
+					break;
+				} catch (error) {
+					throw new InsightError(`${error}`);
+				}
+			}
+
+			case RoomField.nothing: {
+				const roomLink: string = node.childNodes[1].attrs[0].value;
+				const zipEntry = zip.files["campus/" + roomLink.substring(2)];
+				try {
+					const indexContent = await zipEntry.async("text");
+					const indexObject = parse5.parse(indexContent);
+					await this.findElements(indexObject, zip, false);
+					break;
+				} catch (error) {
+					throw new InsightError();
+				}
+			}
+		}
+	}
+
+	private processMoreInfo(node: any) {
+		const className: string = node.attrs[0].value;
+		const field: string = className.split(" ")[1];
+		if (field !== RoomField.nothing && field !== RoomField.number && node.childNodes.length !== 1) {
+			return;
+		}
+		const value: string | number = node.childNodes[0].value;
+
+		switch (field) {
+			case RoomField.number: {
+				const number: string = node.childNodes[1].childNodes[0].value;
+				this.room.number = number;
+				this.room.name = `${this.room.shortname}_${number}`;
+				break;
+			}
+
+			case RoomField.seats:
+				this.room.seats = Number(value);
+				break;
+
+			case RoomField.furniture:
+				this.room.furniture = this.formatValue(value);
+				break;
+
+			case RoomField.type:
+				this.room.type = this.formatValue(value);
+				break;
+
+			case RoomField.nothing: {
+				const href: string = node.childNodes[1].attrs[0].value;
+				this.room.href = href;
+				this.rooms.addRoom(this.room);
+				this.room = new Room();
+				break;
+			}
+		}
+	}
+
+	private formatValue(value: string | number): string {
+		return value.toString().trim().replace("\n", "");
+	}
 }
 
-
-function findElements(node: any, result: any) {
-	if (node.tagName === "td") {
-		// Check if the <td> element has a "views-field" class
-		const classAttribute = node.attrs.find((attr: {name: string}) => attr.name === "class");
-		if (classAttribute && classAttribute.value.includes("views-field")) {
-			result.push(node);
-		}
-	}
-
-	if (node.childNodes) {
-		for (const child of node.childNodes) {
-			findElements(child, result);
-		}
-	}
+enum RoomField {
+	shortname = "views-field-field-building-code",
+	fullname = "views-field-title",
+	address = "views-field-field-building-address",
+	number = "views-field-field-room-number",
+	seats = "views-field-field-room-capacity",
+	furniture = "views-field-field-room-furniture",
+	type = "views-field-field-room-type",
+	nothing = "views-field-nothing",
 }

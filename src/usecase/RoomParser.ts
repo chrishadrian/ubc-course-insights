@@ -164,10 +164,14 @@ export default class RoomParser {
 					try {
 						await this.processElement(node, zip);
 					} catch (error) {
-						throw new InsightError(`${error}`);
+						throw new InsightError(`Error processing element: ${error}`);
 					}
 				} else {
-					this.processMoreInfo(node);
+					try {
+						await this.processMoreInfo(node);
+					} catch (error) {
+						throw new InsightError(`Error processing more info: ${error}`);
+					}
 				}
 			}
 		}
@@ -204,35 +208,32 @@ export default class RoomParser {
 
 			case RoomField.address: {
 				this.room.address = this.formatValue(value);
-				try {
-					const geoLocation = await getGeolocation(this.room.address);
-					if (!geoLocation.lat || !geoLocation.lon || geoLocation.error) {
-						throw new InsightError();
-					}
-					this.room.lat = geoLocation.lat;
-					this.room.lon = geoLocation.lon;
-					break;
-				} catch (error) {
-					throw new InsightError(`${error}`);
-				}
+				break;
 			}
 
 			case RoomField.nothing: {
-				const roomLink: string = node.childNodes[1].attrs[0].value;
-				const zipEntry = zip.files["campus/" + roomLink.substring(2)];
 				try {
+					const geoLocation = await getGeolocation(this.room.address);
+					if (!geoLocation.lat || !geoLocation.lon || geoLocation.error) {
+						throw new InsightError("Error when getting Geolocation: " + geoLocation.error);
+					}
+					this.room.lat = geoLocation.lat;
+					this.room.lon = geoLocation.lon;
+
+					const roomLink: string = node.childNodes[1].attrs[0].value;
+					const zipEntry = zip.files["campus/" + roomLink.substring(2)];
 					const indexContent = await zipEntry.async("text");
 					const indexObject = parse5.parse(indexContent);
 					await this.findElements(indexObject, zip, false);
 					break;
 				} catch (error) {
-					throw new InsightError();
+					throw new InsightError(`Error finding building information: ${error} with node: ${node}`);
 				}
 			}
 		}
 	}
 
-	private processMoreInfo(node: any) {
+	private async processMoreInfo(node: any) {
 		const className: string = node.attrs[0].value;
 		const field: string = className.split(" ")[1];
 		if (field !== RoomField.nothing && field !== RoomField.number && node.childNodes.length !== 1) {
@@ -264,7 +265,6 @@ export default class RoomParser {
 				const href: string = node.childNodes[1].attrs[0].value;
 				this.room.href = href;
 				this.rooms.addRoom(this.room);
-				this.room = new Room();
 				break;
 			}
 		}

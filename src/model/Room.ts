@@ -11,17 +11,17 @@ export default class Room {
 	public href: string;
 	public seats: number;
 
-	constructor() {
-		this.fullname = "";
-		this.shortname = "";
-		this.furniture = "";
-		this.number = "";
-		this.name = "";
-		this.address = "";
-		this.lat = 0;
-		this.lon = 0;
-		this.type = "";
-		this.href = "";
-		this.seats = 0;
+	constructor(room?: Room) {
+		this.fullname = room ? room.fullname : "";
+		this.shortname = room ? room.shortname : "";
+		this.furniture = room ? room.furniture : "";
+		this.number = room ? room.number : "";
+		this.name = room ? room.name : "";
+		this.address = room ? room.address : "";
+		this.lat = room ? room.lat : 0;
+		this.lon = room ? room.lon : 0;
+		this.type = room ? room.type : "";
+		this.href = room ? room.href : "";
+		this.seats = room ? room.seats : 0;
 	}
 }

@@ -9,8 +9,8 @@ const persistDir = "./data";
  *
  * @return Promise A base 64 representation of the file
  */
-const getContentFromArchives = (name: string): string =>
-	fs.readFileSync("test/resources/archives/" + name).toString("base64");
+const getContentFromArchives = (name: string, room?: boolean): string =>
+	fs.readFileSync("test/resources/archives/" + (room ? "rooms/" : "") + name).toString("base64");
 
 /**
  * Removes all files within the persistDir.

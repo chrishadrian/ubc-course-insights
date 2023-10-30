@@ -98,16 +98,16 @@ export default class InsightFacade implements IInsightFacade {
 
 		try {
 			const section = new Section();
-			const isSection = orderField in section;
+			const isSection = columns[0] in section;
 			const viewer = new Viewer();
 			let indexes = isSection ? this.sindexes[datasetID] : this.rindexes[datasetID];
+			if (!indexes) {
+				return Promise.reject(new InsightError("Dataset does not exist!"));
+			}
 			if (Object.keys(indexes).length === 0) {
 				indexes = await viewer.getSectionIndexesByDatasetID(datasetID);
 			}
 
-			if (indexes === undefined) {
-				return Promise.reject(new InsightError("Dataset does not exist!"));
-			}
 
 			const filteredSections = viewer.filterByNode(filters, indexes);
 			const result = viewer.filterByColumnsAndOrder(filteredSections, columns, orderField, datasetID);

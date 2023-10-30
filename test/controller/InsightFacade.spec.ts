@@ -173,7 +173,7 @@ describe("InsightFacade", function () {
 				}
 			});
 
-			it("should reject due to rooms kind", async function () {
+			it("should reject due to content and kind's mismatch", async function () {
 				try {
 					await facade.addDataset("sections", sections, InsightDatasetKind.Rooms);
 					expect.fail("Should have rejected!");

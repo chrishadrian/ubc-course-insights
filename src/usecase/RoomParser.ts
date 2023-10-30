@@ -57,6 +57,9 @@ export default class RoomParser {
 			const zip = await JSZip.loadAsync(data);
 
 			const zipEntry = zip.files["campus/index.htm"];
+			if (!zipEntry) {
+				throw new InsightError("Index.htm is not found");
+			}
 			const indexContent = await zipEntry.async("text");
 			try {
 				const indexObject = parse5.parse(indexContent);
@@ -67,7 +70,7 @@ export default class RoomParser {
 
 			return Promise.resolve(this.rooms);
 		} catch (error) {
-			return Promise.reject(`Dataset is invalid: ${error}`);
+			return Promise.reject(new InsightError(`Dataset is invalid: ${error}`));
 		}
 	}
 

@@ -15,10 +15,9 @@ import {clearDisk, getContentFromArchives} from "../TestUtil";
 
 use(chaiAsPromised);
 
-describe("InsightFacade", function () {
+describe("InsightFacade — Room", function () {
 	let facade: IInsightFacade;
 	let rooms: string;
-	let halfSections: string;
 
 	before(function () {
 		rooms = getContentFromArchives("lessCampus.zip", true);
@@ -33,7 +32,7 @@ describe("InsightFacade", function () {
 				facade = new InsightFacade();
 			});
 
-			it("should add one dataset and return its id", async function () {
+			it("should add one room dataset and return its id", async function () {
 				const datasetID = "rooms";
 				try {
 					const result = await facade.addDataset(datasetID, rooms, InsightDatasetKind.Rooms);
@@ -43,7 +42,7 @@ describe("InsightFacade", function () {
 				}
 			});
 
-			it("should add two dataset and return its ids", async function () {
+			it("should add two room dataset and return its ids", async function () {
 				try {
 					const result1 = await facade.addDataset("rooms", rooms, InsightDatasetKind.Rooms);
 					expect(result1).to.deep.equal(["rooms"]);

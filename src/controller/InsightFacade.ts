@@ -8,6 +8,7 @@ import Remover from "../usecase/Remover";
 import Viewer, {Node} from "../usecase/Viewer";
 import QueryEngine from "../usecase/QueryEngine";
 import RoomParser, {RoomIndexes} from "../usecase/RoomParser";
+import Section from "../model/Section";
 
 export default class InsightFacade implements IInsightFacade {
 	private validator;
@@ -96,9 +97,11 @@ export default class InsightFacade implements IInsightFacade {
 		}
 
 		try {
+			const section = new Section();
+			const isSection = orderField in section;
 			const viewer = new Viewer();
-			let indexes = this.sindexes[datasetID];
-			if (Object.keys(this.sindexes).length === 0) {
+			let indexes = isSection ? this.sindexes[datasetID] : this.rindexes[datasetID];
+			if (Object.keys(indexes).length === 0) {
 				indexes = await viewer.getSectionIndexesByDatasetID(datasetID);
 			}
 

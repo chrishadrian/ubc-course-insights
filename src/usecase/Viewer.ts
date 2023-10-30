@@ -1,13 +1,18 @@
+/* eslint-disable max-lines-per-function */
 import * as fs from "fs-extra";
 import {InsightDataset, InsightError, ResultTooLargeError} from "../controller/IInsightFacade";
 import Section from "../model/Section";
 import {Logic} from "../model/Where";
-import {DatasetJSON} from "./SectionParser";
+import {SectionJSON} from "./SectionParser";
+import Room from "../model/Room";
 const persistDir = "./data";
 
 export interface Node {
 	[key: string]: string | number | Node[] | Node;
 }
+
+type DatasetIndexes = Record<string, Map<string | number, Section[]>> | Record<string, Map<string | number, Room[]>>
+type DatasetResult = Array<Section | Room>
 
 export default class Viewer {
 	public getInsightDatasets(): InsightDataset[] {
@@ -21,7 +26,7 @@ export default class Viewer {
 
 		files.forEach((file) => {
 			const fileContent = fs.readFileSync(`${persistDir}/${file}`).toString();
-			const obj: DatasetJSON = JSON.parse(fileContent);
+			const obj: SectionJSON = JSON.parse(fileContent);
 			result.push(obj.InsightDataset);
 		});
 
@@ -45,7 +50,30 @@ export default class Viewer {
 
 		for (const key in datasetJSON.MappedSection) {
 			const fieldName: keyof Section = key as keyof Section;
-			result[fieldName] = this.jsonToMap(datasetJSON.MappedSection[fieldName]);
+			result[fieldName] = this.sectionJSONToMap(datasetJSON.MappedSection[fieldName]);
+		}
+
+		return Promise.resolve(result);
+	}
+
+	public async getRoomIndexesByDatasetID(
+		datasetID: string
+	): Promise<Record<string, Map<string | number, Room[]>>> {
+		let result: Record<string, Map<string | number, Room[]>> = {};
+
+		if (!fs.existsSync(persistDir)) {
+			return Promise.reject(new InsightError("dataset does not exist"));
+		}
+
+		const fileContent = await fs.readFile(`${persistDir}/${datasetID}.json`);
+		const datasetJSON: {
+			insightDataset: InsightDataset;
+			MappedSection: Record<string, Record<string | number, Room[]>>;
+		} = JSON.parse(fileContent.toString());
+
+		for (const key in datasetJSON.MappedSection) {
+			const fieldName: keyof Room = key as keyof Room;
+			result[fieldName] = this.roomJSONToMap(datasetJSON.MappedSection[fieldName]);
 		}
 
 		return Promise.resolve(result);
@@ -55,10 +83,10 @@ export default class Viewer {
 		operation: Logic,
 		fieldNames: string[],
 		values: string[][],
-		indexes: Record<string, Map<string | number, Section[]>>,
-		currentResult: Section[]
-	): Section[] {
-		let resultSet: Section[] = currentResult;
+		indexes: DatasetIndexes,
+		currentResult: DatasetResult,
+	): DatasetResult {
+		let resultSet: DatasetResult = currentResult;
 		let newResult: boolean = true;
 
 		for (let j = 0; j < fieldNames.length; j++) {
@@ -71,7 +99,7 @@ export default class Viewer {
 					resultSet = filteredData;
 					newResult = false;
 				} else {
-					resultSet = resultSet.filter((section) => filteredData.includes(section));
+					resultSet = resultSet.filter((data) => filteredData.includes(data));
 				}
 			} else if (operation === Logic.OR) {
 				resultSet = [...new Set([...resultSet, ...filteredData])];
@@ -84,9 +112,9 @@ export default class Viewer {
 	private filterByField(
 		fieldName: string,
 		values: string[],
-		indexes: Record<string, Map<string | number, Section[]>>
-	): Section[] {
-		const result: Section[] = [];
+		indexes: DatasetIndexes,
+	): DatasetResult {
+		const result: DatasetResult = [];
 		if (!values || values.length === 0) {
 			return result;
 		}
@@ -133,15 +161,18 @@ export default class Viewer {
 		return result;
 	}
 
-	public filterByNode(root: Node, indexes: Record<string, Map<string | number, Section[]>>): Section[] {
-		let fields: string[] = [], values: string[][] = [], result: Section[] = [], counter = 0;
+	public filterByNode(
+		root: Node,
+		indexes: DatasetIndexes,
+	): DatasetResult {
+		let fields: string[] = [], values: string[][] = [], result: DatasetResult = [], counter = 0;
 
-		const filterSections = (node: Node): Section[] => {
+		const filterSections = (node: Node): DatasetResult => {
 			for (const key in node) {
 				if (Object.prototype.hasOwnProperty.call(node, key)) {
 					if (key === "AND" || key === "OR") {
 						const value = node[key] as Node[];
-						let tempResult: Section[] = [];
+						let tempResult: DatasetResult = [];
 						for (const i in value) {
 							const curr = value[i];
 							tempResult = filterSections(curr);
@@ -153,7 +184,8 @@ export default class Viewer {
 								}
 							}
 						}
-						const tempResult2 = this.filterByFields(Logic[key], fields, values, indexes, tempResult);
+						const tempResult2 = this.
+							filterByFields(Logic[key], fields, values, indexes, tempResult);
 						fields = [];
 						values = [];
 						return tempResult2;
@@ -184,8 +216,10 @@ export default class Viewer {
 		return result;
 	}
 
-	private handleLogicMerge(logic: Logic, currResult: Section[], result: Section[], newResult: boolean): Section[]{
-		let resultSet: Section[] = [];
+	private handleLogicMerge(
+		logic: Logic, currResult: DatasetResult, result: DatasetResult, newResult: boolean
+	): DatasetResult{
+		let resultSet: DatasetResult = [];
 
 		if (newResult) {
 			resultSet = result;
@@ -194,7 +228,7 @@ export default class Viewer {
 		}
 
 		if (logic === Logic.AND) {
-			resultSet = resultSet.filter((section) => result.includes(section));
+			resultSet = resultSet.filter((data) => result.includes(data));
 		} else if (logic === Logic.OR) {
 			resultSet = [...new Set([...resultSet, ...result])];
 		}
@@ -217,18 +251,19 @@ export default class Viewer {
 		return {field, fieldValue};
 	}
 
-	public filterByColumnsAndOrder(data: Section[], columns: string[], orderField: string, datasetID: string) {
+	public filterByColumnsAndOrder(
+		data: DatasetResult, columns: string[], orderField: string, datasetID: string
+	) {
 		const filteredData = data.map((section) => {
 			const filteredItem: any = {};
 			columns.forEach((column) => {
-				const sectionKey = column as keyof Section;
-				filteredItem[`${datasetID}_${sectionKey}`] = section[sectionKey];
+				filteredItem[`${datasetID}_${column}`] = (section as keyof (Section | Room))[column];
 			});
 			return filteredItem;
 		});
 
-		return filteredData.sort((a, b) => {
-			const order = `${datasetID}_${orderField as keyof Section}`;
+		const result =  filteredData.sort((a, b) => {
+			const order = `${datasetID}_${orderField as keyof (Section | Room)}`;
 			if (a[order] < b[order]) {
 				return -1;
 			}
@@ -237,10 +272,20 @@ export default class Viewer {
 			}
 			return 0;
 		});
+
+		return result;
 	}
 
-	private jsonToMap(json: Record<string | number, Section[]>): Map<string | number, Section[]> {
+	private sectionJSONToMap(json: Record<string | number, Section[]>): Map<string | number, Section[]> {
 		const map = new Map<string | number, Section[]>();
+		for (const key in json) {
+			map.set(key as string | number, json[key]);
+		}
+		return map;
+	}
+
+	private roomJSONToMap(json: Record<string | number, Room[]>): Map<string | number, Room[]> {
+		const map = new Map<string | number, Room[]>();
 		for (const key in json) {
 			map.set(key as string | number, json[key]);
 		}

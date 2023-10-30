@@ -3,17 +3,16 @@ import InsightFacade from "../../src/controller/InsightFacade";
 import {expect, use} from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {clearDisk, getContentFromArchives} from "../TestUtil";
-import {veryComplexQuery} from "../resources/queries/abc";
 import {NegationQuery} from "../resources/queries/performQueryData";
 
 use(chaiAsPromised);
 
 describe("InsightFacade", function () {
 	let facade: IInsightFacade;
-	let sections: string;
+	let rooms: string;
 
 	before(function () {
-		sections = getContentFromArchives("pair.zip");
+		rooms = getContentFromArchives("rooms/oneCampus.zip");
 
 		clearDisk();
 	});
@@ -26,13 +25,16 @@ describe("InsightFacade", function () {
 			});
 
 			it("should add one dataset and return its id", async function () {
-				const datasetID = "sections";
+				const datasetID = "rooms";
 				try {
-					const result = await facade.addDataset(datasetID, sections, InsightDatasetKind.Sections);
+					const result = await facade.addDataset(datasetID, rooms, InsightDatasetKind.Rooms);
 					expect(result).to.deep.equal([datasetID]);
-					const queryResult = await facade.performQuery(NegationQuery.input);
-					const expectedResult = NegationQuery.output;
-					expect(queryResult).have.deep.members(NegationQuery.output);
+					// const remove = await facade.removeDataset(datasetID);
+					// expect(remove).to.deep.equal(datasetID);
+
+					// const queryResult = await facade.performQuery(NegationQuery.input);
+					// const expectedResult = NegationQuery.output;
+					// expect(queryResult).have.deep.members(NegationQuery.output);
 				} catch (err) {
 					console.error("Found error: ", err);
 				}

@@ -5,10 +5,11 @@ import {
 import SectionParser, {SectionIndexes} from "../usecase/SectionParser";
 import Validator from "../util/validator";
 import Remover from "../usecase/Remover";
-import Viewer, {Node} from "../usecase/Viewer";
+import Viewer from "../usecase/Viewer";
 import QueryEngine from "../usecase/QueryEngine";
 import RoomParser, {RoomIndexes} from "../usecase/RoomParser";
 import Section from "../model/Section";
+import Filter, {Node} from "../usecase/Filter";
 
 export default class InsightFacade implements IInsightFacade {
 	private validator;
@@ -109,8 +110,12 @@ export default class InsightFacade implements IInsightFacade {
 			}
 
 
-			const filteredSections = viewer.filterByNode(filters, indexes);
-			const result = viewer.filterByColumnsAndOrder(filteredSections, columns, orderField, datasetID);
+			const filter = new Filter();
+			const filteredSections = filter.filterByNode(filters, indexes);
+			if (filteredSections.length > 5000) {
+				throw new ResultTooLargeError();
+			}
+			const result = filter.filterByColumnsAndOrder(filteredSections, columns, orderField, datasetID);
 
 			return Promise.resolve(result);
 		} catch (err) {

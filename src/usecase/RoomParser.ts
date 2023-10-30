@@ -1,4 +1,3 @@
-/* eslint-disable max-lines-per-function */
 import JSZip, {folder} from "jszip";
 import {InsightDataset, InsightDatasetKind, InsightError} from "../controller/IInsightFacade";
 import * as fs from "fs-extra";

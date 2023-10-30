@@ -31,6 +31,13 @@
 			"request": "launch",
 			"command": "yarn run main",
 			"cwd": "${workspaceFolder}"
+		},
+		{
+			"type": "node-terminal",
+			"name": "room",
+			"request": "launch",
+			"command": "yarn run room",
+			"cwd": "${workspaceFolder}"
 		}
     ]
 }

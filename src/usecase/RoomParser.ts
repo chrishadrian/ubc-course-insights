@@ -40,13 +40,13 @@ export default class RoomParser {
 	private indexes: Record<string, Map<string | number, Room[]>>;
 	private room: Room;
 	private rooms: Rooms;
-	private results: any[];
+	private validIndex: boolean;
 
 	constructor() {
 		this.indexes = {};
 		this.room = new Room();
 		this.rooms = new Rooms();
-		this.results = [];
+		this.validIndex = false;
 	}
 
 	public async parseRoomsContent(content: string): Promise<Rooms> {
@@ -64,10 +64,12 @@ export default class RoomParser {
 			try {
 				const indexObject = parse5.parse(indexContent);
 				await this.findElements(indexObject, zip, true);
+				if (!this.validIndex) {
+					throw new InsightError("index.htm is invalid");
+				}
 			} catch (error) {
-				throw new InsightError(`${error}`);
+				return Promise.reject(new InsightError(`Error when parsing room content: ${error}`));
 			}
-
 			return Promise.resolve(this.rooms);
 		} catch (error) {
 			return Promise.reject(new InsightError(`Dataset is invalid: ${error}`));
@@ -143,7 +145,9 @@ export default class RoomParser {
 		if (node.tagName === "td") {
 			const classAttribute = node.attrs.find((attr: {name: string}) => attr.name === "class");
 			if (classAttribute && classAttribute.value.includes("views-field")) {
-				this.results.push(node);
+				if (!this.validIndex) {
+					this.validIndex = true;
+				}
 				if (processBuilding) {
 					try {
 						await this.processElement(node, zip);

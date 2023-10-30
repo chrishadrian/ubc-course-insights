@@ -1,4 +1,5 @@
 import * as fs from "fs-extra";
+import Transformations from "../model/Transformations";
 import WhereRe, {Node} from "../model/WhereRe";
 import Options from "../model/Options";
 import {InsightError, InsightResult, NotFoundError, ResultTooLargeError} from "../controller/IInsightFacade";
@@ -9,12 +10,21 @@ export enum Logic {
 	NOT = "NOT",
 }
 
+export enum ApplyToken {
+	MAX = "MAX",
+	MIN = "MIN",
+	AVG = "AVG",
+	SUM = "SUM"
+}
+
 export class Query {
 	public whereBlock: Node;
 	public optionsBlock: Options;
-	constructor(w: Node, o: Options) {
+	public transformationsBlock?: Transformations;
+	constructor(w: Node, o: Options, t?: Transformations) {
 		this.whereBlock = w;
 		this.optionsBlock = o;
+		this.transformationsBlock = t;
 	}
 }
 
@@ -32,8 +42,13 @@ export default class QueryEngine {
 		if (id !== "" && optionsBlock.getDatasetID() !== id) {
 			throw new InsightError("two different dataset ideas in WHERE and OPTIONS");
 		}
-		let parsed = new Query(whereBlock, optionsBlock);
-		return parsed;
+		let keys = this.getKeysHelper(query);
+		let parsed;
+		if (keys.length !== 3) {
+			return parsed = new Query(whereBlock, optionsBlock);
+		}
+		let transformationsBlock = new Transformations(q["TRANSFORMATIONS"]);
+		return parsed = new Query(whereBlock, optionsBlock, transformationsBlock);
 	}
 
 	// return false if first query node does not have WHERE or Options, or more than one
@@ -44,7 +59,12 @@ export default class QueryEngine {
 	// https://bobbyhadz.com/blog/typescript-type-unknown-is-not-assignable-to-type
 	private validRoot(query: unknown): boolean {
 		let keys = this.getKeysHelper(query);
-		return keys.length === 2 && keys[0] === "WHERE" && keys[1] === "OPTIONS";
+		if (keys.length === 2) {
+			return keys[0] === "WHERE" && keys[1] === "OPTIONS";
+		} else if (keys.length === 3) {
+			return keys[0] === "WHERE" && keys[1] === "OPTIONS" && keys[2] === "TRANSFORMATIONS";
+		}
+		return false;
 	}
 
 	private validOpts(opts: unknown): boolean {
@@ -153,7 +173,10 @@ export default class QueryEngine {
 			throw new InsightError("no columns specified");
 		}
 		for (let i of strs) {
-			this.validateMSKey(i);
+			// FIX THIS
+			if (!this.validateMSKey(i)) {
+				throw new InsightError("invalid key in cols");
+			}
 			let currId = this.extractIDString(i);
 			if (id !== "" && id !== currId) {
 				throw new InsightError("more than one dataset specified in columns");

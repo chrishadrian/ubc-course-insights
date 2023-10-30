@@ -1,8 +1,10 @@
 import {InsightError} from "../controller/IInsightFacade";
+import QueryHelper from "../util/PerformQueryHelper";
 export interface Node {
 	[key: string]: string | number | Node[] | Node;
 }
 export default class WhereRe {
+	private helper = new QueryHelper();
 
 	private validateKey(key: string, isSkey: boolean): boolean {
 		if (isSkey) {

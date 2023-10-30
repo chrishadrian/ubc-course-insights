@@ -4,7 +4,7 @@ import * as fs from "fs-extra";
 import * as parse5 from "parse5";
 import Room from "../model/Room";
 import Rooms from "../model/Rooms";
-import Geolocation from "../util/geolocation";
+import Geolocation from "./Geolocation";
 
 enum RoomField {
 	shortname = "views-field-field-building-code",

@@ -20,7 +20,7 @@ describe("InsightFacade — Room", function () {
 	let rooms: string;
 
 	before(function () {
-		rooms = getContentFromArchives("lessCampus.zip", true);
+		rooms = getContentFromArchives("rooms/lessCampus.zip");
 
 		clearDisk();
 	});
@@ -54,7 +54,7 @@ describe("InsightFacade — Room", function () {
 			});
 
 			it("should add one no room dataset and return its id", async function () {
-				const noRoomData = getContentFromArchives("noRoomTable.zip", true);
+				const noRoomData = getContentFromArchives("rooms/noRoomTable.zip");
 				try {
 					const result = await facade.addDataset("rooms", noRoomData, InsightDatasetKind.Rooms);
 					expect(result).to.deep.equal(["rooms"]);
@@ -117,7 +117,7 @@ describe("InsightFacade — Room", function () {
 
 			it("should reject due to empty dataset", async function () {
 				try {
-					const emptyRoom = getContentFromArchives("emptyCampus.zip", true);
+					const emptyRoom = getContentFromArchives("rooms/emptyCampus.zip");
 					await facade.addDataset("rooms", emptyRoom, InsightDatasetKind.Rooms);
 					expect.fail("Should have rejected!");
 				} catch (err) {
@@ -127,7 +127,7 @@ describe("InsightFacade — Room", function () {
 
 			it("should reject due to missing index.htm", async function () {
 				try {
-					const missingIndex = getContentFromArchives("noIndexCampus.zip", true);
+					const missingIndex = getContentFromArchives("rooms/noIndexCampus.zip");
 					await facade.addDataset("rooms", missingIndex, InsightDatasetKind.Rooms);
 					expect.fail("Should have rejected!");
 				} catch (err) {
@@ -137,7 +137,7 @@ describe("InsightFacade — Room", function () {
 
 			it("should reject due to missing valid table in index.htm", async function () {
 				try {
-					const missingValidTable = getContentFromArchives("noTableIndex.zip", true);
+					const missingValidTable = getContentFromArchives("rooms/noTableIndex.zip");
 					await facade.addDataset("rooms", missingValidTable, InsightDatasetKind.Rooms);
 					expect.fail("Should have rejected!");
 				} catch (err) {
@@ -148,7 +148,7 @@ describe("InsightFacade — Room", function () {
 
 			it("should reject due to missing building file", async function () {
 				try {
-					const missingBuildingFile = getContentFromArchives("buildingFileNotFound.zip", true);
+					const missingBuildingFile = getContentFromArchives("rooms/buildingFileNotFound.zip");
 					await facade.addDataset("rooms", missingBuildingFile, InsightDatasetKind.Rooms);
 					expect.fail("Should have rejected!");
 				} catch (err) {
@@ -158,7 +158,7 @@ describe("InsightFacade — Room", function () {
 
 			it("should reject due to invalid rooms", async function () {
 				try {
-					const invalidData = getContentFromArchives("noBuildingFiles.zip", true);
+					const invalidData = getContentFromArchives("rooms/noBuildingFiles.zip");
 					await facade.addDataset("rooms", invalidData, InsightDatasetKind.Rooms);
 					expect.fail("Should have rejected!");
 				} catch (err) {

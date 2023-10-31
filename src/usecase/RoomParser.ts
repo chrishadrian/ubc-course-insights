@@ -48,7 +48,7 @@ export default class RoomParser {
 			const data = decode(content);
 			const zip = await JSZip.loadAsync(data);
 
-			const zipEntry = zip.files["campus/index.htm"];
+			const zipEntry = zip.files["index.htm"];
 			if (!zipEntry) {
 				throw new InsightError("Index.htm is not found");
 			}
@@ -204,7 +204,7 @@ export default class RoomParser {
 
 					const nodeTagA = this.findChildByNodeName(node, "a");
 					const roomLink: string = this.findNodeAttrByName(nodeTagA, "href").value;
-					const zipEntry = zip.files["campus/" + roomLink.substring(2)];
+					const zipEntry = zip.files[roomLink.substring(2)];
 					const indexContent = await zipEntry.async("text");
 					const indexObject = parse5.parse(indexContent);
 					await this.findElements(indexObject, zip, false);

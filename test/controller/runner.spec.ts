@@ -3,7 +3,6 @@ import InsightFacade from "../../src/controller/InsightFacade";
 import {expect, use} from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {clearDisk, getContentFromArchives} from "../TestUtil";
-import {NegationQuery} from "../resources/queries/performQueryData";
 
 use(chaiAsPromised);
 
@@ -12,7 +11,7 @@ describe("InsightFacade", function () {
 	let rooms: string;
 
 	before(function () {
-		rooms = getContentFromArchives("rooms/oneCampus.zip");
+		rooms = getContentFromArchives("rooms/lessCampus.zip");
 
 		clearDisk();
 	});

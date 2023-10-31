@@ -880,7 +880,7 @@ describe("InsightFacade - Section", function () {
 				}
 			});
 
-			it("should reject due to empty string id", async function () {
+			it("section - should reject due to empty string id", async function () {
 				try {
 					await facade.addDataset("", sections, InsightDatasetKind.Sections);
 					expect.fail("Should have rejected!");
@@ -889,7 +889,7 @@ describe("InsightFacade - Section", function () {
 				}
 			});
 
-			it("should reject due to underscore id", async function () {
+			it("section - should reject due to underscore id", async function () {
 				try {
 					await facade.addDataset("dataset_1", sections, InsightDatasetKind.Sections);
 					expect.fail("Should have rejected!");
@@ -898,7 +898,7 @@ describe("InsightFacade - Section", function () {
 				}
 			});
 
-			it("should reject due to only whitespace id", async function () {
+			it("section - should reject due to only whitespace id", async function () {
 				try {
 					await facade.addDataset(" ", sections, InsightDatasetKind.Sections);
 					expect.fail("Should have rejected!");
@@ -922,7 +922,7 @@ describe("InsightFacade - Section", function () {
 				}
 			});
 
-			it("should reject due to invalid dataset file type", async function () {
+			it("section - should reject due to invalid dataset file type", async function () {
 				try {
 					const invalidSections = getContentFromArchives("invalidPair.jpg");
 					await facade.addDataset("sections", invalidSections, InsightDatasetKind.Sections);
@@ -932,7 +932,7 @@ describe("InsightFacade - Section", function () {
 				}
 			});
 
-			it("should reject due to empty dataset", async function () {
+			it("section - should reject due to empty dataset", async function () {
 				try {
 					const emptySection = getContentFromArchives("emptyPair.zip");
 					await facade.addDataset("sections", emptySection, InsightDatasetKind.Sections);
@@ -942,7 +942,7 @@ describe("InsightFacade - Section", function () {
 				}
 			});
 
-			it("should reject due to invalid section format", async function () {
+			it("section - should reject due to invalid section format", async function () {
 				try {
 					const invalidSectionData = getContentFromArchives("invalidSection.zip");
 					await facade.addDataset("sections", invalidSectionData, InsightDatasetKind.Sections);
@@ -952,7 +952,7 @@ describe("InsightFacade - Section", function () {
 				}
 			});
 
-			it("should reject due to content and kind's mismatch", async function () {
+			it("section - should reject due to content and kind's mismatch", async function () {
 				try {
 					await facade.addDataset("sections", sections, InsightDatasetKind.Rooms);
 					expect.fail("Should have rejected!");
@@ -973,7 +973,7 @@ describe("InsightFacade - Section", function () {
 				}
 			});
 
-			it("should remove one dataset and return its id", async function () {
+			it("section - should remove one dataset and return its id", async function () {
 				try {
 					const result = await facade.removeDataset("sections");
 					expect(result).to.deep.equal("sections");
@@ -982,7 +982,7 @@ describe("InsightFacade - Section", function () {
 				}
 			});
 
-			it("should remove two datasets and return its ids", async function () {
+			it("section - should remove two datasets and return its ids", async function () {
 				try {
 					await facade.addDataset("ubc", sections, InsightDatasetKind.Sections);
 				} catch (err) {
@@ -1000,7 +1000,7 @@ describe("InsightFacade - Section", function () {
 				}
 			});
 
-			it("should reject due to empty string dataset id", async function () {
+			it("section - should reject due to empty string dataset id", async function () {
 				try {
 					await facade.removeDataset("");
 					expect.fail("Should have rejected!");
@@ -1009,7 +1009,7 @@ describe("InsightFacade - Section", function () {
 				}
 			});
 
-			it("should reject due to underscore dataset id", async function () {
+			it("section - should reject due to underscore dataset id", async function () {
 				try {
 					await facade.removeDataset("dataset_1");
 					expect.fail("Should have rejected!");
@@ -1018,7 +1018,7 @@ describe("InsightFacade - Section", function () {
 				}
 			});
 
-			it("should reject due to only whitespace dataset id", async function () {
+			it("section - should reject due to only whitespace dataset id", async function () {
 				try {
 					await facade.removeDataset(" ");
 					expect.fail("Should have rejected!");
@@ -1027,7 +1027,7 @@ describe("InsightFacade - Section", function () {
 				}
 			});
 
-			it("should reject due to non-existent dataset id", async function () {
+			it("section - should reject due to non-existent dataset id", async function () {
 				try {
 					const nonExistentID = "nonExistentID";
 					await facade.removeDataset(nonExistentID);
@@ -1039,7 +1039,7 @@ describe("InsightFacade - Section", function () {
 		});
 
 		describe("List Dataset", function () {
-			it("should list empty dataset", async function () {
+			it("section - should list empty dataset", async function () {
 				clearDisk();
 				facade = new InsightFacade();
 				try {
@@ -1061,7 +1061,7 @@ describe("InsightFacade - Section", function () {
 					}
 				});
 
-				it("should list one dataset", async function () {
+				it("section - should list one dataset", async function () {
 					try {
 						const datasets = await facade.listDatasets();
 						expect(datasets).to.deep.equal([
@@ -1076,7 +1076,7 @@ describe("InsightFacade - Section", function () {
 					}
 				});
 
-				it("should list empty dataset after removing one dataset", async function () {
+				it("section - should list empty dataset after removing one dataset", async function () {
 					try {
 						await facade.removeDataset("sections");
 						const datasets = await facade.listDatasets();
@@ -1086,7 +1086,7 @@ describe("InsightFacade - Section", function () {
 					}
 				});
 
-				it("should list the same dataset even after clearing disk", async function () {
+				it("section - should list the same dataset even after clearing disk", async function () {
 					try {
 						clearDisk();
 						const datasets = await facade.listDatasets();
@@ -1102,47 +1102,50 @@ describe("InsightFacade - Section", function () {
 					}
 				});
 
-				it("should list the same dataset with a new facade after old facade crashed", async function () {
-					try {
-						const newFacade = new InsightFacade();
-						const datasets = await newFacade.listDatasets();
-						expect(datasets).to.deep.equal([
-							{
-								id: "sections",
-								kind: InsightDatasetKind.Sections,
-								numRows: 4,
-							},
-						]);
-					} catch (err) {
-						expect.fail("Should not be rejected!");
-					}
-				});
+				it("should list the same dataset with a new facade after old facade crashed",
+					async function () {
+						try {
+							const newFacade = new InsightFacade();
+							const datasets = await newFacade.listDatasets();
+							expect(datasets).to.deep.equal([
+								{
+									id: "sections",
+									kind: InsightDatasetKind.Sections,
+									numRows: 4,
+								},
+							]);
+						} catch (err) {
+							expect.fail("Should not be rejected!");
+						}
+					});
 
-				it("should list empty dataset after old facade removed prev dataset and crashed", async function () {
-					try {
-						await facade.addDataset("abc", sections, InsightDatasetKind.Sections);
-						await facade.removeDataset("abc");
-						await facade.removeDataset("sections");
-						const newFacade = new InsightFacade();
-						const datasets = await newFacade.listDatasets();
-						expect(datasets.length).to.equal(0);
-					} catch (err) {
-						expect.fail("Should not be rejected!");
-					}
-				});
+				it("section - should list empty dataset after old facade removed prev dataset and crashed",
+					async function () {
+						try {
+							await facade.addDataset("abc", sections, InsightDatasetKind.Sections);
+							await facade.removeDataset("abc");
+							await facade.removeDataset("sections");
+							const newFacade = new InsightFacade();
+							const datasets = await newFacade.listDatasets();
+							expect(datasets.length).to.equal(0);
+						} catch (err) {
+							expect.fail("Should not be rejected!");
+						}
+					});
 
-				it("should list empty dataset after old facade crashed and disk being cleared", async function () {
-					try {
-						clearDisk();
-						const newFacade = new InsightFacade();
-						const datasets = await newFacade.listDatasets();
-						expect(datasets).to.deep.equal([]);
-					} catch (err) {
-						expect.fail("Should not be rejected!");
-					}
-				});
+				it("section - should list empty dataset after old facade crashed and disk being cleared",
+					async function () {
+						try {
+							clearDisk();
+							const newFacade = new InsightFacade();
+							const datasets = await newFacade.listDatasets();
+							expect(datasets).to.deep.equal([]);
+						} catch (err) {
+							expect.fail("Should not be rejected!");
+						}
+					});
 
-				it("should list multiple datasets", async function () {
+				it("section - should list multiple datasets", async function () {
 					try {
 						await facade.addDataset("datasetID2", sections, InsightDatasetKind.Sections);
 						const datasets = await facade.listDatasets();
@@ -1164,7 +1167,7 @@ describe("InsightFacade - Section", function () {
 					}
 				});
 
-				it("should list one dataset after removing one from two datasets", async function () {
+				it("section - should list one dataset after removing one from two datasets", async function () {
 					try {
 						await facade.addDataset("datasetID2", sections, InsightDatasetKind.Sections);
 						await facade.removeDataset("sections");
@@ -1488,14 +1491,6 @@ describe("InsightFacade - Section", function () {
 		});
 
 		it("should reject due to invalid queries — multiple datasets", async function () {
-			/*
-			try {
-				await facade.addDataset("ubc", sections, InsightDatasetKind.Sections);
-			} catch (err) {
-				expect.fail("Should not be rejected!");
-			}
-			*/
-
 			try {
 				await facade.performQuery(invalidMultipleIDsQuery);
 				expect.fail("Should have rejected!");

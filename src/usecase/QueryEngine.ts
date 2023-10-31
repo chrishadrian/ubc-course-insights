@@ -29,6 +29,11 @@ export class Query {
 	}
 }
 
+interface IQuery {
+	WHERE: object;
+	OPTIONS: object;
+}
+
 export default class QueryEngine {
 
 	private whereDeveloper = new WhereRe();

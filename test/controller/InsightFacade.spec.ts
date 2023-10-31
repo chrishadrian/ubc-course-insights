@@ -369,6 +369,8 @@ describe("InsightFacade — Room", function () {
 
 				it("should list empty dataset after old facade removed prev dataset and crashed", async function () {
 					try {
+						await facade.addDataset("abc", rooms, InsightDatasetKind.Rooms);
+						await facade.removeDataset("abc");
 						await facade.removeDataset("rooms");
 						const newFacade = new InsightFacade();
 						const datasets = await newFacade.listDatasets();
@@ -1118,6 +1120,8 @@ describe("InsightFacade - Section", function () {
 
 				it("should list empty dataset after old facade removed prev dataset and crashed", async function () {
 					try {
+						await facade.addDataset("abc", sections, InsightDatasetKind.Sections);
+						await facade.removeDataset("abc");
 						await facade.removeDataset("sections");
 						const newFacade = new InsightFacade();
 						const datasets = await newFacade.listDatasets();

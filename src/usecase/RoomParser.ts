@@ -1,17 +1,10 @@
-import JSZip, {folder} from "jszip";
+import JSZip from "jszip";
 import {InsightDataset, InsightDatasetKind, InsightError} from "../controller/IInsightFacade";
 import * as fs from "fs-extra";
 import * as parse5 from "parse5";
 import Room from "../model/Room";
 import Rooms from "../model/Rooms";
-import * as http from "http";
-import {promises} from "dns";
-
-interface GeoResponse {
-	lat?: number;
-	lon?: number;
-	error?: string;
-}
+import Geolocation from "./Geolocation";
 
 enum RoomField {
 	shortname = "views-field-field-building-code",
@@ -55,7 +48,7 @@ export default class RoomParser {
 			const data = decode(content);
 			const zip = await JSZip.loadAsync(data);
 
-			const zipEntry = zip.files["campus/index.htm"];
+			const zipEntry = zip.files["index.htm"];
 			if (!zipEntry) {
 				throw new InsightError("Index.htm is not found");
 			}
@@ -142,7 +135,7 @@ export default class RoomParser {
 
 	private async findElements(node: any, zip: JSZip, processBuilding: boolean): Promise<void> {
 		if (node.tagName === "td") {
-			const classAttribute = node.attrs.find((attr: {name: string}) => attr.name === "class");
+			const classAttribute = this.findNodeAttrByName(node, "class");
 			if (classAttribute && classAttribute.value.includes("views-field")) {
 				if (!this.validIndex) {
 					this.validIndex = true;
@@ -155,7 +148,7 @@ export default class RoomParser {
 					}
 				} else {
 					try {
-						await this.processMoreInfo(node);
+						this.processMoreInfo(node);
 					} catch (error) {
 						throw new InsightError(`Error processing more info: ${error}`);
 					}
@@ -175,12 +168,12 @@ export default class RoomParser {
 	}
 
 	private async processElement(node: any, zip: JSZip) {
-		const className: string = node.attrs[0].value;
+		const className: string = this.findNodeAttrByName(node, "class").value;
 		const field: string = className.split(" ")[1];
 		if (field !== RoomField.fullname && field !== RoomField.nothing && node.childNodes.length !== 1) {
 			return;
 		}
-		const value: string | number = node.childNodes[0].value;
+		const value: string | number = this.findChildByNodeName(node, "#text").value;
 
 		switch (field) {
 			case RoomField.shortname:
@@ -188,7 +181,8 @@ export default class RoomParser {
 				break;
 
 			case RoomField.fullname: {
-				const fullname = node.childNodes[1].childNodes[0].value;
+				const nodeTagA = this.findChildByNodeName(node, "a");
+				const fullname = this.findChildByNodeName(nodeTagA, "#text").value;
 				this.room.fullname = fullname;
 				break;
 			}
@@ -200,94 +194,82 @@ export default class RoomParser {
 
 			case RoomField.nothing: {
 				try {
-					const geoLocation = await this.getGeolocation(this.room.address);
+					const util = new Geolocation();
+					const geoLocation = await util.getGeolocation(this.room.address);
 					if (!geoLocation.lat || !geoLocation.lon || geoLocation.error) {
 						throw new InsightError("Error when getting Geolocation: " + geoLocation.error);
 					}
 					this.room.lat = geoLocation.lat;
 					this.room.lon = geoLocation.lon;
 
-					const roomLink: string = node.childNodes[1].attrs[0].value;
-					const zipEntry = zip.files["campus/" + roomLink.substring(2)];
+					const nodeTagA = this.findChildByNodeName(node, "a");
+					const roomLink: string = this.findNodeAttrByName(nodeTagA, "href").value;
+					const zipEntry = zip.files[roomLink.substring(2)];
 					const indexContent = await zipEntry.async("text");
 					const indexObject = parse5.parse(indexContent);
 					await this.findElements(indexObject, zip, false);
 					break;
 				} catch (error) {
-					throw new InsightError(`Error finding building information: ${error} with node: ${node}`);
+					throw new InsightError(`Error finding building information: ${error}}`);
 				}
 			}
 		}
 	}
 
-	private async processMoreInfo(node: any) {
-		const className: string = node.attrs[0].value;
-		const field: string = className.split(" ")[1];
-		if (field !== RoomField.nothing && field !== RoomField.number && node.childNodes.length !== 1) {
-			return;
-		}
-		const value: string | number = node.childNodes[0].value;
-
-		switch (field) {
-			case RoomField.number: {
-				const number: string = node.childNodes[1].childNodes[0].value;
-				this.room.number = number;
-				this.room.name = `${this.room.shortname}_${number}`;
-				break;
+	private processMoreInfo(node: any) {
+		try{
+			const className: string = this.findNodeAttrByName(node, "class").value;
+			const field: string = className.split(" ")[1];
+			if (field !== RoomField.nothing && field !== RoomField.number && node.childNodes.length !== 1) {
+				return;
 			}
+			const value: string | number = this.findChildByNodeName(node, "#text").value;
 
-			case RoomField.seats:
-				this.room.seats = Number(value);
-				break;
+			switch (field) {
+				case RoomField.number: {
+					const nodeTagA = this.findChildByNodeName(node, "a");
+					const number = this.findChildByNodeName(nodeTagA, "#text").value;
+					this.room.number = number;
+					this.room.name = `${this.room.shortname}_${number}`;
+					break;
+				}
 
-			case RoomField.furniture:
-				this.room.furniture = this.formatValue(value);
-				break;
+				case RoomField.seats:
+					this.room.seats = Number(value);
+					break;
 
-			case RoomField.type:
-				this.room.type = this.formatValue(value);
-				break;
+				case RoomField.furniture:
+					this.room.furniture = this.formatValue(value);
+					break;
 
-			case RoomField.nothing: {
-				const href: string = node.childNodes[1].attrs[0].value;
-				this.room.href = href;
-				this.rooms.addRoom(this.room);
-				break;
+				case RoomField.type:
+					this.room.type = this.formatValue(value);
+					break;
+
+				case RoomField.nothing: {
+					const nodeTagA = this.findChildByNodeName(node, "a");
+					const href = this.findNodeAttrByName(nodeTagA, "href").value;
+					this.room.href = href;
+					this.rooms.addRoom(this.room);
+					break;
+				}
 			}
+		} catch (error) {
+			throw new InsightError(`${error}`);
 		}
 	}
 
-	private getGeolocation = (address: string): Promise<GeoResponse> => {
-		return new Promise<GeoResponse>((resolve, reject) => {
-			const encodedAddress = encodeURIComponent(address);
-			const url = `http://cs310.students.cs.ubc.ca:11316/api/v1/project_team246/${encodedAddress}`;
-
-			http
-				.get(url, (response) => {
-					let data = "";
-
-					// A chunk of data has been received.
-					response.on("data", (chunk) => {
-						data += chunk;
-					});
-
-					// The whole response has been received.
-					response.on("end", () => {
-						try {
-							const parsedData: GeoResponse = JSON.parse(data);
-							resolve(parsedData);
-						} catch (error) {
-							reject({error: "Failed to parse response data"});
-						}
-					});
-				})
-				.on("error", (error) => {
-					reject({error: `Error: ${error.message}`});
-				});
-		});
-	};
-
 	private formatValue(value: string | number): string {
 		return value.toString().trim().replace("\n", "");
+	}
+
+	private findChildByNodeName(node: any, nodeName: string) {
+		return node.childNodes.find(
+			(child: {nodeName: string;}) => child.nodeName === nodeName
+		);
+	}
+
+	private findNodeAttrByName(node: any, name: string) {
+		return node.attrs.find((attr: {name: string}) => attr.name === name);
 	}
 }

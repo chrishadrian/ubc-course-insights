@@ -88,13 +88,13 @@ describe("InsightFacade — Room", function () {
 				}
 			});
 
-			it("should add one no room dataset and return its id", async function () {
+			it("should reject building with no room", async function () {
 				const noRoomData = getContentFromArchives("rooms/noRoomTable.zip");
 				try {
-					const result = await facade.addDataset("rooms", noRoomData, InsightDatasetKind.Rooms);
-					expect(result).to.deep.equal(["rooms"]);
+					await facade.addDataset("rooms", noRoomData, InsightDatasetKind.Rooms);
+					expect.fail("Should have rejected!");
 				} catch (err) {
-					expect.fail("Should not be rejected!");
+					expect(err).to.be.instanceof(InsightError);
 				}
 			});
 
@@ -907,7 +907,7 @@ describe("InsightFacade - Section", function () {
 				}
 			});
 
-			it("should reject due to duplicate id", async function () {
+			it("section - should reject due to duplicate id", async function () {
 				try {
 					await facade.addDataset("dataset2", sections, InsightDatasetKind.Sections);
 				} catch (err) {
@@ -1102,7 +1102,7 @@ describe("InsightFacade - Section", function () {
 					}
 				});
 
-				it("should list the same dataset with a new facade after old facade crashed",
+				it("section - should list the same dataset with a new facade after old facade crashed",
 					async function () {
 						try {
 							const newFacade = new InsightFacade();

@@ -33,12 +33,14 @@ export default class RoomParser {
 	private room: Room;
 	private rooms: Rooms;
 	private validIndex: boolean;
+	private validRoom: boolean;
 
 	constructor() {
 		this.indexes = {};
 		this.room = new Room();
 		this.rooms = new Rooms();
 		this.validIndex = false;
+		this.validRoom = false;
 	}
 
 	public async parseRoomsContent(content: string): Promise<Rooms> {
@@ -58,6 +60,8 @@ export default class RoomParser {
 				await this.findElements(indexObject, zip, true);
 				if (!this.validIndex) {
 					throw new InsightError("index.htm is invalid");
+				} else if (!this.validRoom) {
+					throw new InsightError("room.htm is invalid");
 				}
 			} catch (error) {
 				return Promise.reject(new InsightError(`Error when parsing room content: ${error}`));
@@ -148,6 +152,9 @@ export default class RoomParser {
 					}
 				} else {
 					try {
+						if (!this.validRoom) {
+							this.validRoom = true;
+						}
 						this.processMoreInfo(node);
 					} catch (error) {
 						throw new InsightError(`Error processing more info: ${error}`);
@@ -156,8 +163,9 @@ export default class RoomParser {
 			}
 		}
 		let childPromises = [];
-		const selectedNodeNames = ["#comment", "#text", "#documentType", "head",
-			"script", "footer", "noscript", "header"];
+		const selectedNodeNames = [
+			"#comment", "#text", "#documentType", "head", "script", "footer", "noscript", "header"
+		];
 		if (node.childNodes) {
 			node.childNodes = node.childNodes.filter(
 				(childNode: any) => !selectedNodeNames.includes(childNode.nodeName)
@@ -217,7 +225,7 @@ export default class RoomParser {
 	}
 
 	private processMoreInfo(node: any) {
-		try{
+		try {
 			const className: string = this.findNodeAttrByName(node, "class").value;
 			const field: string = className.split(" ")[1];
 			if (field !== RoomField.nothing && field !== RoomField.number && node.childNodes.length !== 1) {
@@ -264,9 +272,7 @@ export default class RoomParser {
 	}
 
 	private findChildByNodeName(node: any, nodeName: string) {
-		return node.childNodes.find(
-			(child: {nodeName: string;}) => child.nodeName === nodeName
-		);
+		return node.childNodes.find((child: {nodeName: string}) => child.nodeName === nodeName);
 	}
 
 	private findNodeAttrByName(node: any, name: string) {

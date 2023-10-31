@@ -5,7 +5,7 @@ import {InsightError} from "../controller/IInsightFacade";
 export default class Transformations {
 
 	private datasetID: string;
-	private group: string[];
+	private group: Set<string>;
 	private apply: Node[];
 	private applyKeys: Set<string>;
 	private queryHelper = new QueryHelper();
@@ -82,12 +82,12 @@ export default class Transformations {
 		}
 	}
 
-	private parseGroup(obj: unknown): [string[], string] {
+	private parseGroup(obj: unknown): [Set<string>, string] {
 		let strs: string[] = obj as string[];
 		if (strs.length < 1) {
 			throw new InsightError("no group specified");
 		}
-		let groupFields = [];
+		let groupFields = new Set<string>();
 		let id = "";
 		for (let i of strs) {
 			if (!(this.queryHelper.validateRoomsMKey(i) ||
@@ -100,7 +100,7 @@ export default class Transformations {
 			if (id !== "" && id !== currId) {
 				throw new InsightError("more than one dataset specified in group");
 			}
-			groupFields.push(field);
+			groupFields.add(field);
 		}
 		return [groupFields, id];
 	}
@@ -110,7 +110,7 @@ export default class Transformations {
 		return this.datasetID;
 	}
 
-	public getGroup(): string[] {
+	public getGroup(): Set<string> {
 		return this.group;
 	}
 

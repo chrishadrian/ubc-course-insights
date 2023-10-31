@@ -82,7 +82,7 @@ export default class InsightFacade implements IInsightFacade {
 			const options = queryResult.optionsBlock;
 			datasetID = options.getDatasetID();
 			columns = options.getColumns();
-			orderField = options.getOrder();
+			orderField = options.getOrder()[0];
 		} catch (err) {
 			return Promise.reject(err);
 		}

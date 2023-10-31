@@ -374,7 +374,7 @@ describe("InsightFacade — Room", function () {
 						const datasets = await newFacade.listDatasets();
 						expect(datasets.length).to.equal(0);
 					} catch (err) {
-						expect.fail("Should not be rejected!");
+						expect.fail("Should not be rejected! Error: " + err);
 					}
 				});
 

@@ -13,7 +13,7 @@
 		"express": "4.18.2",
 		"fs-extra": "11.1.0",
 		"jszip": "3.10.1",
-		"parse5": "7.1.1"
+		"parse5": "^7.1.2"
 	},
 	"devDependencies": {
 		"@tsconfig/node18": "1.0.1",
@@ -45,6 +45,7 @@
 		"build": "tsc && yarn lint",
 		"test": "mocha --require ts-node/register --timeout 10000 --extension .spec.ts --recursive test",
 		"main": "mocha --require ts-node/register --timeout 10000 test/**/runner.spec.ts",
+		"section": "mocha --require ts-node/register --timeout 10000 test/**/Section.spec.ts",
 		"pretty": "prettier --config ./.prettierrc.json --write \"./**/*.ts\"",
 		"lint": "eslint src test --ext .ts",
 		"fix": "yarn lint --fix"

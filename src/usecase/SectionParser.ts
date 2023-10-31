@@ -9,25 +9,25 @@ interface ZipFile {
 	rank: number;
 }
 
-export interface DatasetJSON {
+export interface SectionJSON {
 	InsightDataset: InsightDataset;
 	MappedSection: Record<string, Record<string | number, Section[]>>;
 }
 
-export interface DatasetIndexes {
+export interface SectionIndexes {
 	[datasetID: string]: Record<string, Map<string | number, Section[]>>
 }
 
 const persistDir = "./data";
 
-export default class Adder {
+export default class SectionParser {
 	private indexes: Record<string, Map<string | number, Section[]>>;
 
 	constructor() {
 		this.indexes = {};
 	}
 
-	public async parseContentSection(content: string): Promise<Sections> {
+	public async parseSectionsContent(content: string): Promise<Sections> {
 		let count = 0;
 		const decode = (str: string): string => Buffer.from(str, "base64").toString("binary");
 
@@ -78,7 +78,7 @@ export default class Adder {
 	}
 
 	public async writeToDisk(sections: Sections, datasetID: string, kind: InsightDatasetKind):
-	Promise<{insightDataset: InsightDataset, datasetIndex: DatasetIndexes}> {
+	Promise<{insightDataset: InsightDataset, datasetIndexes: SectionIndexes}> {
 		const data = sections.getSections();
 
 		const rows = data.length;
@@ -88,7 +88,7 @@ export default class Adder {
 			numRows: rows,
 		};
 
-		const datasetJSON: DatasetJSON = {
+		const datasetJSON: SectionJSON = {
 			InsightDataset: insight,
 			MappedSection: {},
 		};
@@ -108,12 +108,12 @@ export default class Adder {
 		const filePath = `${persistDir}/${datasetID}.json`;
 		await fs.writeFile(filePath, jsonData);
 
-		const datasetIndex: DatasetIndexes = {};
-		datasetIndex[datasetID] = this.indexes;
+		const datasetIndexes: SectionIndexes = {};
+		datasetIndexes[datasetID] = this.indexes;
 
-		const result: {insightDataset: InsightDataset, datasetIndex: DatasetIndexes} = {
+		const result: {insightDataset: InsightDataset, datasetIndexes: SectionIndexes} = {
 			insightDataset: datasetJSON.InsightDataset,
-			datasetIndex: datasetIndex
+			datasetIndexes: datasetIndexes
 		};
 
 		return Promise.resolve(result);

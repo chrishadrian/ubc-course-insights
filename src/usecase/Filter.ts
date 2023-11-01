@@ -128,6 +128,7 @@ export default class Filter {
 					}
 				}
 			}
+			// THIS NEEDS FIXING
 			return [];
 		};
 
@@ -180,7 +181,7 @@ export default class Filter {
 	}
 
 	public filterByColumnsAndOrder(
-		data: DatasetResult, columns: string[], orderField: string, direction: string, datasetID: string
+		data: DatasetResult, columns: string[], orderFields: string[], direction: string, datasetID: string
 	) {
 		const filteredData = data.map((section) => {
 			const filteredItem: any = {};
@@ -191,24 +192,29 @@ export default class Filter {
 		});
 
 		const result =  filteredData.sort((a, b) => {
-			const order = `${datasetID}_${orderField as keyof (Section | Room)}`;
+			// const order = `${datasetID}_${orderField as keyof (Section | Room)}`;
 			if (direction === "" || direction === "UP") {
-				if (a[order] < b[order]) {
-					return -1;
+				for (let orderField of orderFields) {
+					const order =  `${datasetID}_${orderField as keyof (Section | Room)}`;
+					if (a[order] < b[order]) {
+						return -1;
+					}
+					if (a[order] > b[order]) {
+						return 1;
+					}
 				}
-				if (a[order] > b[order]) {
-					return 1;
-				}
-				return 0;
 			} else {
-				if (a[order] > b[order]) {
-					return -1;
+				for (let orderField of orderFields) {
+					const order =  `${datasetID}_${orderField as keyof (Section | Room)}`;
+					if (a[order] > b[order]) {
+						return -1;
+					}
+					if (a[order] < b[order]) {
+						return 1;
+					}
 				}
-				if (a[order] < b[order]) {
-					return 1;
-				}
-				return 0;
 			}
+			return 0;
 		});
 
 		return result;

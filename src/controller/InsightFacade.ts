@@ -80,7 +80,7 @@ export default class InsightFacade implements IInsightFacade {
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
 		const queryEngine = new QueryEngine();
 		let datasetID = "";
-		let orderField = "";
+		let orderFields = [];
 		let columns = [""];
 		let filters: Node = {};
 		let direction = "";
@@ -93,7 +93,7 @@ export default class InsightFacade implements IInsightFacade {
 			const options = queryResult.optionsBlock;
 			datasetID = options.getDatasetID();
 			columns = options.getColumns();
-			orderField = options.getOrder()[0];
+			orderFields = options.getOrder();
 			direction = options.getDirection();
 		} catch (err) {
 			return Promise.reject(err);
@@ -117,7 +117,7 @@ export default class InsightFacade implements IInsightFacade {
 			if (filteredSections.length > 5000) {
 				throw new ResultTooLargeError();
 			}
-			const result = filter.filterByColumnsAndOrder(filteredSections, columns, orderField, direction, datasetID);
+			const result = filter.filterByColumnsAndOrder(filteredSections, columns, orderFields, direction, datasetID);
 
 			return Promise.resolve(result);
 		} catch (err) {

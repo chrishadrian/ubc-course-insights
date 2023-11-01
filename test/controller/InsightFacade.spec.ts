@@ -47,7 +47,7 @@ import {
 	InvalidKeySCompOnMKey,
 	InvalidIdStringEmptyId,
 } from "../resources/queries/invalidQuery";
-import {roomsQueryAllKeys, allRoomsQuery} from "../resources/queries/roomsQueries";
+import {roomsQueryAllKeys, allRoomsQuery, roomsMultiplOrderKeys} from "../resources/queries/roomsQueries";
 
 use(chaiAsPromised);
 
@@ -463,6 +463,15 @@ describe("PerformQuery on Rooms", function () {
 		try {
 			const result = await facade.performQuery(roomsQueryAllKeys.input);
 			expect(result).have.deep.members(roomsQueryAllKeys.output);
+		} catch (err) {
+			expect.fail("Should not be rejected!");
+		}
+	});
+
+	it("should perform a rooms query with multiple order keys", async function () {
+		try {
+			const result = await facade.performQuery(roomsMultiplOrderKeys.input);
+			expect(result).have.deep.members(roomsMultiplOrderKeys.output);
 		} catch (err) {
 			expect.fail("Should not be rejected!");
 		}

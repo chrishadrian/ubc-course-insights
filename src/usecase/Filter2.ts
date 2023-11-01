@@ -10,7 +10,7 @@ export interface Node {
 type DatasetIndexes = Record<string, Map<string | number, Section[]>> | Record<string, Map<string | number, Room[]>>
 type DatasetResult = Array<Section | Room>
 
-export default class Filter {
+export default class Filter2 {
 	public filterByFields(
 		operation: Logic,
 		fieldNames: string[],
@@ -91,6 +91,11 @@ export default class Filter {
 		}
 
 		return result;
+	}
+
+	public filterByNode2(root: Node, indexes: DatasetIndexes): DatasetResult {
+		let fields: string[] = [], values: string[][] = [], result: DatasetResult = [], counter = 0;
+		return [];
 	}
 
 	public filterByNode(

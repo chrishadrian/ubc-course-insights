@@ -47,6 +47,7 @@ import {
 	InvalidKeySCompOnMKey,
 	InvalidIdStringEmptyId,
 } from "../resources/queries/invalidQuery";
+import {roomsQueryAllKeys, allRoomsQuery} from "../resources/queries/roomsQueries";
 
 use(chaiAsPromised);
 
@@ -434,402 +435,41 @@ describe("InsightFacade — Room", function () {
 		});
 	});
 
-	// describe("PerformQuery", function () {
-	// 	before(async function () {
-	// 		clearDisk();
-	// 		rooms = getContentFromArchives("pair.zip");
-	// 		halfSections = getContentFromArchives("halfPair.zip");
-	// 		facade = new InsightFacade();
-	// 		try {
-	// 			await facade.addDataset("rooms", rooms, InsightDatasetKind.Rooms);
-	// 			await facade.addDataset("large", halfSections, InsightDatasetKind.Rooms);
-	// 		} catch (err) {
-	// 			expect.fail("Should not be rejected!");
-	// 		}
-	// 	});
-
-	// 	it("should perform a query and return empty array", async function () {
-	// 		try {
-	// 			const result = await facade.performQuery(emptyQuery.input);
-	// 			expect(result).have.deep.members(emptyQuery.output);
-	// 		} catch (err) {
-	// 			expect.fail("Should not be rejected!");
-	// 		}
-	// 	});
-
-	// 	it("should perform a simple query and return results", async function () {
-	// 		try {
-	// 			const result = await facade.performQuery(simpleQuery.input);
-	// 			expect(result).have.deep.members(simpleQuery.output);
-	// 		} catch (err) {
-	// 			expect.fail("Should not be rejected!");
-	// 		}
-	// 	});
-
-	// 	it("should perform a simple query with no order and return results", async function () {
-	// 		try {
-	// 			const result = await facade.performQuery(simpleQueryWithNoOrder.input);
-	// 			expect(result).have.deep.members(simpleQueryWithNoOrder.output);
-	// 		} catch (err) {
-	// 			expect.fail("Should not be rejected!");
-	// 		}
-	// 	});
-
-	// 	it("should perform a simple query with LT operator and return results", async function () {
-	// 		try {
-	// 			const result = await facade.performQuery(LTOperatorQuery.input);
-	// 			expect(result).have.deep.members(LTOperatorQuery.output);
-	// 		} catch (err) {
-	// 			expect.fail("Should not be rejected!");
-	// 		}
-	// 	});
-
-	// 	it("should perform a very simple query with negation operator and return results", async function () {
-	// 		try {
-	// 			const result = await facade.performQuery(SimpleNegationQuery.input);
-	// 			expect(result).have.deep.members(SimpleNegationQuery.output);
-	// 		} catch (err) {
-	// 			expect.fail("Should not be rejected!");
-	// 		}
-	// 	});
-
-	// 	it("should perform a simple query with negation operator and return results", async function () {
-	// 		try {
-	// 			const result = await facade.performQuery(NegationQuery.input);
-	// 			expect(result).have.deep.members(NegationQuery.output);
-	// 		} catch (err) {
-	// 			expect.fail("Should not be rejected!");
-	// 		}
-	// 	});
-
-	// 	it("should perform a complex query and return results", async function () {
-	// 		try {
-	// 			const result = await facade.performQuery(complexQuery.input);
-	// 			expect(result).have.deep.members(complexQuery.output);
-	// 		} catch (err) {
-	// 			expect.fail("Should not be rejected!");
-	// 		}
-	// 	});
-
-	// 	it("should perform a more complex query and return results", async function () {
-	// 		try {
-	// 			const result = await facade.performQuery(MoreComplexQuery.input);
-	// 			expect(result).have.deep.members(MoreComplexQuery.output);
-	// 		} catch (err) {
-	// 			expect.fail("Should not be rejected!");
-	// 		}
-	// 	});
-
-	// 	it("should perform a more complex query and return 0 result", async function () {
-	// 		try {
-	// 			const result = await facade.performQuery(MoreComplexQueryReturn0.input);
-	// 			expect(result).have.deep.members(MoreComplexQueryReturn0.output);
-	// 		} catch (err) {
-	// 			expect.fail("Should not be rejected!");
-	// 		}
-	// 	});
-
-	// 	it("should perform a query with front wildcard pattern and return results", async function () {
-	// 		try {
-	// 			const result = await facade.performQuery(wildCardQueryA.input);
-	// 			expect(result).have.deep.members(wildCardQueryA.output);
-	// 		} catch (err) {
-	// 			expect.fail("Should not be rejected!");
-	// 		}
-	// 	});
-
-	// 	it("should perform a query with end wildcard pattern and return results", async function () {
-	// 		try {
-	// 			const result = await facade.performQuery(wildCardQueryB.input);
-	// 			expect(result).have.deep.members(wildCardQueryB.output);
-	// 		} catch (err) {
-	// 			expect.fail("Should not be rejected!");
-	// 		}
-	// 	});
-
-	// 	it("should perform a query with both wildcard patterns and return results", async function () {
-	// 		try {
-	// 			const result = await facade.performQuery(wildCardQueryC.input);
-	// 			expect(result).have.deep.members(wildCardQueryC.output);
-	// 		} catch (err) {
-	// 			expect.fail("Should not be rejected!");
-	// 		}
-	// 	});
-
-	// 	it("should perform a query with only wildcard patterns and return results", async function () {
-	// 		try {
-	// 			const result = await facade.performQuery(wildCardQueryD.input);
-	// 			expect(result).have.deep.members(wildCardQueryD.output);
-	// 		} catch (err) {
-	// 			expect.fail("Should not be rejected!");
-	// 		}
-	// 	});
-
-	// 	it("should reject invalid complex queries", async function () {
-	// 		try {
-	// 			const result = await facade.performQuery(complexQuery.input);
-	// 			expect(result).have.deep.members(complexQuery.output);
-	// 		} catch (err) {
-	// 			expect.fail("Should not be rejected!");
-	// 		}
-	// 	});
-
-	// 	it("should reject queries that exceed the result limit", async function () {
-	// 		try {
-	// 			await facade.performQuery(exceedLimitQuery);
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(ResultTooLargeError);
-	// 		}
-	// 	});
-
-	// 	it("should reject due to invalid queries — additional comma", async function () {
-	// 		try {
-	// 			await facade.performQuery(invalidStringQuery);
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(InsightError);
-	// 		}
-	// 	});
-
-	// 	it("should reject due to invalid queries — wrong format", async function () {
-	// 		try {
-	// 			await facade.performQuery(invalidFormatQuery);
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(InsightError);
-	// 		}
-	// 	});
-
-	// 	it("should reject due to invalid queries — dataset doesn't exist", async function () {
-	// 		try {
-	// 			await facade.performQuery(invalidReferenceQuery);
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(InsightError);
-	// 		}
-	// 	});
-
-	// 	it("should reject due to invalid queries — query is empty", async function () {
-	// 		try {
-	// 			await facade.performQuery({});
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(InsightError);
-	// 		}
-	// 	});
-
-	// 	it("should reject due to invalid queries — EBNF type unmatch", async function () {
-	// 		try {
-	// 			await facade.performQuery(invalidEBNFType);
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(InsightError);
-	// 		}
-	// 	});
-
-	// 	it("should reject due to invalid queries — EBNF invalid key", async function () {
-	// 		try {
-	// 			await facade.performQuery(invalidEBNFKey);
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(InsightError);
-	// 		}
-	// 	});
-
-	// 	it("should reject due to invalid queries — EBNF missing where", async function () {
-	// 		try {
-	// 			await facade.performQuery(invalidEBNFMissingWhere);
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(InsightError);
-	// 		}
-	// 	});
-
-	// 	it("should reject due to invalid queries — EBNF invalid where type", async function () {
-	// 		try {
-	// 			await facade.performQuery(invalidEBNFInvalidWhereType);
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(InsightError);
-	// 		}
-	// 	});
-
-	// 	it("should reject due to invalid queries — EBNF missing options", async function () {
-	// 		try {
-	// 			await facade.performQuery(invalidEBNFMissingOptions);
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(InsightError);
-	// 		}
-	// 	});
-
-	// 	it("should reject due to invalid queries — EBNF missing columns", async function () {
-	// 		try {
-	// 			await facade.performQuery(invalidEBNFMissingColumns);
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(InsightError);
-	// 		}
-	// 	});
-
-	// 	it("should reject due to invalid queries — EBNF invalid columns type", async function () {
-	// 		try {
-	// 			await facade.performQuery(invalidEBNFInvalidColumnsType);
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(InsightError);
-	// 		}
-	// 	});
-
-	// 	it("should reject due to invalid queries — EBNF empty columns", async function () {
-	// 		try {
-	// 			await facade.performQuery(invalidEBNFEmptyColumns);
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(InsightError);
-	// 		}
-	// 	});
-
-	// 	it("should reject due to invalid queries — EBNF invalid order key", async function () {
-	// 		try {
-	// 			await facade.performQuery(invalidEBNFInvalidOrderKey);
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(InsightError);
-	// 		}
-	// 	});
-
-	// 	it("should reject due to invalid queries — EBNF invalid order type", async function () {
-	// 		try {
-	// 			await facade.performQuery(invalidEBNFInvalidOrderType);
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(InsightError);
-	// 		}
-	// 	});
-
-	// 	it("should reject due to invalid queries — EBNF invalid filter key", async function () {
-	// 		try {
-	// 			await facade.performQuery(invalidEBNFFilterKey);
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(InsightError);
-	// 		}
-	// 	});
-
-	// 	it("should reject due to invalid queries — EBNF skey on mcomparison", async function () {
-	// 		try {
-	// 			await facade.performQuery(InvalidKeyMCompOnSKey);
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(InsightError);
-	// 		}
-	// 	});
-
-	// 	it("should reject due to invalid queries — EBNF mkey on scomparison", async function () {
-	// 		try {
-	// 			await facade.performQuery(InvalidKeySCompOnMKey);
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(InsightError);
-	// 		}
-	// 	});
-
-	// 	it("should reject due to invalid queries — multiple datasets", async function () {
-	// 		/*
-	// 		try {
-	// 			await facade.addDataset("ubc", sections, InsightDatasetKind.Rooms);
-	// 		} catch (err) {
-	// 			expect.fail("Should not be rejected!");
-	// 		}
-	// 		*/
-
-	// 		try {
-	// 			await facade.performQuery(invalidMultipleIDsQuery);
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(InsightError);
-	// 		}
-	// 	});
-
-	// 	it("should reject due to invalid queries — string query", async function () {
-	// 		try {
-	// 			await facade.performQuery("invalidEBNFFilterKey");
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(InsightError);
-	// 		}
-	// 	});
-
-	// 	it("should reject due to invalid queries — int query", async function () {
-	// 		try {
-	// 			await facade.performQuery(123);
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(InsightError);
-	// 		}
-	// 	});
-
-	// 	it("should reject due to invalid queries — array query", async function () {
-	// 		try {
-	// 			await facade.performQuery([]);
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(InsightError);
-	// 		}
-	// 	});
-
-	// 	it("should reject due to invalid queries — empty string referenced dataset", async function () {
-	// 		try {
-	// 			await facade.performQuery(InvalidIdStringEmptyId);
-	// 			expect.fail("Should have rejected!");
-	// 		} catch (err) {
-	// 			expect(err).to.be.instanceof(InsightError);
-	// 		}
-	// 	});
-	// });
-
-	// describe("PerformQuery with foldertest", () => {
-	// 	before(async function () {
-	// 		clearDisk();
-	// 		rooms = getContentFromArchives("halfPair.zip");
-	// 		facade = new InsightFacade();
-	// 		try {
-	// 			await facade.addDataset("rooms", rooms, InsightDatasetKind.Rooms);
-	// 		} catch (err) {
-	// 			expect.fail("Should not be rejected!");
-	// 		}
-	// 	});
-
-	// 	after(function () {
-	// 		clearDisk();
-	// 	});
-
-	// 	type PQErrorKind = "ResultTooLargeError" | "InsightError";
-
-	// 	folderTest<unknown, Promise<InsightResult[]>, PQErrorKind>(
-	// 		"Dynamic InsightFacade PerformQuery tests",
-	// 		async (input) => await facade.performQuery(input),
-	// 		"./test/resources/queries",
-	// 		{
-	// 			assertOnResult: async (actual, expected) => {
-	// 				const expectedResult = await expected;
-	// 				expect(actual).have.deep.members(expectedResult);
-	// 			},
-	// 			errorValidator: (error): error is PQErrorKind =>
-	// 				error === "ResultTooLargeError" || error === "InsightError",
-	// 			assertOnError: (actual, expected) => {
-	// 				if (expected === "ResultTooLargeError") {
-	// 					expect(actual).to.be.instanceof(ResultTooLargeError);
-	// 				} else {
-	// 					expect(actual).to.be.instanceof(InsightError);
-	// 				}
-	// 			},
-	// 		}
-	// 	);
-	// });
 });
+
+describe("PerformQuery on Rooms", function () {
+	let rooms: string;
+	let facade: IInsightFacade;
+	before(async function () {
+		clearDisk();
+		rooms = getContentFromArchives("rooms/campus2.zip");
+		facade = new InsightFacade();
+		try {
+			await facade.addDataset("rooms", rooms, InsightDatasetKind.Rooms);
+		} catch (err) {
+			expect.fail("Should not be rejected when added!");
+		}
+	});
+
+	it("should perform a simple rooms query - return all results", async function () {
+		try {
+			const result = await facade.performQuery(allRoomsQuery.input);
+			expect(result).have.deep.members(allRoomsQuery.output);
+		} catch (err) {
+			expect.fail("Should not be rejected!");
+		}
+	});
+
+	it("should perform a simple rooms query and return all the keys", async function () {
+		try {
+			const result = await facade.performQuery(roomsQueryAllKeys.input);
+			expect(result).have.deep.members(roomsQueryAllKeys.output);
+		} catch (err) {
+			expect.fail("Should not be rejected!");
+		}
+	});
+});
+
 
 describe("InsightFacade - Section", function () {
 	let facade: IInsightFacade;
@@ -1537,12 +1177,15 @@ describe("InsightFacade - Section", function () {
 	});
 
 	describe("PerformQuery with foldertest", () => {
+		let rooms: string;
 		before(async function () {
 			clearDisk();
 			sections = getContentFromArchives("halfPair.zip");
+			// rooms = getContentFromArchives("rooms/campus.zip");
 			facade = new InsightFacade();
 			try {
 				await facade.addDataset("sections", sections, InsightDatasetKind.Sections);
+				// await facade.addDataset("rooms", rooms, InsightDatasetKind.Rooms);
 			} catch (err) {
 				expect.fail("Should not be rejected!");
 			}

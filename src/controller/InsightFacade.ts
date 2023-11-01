@@ -83,6 +83,7 @@ export default class InsightFacade implements IInsightFacade {
 		let orderField = "";
 		let columns = [""];
 		let filters: Node = {};
+		let direction = "";
 
 		try {
 			const queryResult = queryEngine.parseQuery(query);
@@ -93,6 +94,7 @@ export default class InsightFacade implements IInsightFacade {
 			datasetID = options.getDatasetID();
 			columns = options.getColumns();
 			orderField = options.getOrder()[0];
+			direction = options.getDirection();
 		} catch (err) {
 			return Promise.reject(err);
 		}
@@ -115,7 +117,7 @@ export default class InsightFacade implements IInsightFacade {
 			if (filteredSections.length > 5000) {
 				throw new ResultTooLargeError();
 			}
-			const result = filter.filterByColumnsAndOrder(filteredSections, columns, orderField, datasetID);
+			const result = filter.filterByColumnsAndOrder(filteredSections, columns, orderField, direction, datasetID);
 
 			return Promise.resolve(result);
 		} catch (err) {

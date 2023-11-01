@@ -10,7 +10,7 @@ export default class QueryHelper {
 
 	public validateApplyKey(key: string): boolean {
 		const validateApplyKeyyRegex = new RegExp("^([^_]+)$");
-		return validateApplyKeyyRegex.test("key");
+		return validateApplyKeyyRegex.test(key);
 	}
 
 	public validateSectionsSKey(key: string): boolean {
@@ -31,7 +31,7 @@ export default class QueryHelper {
 	}
 
 	public validateRoomsMKey(key: string): boolean {
-		const validateMKeyRegex = new RegExp("^([^_]+_((lat)|(lon)|(fail)|(seats)))$");
+		const validateMKeyRegex = new RegExp("^([^_]+_((lat)|(lon)|(seats)))$");
 		return validateMKeyRegex.test(key);
 	}
 

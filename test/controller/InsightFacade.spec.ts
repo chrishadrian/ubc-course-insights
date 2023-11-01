@@ -442,7 +442,7 @@ describe("PerformQuery on Rooms", function () {
 	let facade: IInsightFacade;
 	before(async function () {
 		clearDisk();
-		rooms = getContentFromArchives("rooms/campus2.zip");
+		rooms = getContentFromArchives("rooms/campus.zip");
 		facade = new InsightFacade();
 		try {
 			await facade.addDataset("rooms", rooms, InsightDatasetKind.Rooms);

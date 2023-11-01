@@ -57,7 +57,7 @@ export default class RoomParser {
 			const indexContent = await zipEntry.async("text");
 			try {
 				const indexObject = parse5.parse(indexContent);
-				await this.findElements(indexObject, zip, true);
+				await this.findElements(indexObject, zip, true, this.room);
 				if (!this.validIndex) {
 					throw new InsightError("index.htm is invalid");
 				} else if (!this.validRoom) {
@@ -137,7 +137,7 @@ export default class RoomParser {
 		return json;
 	}
 
-	private async findElements(node: any, zip: JSZip, processBuilding: boolean): Promise<void> {
+	private async findElements(node: any, zip: JSZip, processBuilding: boolean, currentRoom: Room): Promise<void> {
 		if (node.tagName === "td") {
 			const classAttribute = this.findNodeAttrByName(node, "class");
 			if (classAttribute && classAttribute.value.includes("views-field")) {
@@ -155,7 +155,7 @@ export default class RoomParser {
 						if (!this.validRoom) {
 							this.validRoom = true;
 						}
-						this.processMoreInfo(node);
+						this.processMoreInfo(node, currentRoom);
 					} catch (error) {
 						throw new InsightError(`Error processing more info: ${error}`);
 					}
@@ -170,7 +170,9 @@ export default class RoomParser {
 			node.childNodes = node.childNodes.filter(
 				(childNode: any) => !selectedNodeNames.includes(childNode.nodeName)
 			);
-			childPromises = node.childNodes.map((child: any) => this.findElements(child, zip, processBuilding));
+			childPromises = node.childNodes.map(
+				(child: any) => this.findElements(child, zip, processBuilding, currentRoom)
+			);
 			await Promise.all(childPromises);
 		}
 	}
@@ -203,19 +205,21 @@ export default class RoomParser {
 			case RoomField.nothing: {
 				try {
 					const util = new Geolocation();
-					const geoLocation = await util.getGeolocation(this.room.address);
+					const currentRoom = this.room;
+					this.room = new Room();
+					const geoLocation = await util.getGeolocation(currentRoom.address);
 					if (!geoLocation.lat || !geoLocation.lon || geoLocation.error) {
 						throw new InsightError("Error when getting Geolocation: " + geoLocation.error);
 					}
-					this.room.lat = geoLocation.lat;
-					this.room.lon = geoLocation.lon;
+					currentRoom.lat = geoLocation.lat;
+					currentRoom.lon = geoLocation.lon;
 
 					const nodeTagA = this.findChildByNodeName(node, "a");
 					const roomLink: string = this.findNodeAttrByName(nodeTagA, "href").value;
 					const zipEntry = zip.files[roomLink.substring(2)];
 					const indexContent = await zipEntry.async("text");
 					const indexObject = parse5.parse(indexContent);
-					await this.findElements(indexObject, zip, false);
+					await this.findElements(indexObject, zip, false, currentRoom);
 					break;
 				} catch (error) {
 					throw new InsightError(`Error finding building information: ${error}}`);
@@ -224,7 +228,7 @@ export default class RoomParser {
 		}
 	}
 
-	private processMoreInfo(node: any) {
+	private processMoreInfo(node: any, currentRoom: Room) {
 		try {
 			const className: string = this.findNodeAttrByName(node, "class").value;
 			const field: string = className.split(" ")[1];
@@ -237,28 +241,29 @@ export default class RoomParser {
 				case RoomField.number: {
 					const nodeTagA = this.findChildByNodeName(node, "a");
 					const number = this.findChildByNodeName(nodeTagA, "#text").value;
-					this.room.number = number;
-					this.room.name = `${this.room.shortname}_${number}`;
+					currentRoom.number = number;
+					currentRoom.name = `${currentRoom.shortname}_${number}`;
 					break;
 				}
 
 				case RoomField.seats:
-					this.room.seats = Number(value);
+					currentRoom.seats = Number(value);
 					break;
 
 				case RoomField.furniture:
-					this.room.furniture = this.formatValue(value);
+					currentRoom.furniture = this.formatValue(value);
 					break;
 
 				case RoomField.type:
-					this.room.type = this.formatValue(value);
+					currentRoom.type = this.formatValue(value);
 					break;
 
 				case RoomField.nothing: {
 					const nodeTagA = this.findChildByNodeName(node, "a");
 					const href = this.findNodeAttrByName(nodeTagA, "href").value;
-					this.room.href = href;
-					this.rooms.addRoom(this.room);
+					currentRoom.href = href;
+					const completeRoom = new Room(currentRoom);
+					this.rooms.addRoom(completeRoom);
 					break;
 				}
 			}

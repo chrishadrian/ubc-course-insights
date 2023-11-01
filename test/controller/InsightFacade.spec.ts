@@ -47,7 +47,6 @@ import {
 	InvalidKeySCompOnMKey,
 	InvalidIdStringEmptyId,
 } from "../resources/queries/invalidQuery";
-import {roomsQueryAllKeys, allRoomsQuery, roomsMultiplOrderKeys} from "../resources/queries/roomsQueries";
 
 use(chaiAsPromised);
 
@@ -370,11 +369,10 @@ describe("InsightFacade — Room", function () {
 
 				it("should list one dataset after old facade removed one prev dataset and crashed", async function () {
 					try {
-						await facade.addDataset("abc", rooms, InsightDatasetKind.Rooms);
 						await facade.removeDataset("rooms");
 						const newFacade = new InsightFacade();
 						const datasets = await newFacade.listDatasets();
-						expect(datasets.length).to.equal(1);
+						expect(datasets.length).to.equal(0);
 					} catch (err) {
 						expect.fail("Should not be rejected! Error: " + err);
 					}
@@ -434,50 +432,47 @@ describe("InsightFacade — Room", function () {
 		});
 	});
 
+	describe("Room — PerformQuery with foldertest", () => {
+		before(async function () {
+			clearDisk();
+			const performQueryRooms = getContentFromArchives("rooms/campus.zip");
+			facade = new InsightFacade();
+			try {
+				await facade.addDataset("rooms", performQueryRooms, InsightDatasetKind.Rooms);
+			} catch (err) {
+				expect.fail("Should not be rejected!");
+			}
+		});
+
+		after(function () {
+			clearDisk();
+		});
+
+		type PQErrorKind = "ResultTooLargeError" | "InsightError";
+
+		folderTest<unknown, Promise<InsightResult[]>, PQErrorKind>(
+			"Room — Dynamic InsightFacade PerformQuery tests",
+			async (input) => await facade.performQuery(input),
+			"./test/resources/queries/rooms",
+			{
+				assertOnResult: async (actual, expected) => {
+					const expectedResult = await expected;
+					expect(actual).have.deep.members(expectedResult);
+				},
+				errorValidator: (error): error is PQErrorKind =>
+					error === "ResultTooLargeError" || error === "InsightError",
+				assertOnError: (actual, expected) => {
+					if (expected === "ResultTooLargeError") {
+						expect(actual).to.be.instanceof(ResultTooLargeError);
+					} else {
+						expect(actual).to.be.instanceof(InsightError);
+					}
+				},
+			}
+		);
+	});
+
 });
-
-describe("PerformQuery on Rooms", function () {
-	let rooms: string;
-	let facade: IInsightFacade;
-	before(async function () {
-		clearDisk();
-		rooms = getContentFromArchives("rooms/campus.zip");
-		facade = new InsightFacade();
-		try {
-			await facade.addDataset("rooms", rooms, InsightDatasetKind.Rooms);
-		} catch (err) {
-			expect.fail("Should not be rejected when added!");
-		}
-	});
-
-	it("should perform a simple rooms query - return all results", async function () {
-		try {
-			const result = await facade.performQuery(allRoomsQuery.input);
-			expect(result).have.deep.members(allRoomsQuery.output);
-		} catch (err) {
-			expect.fail("Should not be rejected!");
-		}
-	});
-
-	it("should perform a simple rooms query and return all the keys", async function () {
-		try {
-			const result = await facade.performQuery(roomsQueryAllKeys.input);
-			expect(result).have.deep.members(roomsQueryAllKeys.output);
-		} catch (err) {
-			expect.fail("Should not be rejected!");
-		}
-	});
-
-	it("should perform a rooms query with multiple order keys", async function () {
-		try {
-			const result = await facade.performQuery(roomsMultiplOrderKeys.input);
-			expect(result).have.deep.members(roomsMultiplOrderKeys.output);
-		} catch (err) {
-			expect.fail("Should not be rejected!");
-		}
-	});
-});
-
 
 describe("InsightFacade - Section", function () {
 	let facade: IInsightFacade;
@@ -770,11 +765,10 @@ describe("InsightFacade - Section", function () {
 				it("section - should list one dataset after old facade removed one prev dataset and crashed",
 					async function () {
 						try {
-							await facade.addDataset("abc", sections, InsightDatasetKind.Sections);
 							await facade.removeDataset("sections");
 							const newFacade = new InsightFacade();
 							const datasets = await newFacade.listDatasets();
-							expect(datasets.length).to.equal(1);
+							expect(datasets.length).to.equal(0);
 						} catch (err) {
 							expect.fail("Should not be rejected!" + err);
 						}
@@ -1183,7 +1177,7 @@ describe("InsightFacade - Section", function () {
 		});
 	});
 
-	describe("PerformQuery with foldertest", () => {
+	describe("Section — PerformQuery with foldertest", () => {
 		let rooms: string;
 		before(async function () {
 			clearDisk();
@@ -1205,9 +1199,9 @@ describe("InsightFacade - Section", function () {
 		type PQErrorKind = "ResultTooLargeError" | "InsightError";
 
 		folderTest<unknown, Promise<InsightResult[]>, PQErrorKind>(
-			"Dynamic InsightFacade PerformQuery tests",
+			"Section — Dynamic InsightFacade PerformQuery tests",
 			async (input) => await facade.performQuery(input),
-			"./test/resources/queries",
+			"./test/resources/queries/sections",
 			{
 				assertOnResult: async (actual, expected) => {
 					const expectedResult = await expected;

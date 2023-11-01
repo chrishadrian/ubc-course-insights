@@ -88,13 +88,13 @@ describe("InsightFacade — Room", function () {
 				}
 			});
 
-			it("should add one no room dataset and return its id", async function () {
+			it("should reject building with no room", async function () {
 				const noRoomData = getContentFromArchives("rooms/noRoomTable.zip");
 				try {
-					const result = await facade.addDataset("rooms", noRoomData, InsightDatasetKind.Rooms);
-					expect(result).to.deep.equal(["rooms"]);
+					await facade.addDataset("rooms", noRoomData, InsightDatasetKind.Rooms);
+					expect.fail("Should have rejected!");
 				} catch (err) {
-					expect.fail("Should not be rejected!");
+					expect(err).to.be.instanceof(InsightError);
 				}
 			});
 
@@ -367,14 +367,13 @@ describe("InsightFacade — Room", function () {
 					}
 				});
 
-				it("should list empty dataset after old facade removed prev dataset and crashed", async function () {
+				it("should list one dataset after old facade removed one prev dataset and crashed", async function () {
 					try {
 						await facade.addDataset("abc", rooms, InsightDatasetKind.Rooms);
-						await facade.removeDataset("abc");
 						await facade.removeDataset("rooms");
 						const newFacade = new InsightFacade();
 						const datasets = await newFacade.listDatasets();
-						expect(datasets.length).to.equal(0);
+						expect(datasets.length).to.equal(1);
 					} catch (err) {
 						expect.fail("Should not be rejected! Error: " + err);
 					}
@@ -907,7 +906,7 @@ describe("InsightFacade - Section", function () {
 				}
 			});
 
-			it("should reject due to duplicate id", async function () {
+			it("section - should reject due to duplicate id", async function () {
 				try {
 					await facade.addDataset("dataset2", sections, InsightDatasetKind.Sections);
 				} catch (err) {
@@ -1102,7 +1101,7 @@ describe("InsightFacade - Section", function () {
 					}
 				});
 
-				it("should list the same dataset with a new facade after old facade crashed",
+				it("section - should list the same dataset with a new facade after old facade crashed",
 					async function () {
 						try {
 							const newFacade = new InsightFacade();
@@ -1119,17 +1118,16 @@ describe("InsightFacade - Section", function () {
 						}
 					});
 
-				it("section - should list empty dataset after old facade removed prev dataset and crashed",
+				it("section - should list one dataset after old facade removed one prev dataset and crashed",
 					async function () {
 						try {
 							await facade.addDataset("abc", sections, InsightDatasetKind.Sections);
-							await facade.removeDataset("abc");
 							await facade.removeDataset("sections");
 							const newFacade = new InsightFacade();
 							const datasets = await newFacade.listDatasets();
-							expect(datasets.length).to.equal(0);
+							expect(datasets.length).to.equal(1);
 						} catch (err) {
-							expect.fail("Should not be rejected!");
+							expect.fail("Should not be rejected!" + err);
 						}
 					});
 

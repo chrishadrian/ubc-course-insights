@@ -11,7 +11,7 @@ describe("InsightFacade", function () {
 	let rooms: string;
 
 	before(function () {
-		rooms = getContentFromArchives("rooms/lessCampus.zip");
+		rooms = getContentFromArchives("rooms/campus.zip");
 
 		clearDisk();
 	});

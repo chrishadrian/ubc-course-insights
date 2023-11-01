@@ -79,27 +79,30 @@ export default class InsightFacade implements IInsightFacade {
 
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
 		const queryEngine = new QueryEngine();
-		let datasetID = "";
-		let orderFields = [];
-		let columns = [""];
-		let filters: Node = {};
-		let direction = "";
-
+		let datasetID = "", orderFields = [], columns = [""], filters: Node = {}, direction = "";
+		let group, apply: Node[] = [];
 		try {
 			const queryResult = queryEngine.parseQuery(query);
 			const where = queryResult.whereBlock;
 			filters = where;
-
 			const options = queryResult.optionsBlock;
+			const transformations = queryResult.transformationsBlock;
 			datasetID = options.getDatasetID();
 			columns = options.getColumns();
 			orderFields = options.getOrder();
 			direction = options.getDirection();
+			if (transformations) {
+				group = transformations.getGroup();
+				apply = transformations.getApply();
+			}
 		} catch (err) {
 			return Promise.reject(err);
 		}
-
 		try {
+			if (group) {
+				return this.performQueryTransformations(
+					filters, datasetID, columns, orderFields, direction, group, apply);
+			}
 			const section = new Section();
 			const isSection = columns[0] in section;
 			const viewer = new Viewer();
@@ -110,15 +113,12 @@ export default class InsightFacade implements IInsightFacade {
 			if (Object.keys(indexes).length === 0) {
 				indexes = await viewer.getSectionIndexesByDatasetID(datasetID);
 			}
-
-
 			const filter = new Filter();
 			const filteredSections = filter.filterByNode(filters, indexes);
 			if (filteredSections.length > 5000) {
 				throw new ResultTooLargeError();
 			}
 			const result = filter.filterByColumnsAndOrder(filteredSections, columns, orderFields, direction, datasetID);
-
 			return Promise.resolve(result);
 		} catch (err) {
 			if (err instanceof ResultTooLargeError) {
@@ -126,6 +126,13 @@ export default class InsightFacade implements IInsightFacade {
 			}
 			return Promise.reject(`Perform query error: ${err}`);
 		}
+	}
+
+	private performQueryTransformations(
+		filter: Node,
+		datasetID: string, columns: string[],
+		orderFields: string[], direction: string, group: Set<string>, apply: Node[]): any[] {
+		return [];
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {

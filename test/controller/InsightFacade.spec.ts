@@ -47,7 +47,12 @@ import {
 	InvalidKeySCompOnMKey,
 	InvalidIdStringEmptyId,
 } from "../resources/queries/invalidQuery";
-import {roomsQueryAllKeys, allRoomsQuery, roomsMultiplOrderKeys} from "../resources/queries/roomsQueries";
+import {
+	roomsQueryAllKeys,
+	allRoomsQuery,
+	roomsMultiplOrderKeys,
+	roomsWithMaxApply,
+	roomsWithGroupNoApply} from "../resources/queries/roomsQueries";
 
 use(chaiAsPromised);
 
@@ -472,6 +477,24 @@ describe("PerformQuery on Rooms", function () {
 		try {
 			const result = await facade.performQuery(roomsMultiplOrderKeys.input);
 			expect(result).have.deep.members(roomsMultiplOrderKeys.output);
+		} catch (err) {
+			expect.fail("Should not be rejected!");
+		}
+	});
+
+	it("should perform a rooms query with aggregation - apply max", async function () {
+		try {
+			const result = await facade.performQuery(roomsWithMaxApply.input);
+			expect(result).have.deep.members(roomsWithMaxApply.output);
+		} catch (err) {
+			expect.fail("Should not be rejected!");
+		}
+	});
+
+	it("should perform a rooms query with aggregation - only group", async function () {
+		try {
+			const result = await facade.performQuery(roomsWithGroupNoApply.input);
+			expect(result).have.deep.members(roomsWithGroupNoApply.output);
 		} catch (err) {
 			expect.fail("Should not be rejected!");
 		}

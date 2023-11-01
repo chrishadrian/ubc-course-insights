@@ -489,8 +489,28 @@ const roomsMultiplOrderKeys = {
 		rooms_seats:205,rooms_lat:49.26545}]
 };
 
+const roomsWithMaxApply = {
+	input: {WHERE:
+		{AND:[{IS:{rooms_furniture:"*Tables*"}},
+			{GT:{rooms_seats:300}}]},
+	OPTIONS:{COLUMNS:["rooms_shortname","maxSeats"],
+		ORDER:{dir:"DOWN",keys:["maxSeats"]}},
+	TRANSFORMATIONS:{GROUP:["rooms_shortname"],APPLY:[{maxSeats:{MAX:"rooms_seats"}}]}},
+	output:[
+		{rooms_shortname:"OSBO",maxSeats:442},
+		{rooms_shortname:"HEBB",maxSeats:375},{rooms_shortname:"LSC",maxSeats:350}]
+};
+
+const roomsWithGroupNoApply = {
+	input: {WHERE:{AND:[{IS:{rooms_furniture:"*Tables*"}},{GT:{rooms_seats:300}}]},
+		OPTIONS:{COLUMNS:["rooms_shortname"]},TRANSFORMATIONS:{GROUP:["rooms_shortname"],APPLY:[]}},
+	output: [{rooms_shortname:"HEBB"},{rooms_shortname:"LSC"},{rooms_shortname:"OSBO"}]
+};
+
 export {
 	roomsQueryAllKeys,
 	allRoomsQuery,
-	roomsMultiplOrderKeys
+	roomsMultiplOrderKeys,
+	roomsWithMaxApply,
+	roomsWithGroupNoApply
 };

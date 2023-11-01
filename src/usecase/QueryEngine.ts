@@ -1,15 +1,31 @@
 import * as fs from "fs-extra";
+import Transformations from "../model/Transformations";
 import WhereRe, {Node} from "../model/WhereRe";
-import Where, {FieldFilters, Range, MField, SField, Logic} from "../model/Where";
 import Options from "../model/Options";
 import {InsightError, InsightResult, NotFoundError, ResultTooLargeError} from "../controller/IInsightFacade";
+import QueryHelper from "../util/PerformQueryHelper";
+
+export enum Logic {
+	OR = "OR",
+	AND = "AND",
+	NOT = "NOT",
+}
+
+export enum ApplyToken {
+	MAX = "MAX",
+	MIN = "MIN",
+	AVG = "AVG",
+	SUM = "SUM"
+}
 
 export class Query {
 	public whereBlock: Node;
 	public optionsBlock: Options;
-	constructor(w: Node, o: Options) {
+	public transformationsBlock?: Transformations;
+	constructor(w: Node, o: Options, t?: Transformations) {
 		this.whereBlock = w;
 		this.optionsBlock = o;
+		this.transformationsBlock = t;
 	}
 }
 
@@ -21,19 +37,27 @@ interface IQuery {
 export default class QueryEngine {
 
 	private whereDeveloper = new WhereRe();
+	private helper = new QueryHelper();
+
 	public parseQuery(query: unknown): Query {
 		// throw new InsightError();
 		if (!this.validRoot(query)) {
 			throw new InsightError("Initial structure of query is incorrect");
 		}
 		let q = query as any;
+		let parsed;
 		let [whereBlock, id] = this.whereDeveloper.handleWhere(q["WHERE"]);
-		let optionsBlock = this.handleOptions(q["OPTIONS"]);
-		if (id !== "" && optionsBlock.getDatasetID() !== id) {
-			throw new InsightError("two different dataset ideas in WHERE and OPTIONS");
+		let keys = this.getKeysHelper(query);
+		if (keys.length !== 3) {
+			let optionsBlock = this.handleOptions(q["OPTIONS"]);
+			if (id !== "" && optionsBlock.getDatasetID() !== id) {
+				throw new InsightError("two different dataset ideas in WHERE and OPTIONS");
+			}
+			return parsed = new Query(whereBlock, optionsBlock);
 		}
-		let parsed = new Query(whereBlock, optionsBlock);
-		return parsed;
+		let transformationsBlock = new Transformations(q["TRANSFORMATIONS"]);
+		let optionsBlock = this.handleTransformationsOptions(q["OPTIONS"], transformationsBlock);
+		return parsed = new Query(whereBlock, optionsBlock, transformationsBlock);
 	}
 
 	// return false if first query node does not have WHERE or Options, or more than one
@@ -44,7 +68,12 @@ export default class QueryEngine {
 	// https://bobbyhadz.com/blog/typescript-type-unknown-is-not-assignable-to-type
 	private validRoot(query: unknown): boolean {
 		let keys = this.getKeysHelper(query);
-		return keys.length === 2 && keys[0] === "WHERE" && keys[1] === "OPTIONS";
+		if (keys.length === 2) {
+			return keys[0] === "WHERE" && keys[1] === "OPTIONS";
+		} else if (keys.length === 3) {
+			return keys[0] === "WHERE" && keys[1] === "OPTIONS" && keys[2] === "TRANSFORMATIONS";
+		}
+		return false;
 	}
 
 	private validOpts(opts: unknown): boolean {
@@ -52,11 +81,12 @@ export default class QueryEngine {
 		return (keys.length === 1 || (keys.length === 2 && keys[1] === "ORDER")) && keys[0] === "COLUMNS";
 	}
 
+	private validateRoomsKey(key: string): boolean {
+		return this.helper.validateRoomsMKey(key) || this.helper.validateRoomsSKey(key);
+	}
+
 	private validateMSKey(key: string): boolean {
-		const validKeyRegex = new RegExp(
-			"[^_]+_((avg)|(pass)|(fail)|(audit)|(year)|(dept)|(id)|(instructor)|(title)|(uuid))"
-		);
-		return validKeyRegex.test(key);
+		return this.helper.validateSectionsMKey(key) || this.helper.validateSectionsSKey(key);
 	}
 
 	private extractFieldIDString(str: string): [string,string] {
@@ -110,7 +140,91 @@ export default class QueryEngine {
 		return keys;
 	}
 
-	private handleOptions(opts: unknown) {
+	private handleTransformationsOptions(opts: unknown, trans: Transformations): Options {
+		if (!this.validOpts(opts)) {
+			throw new InsightError("Options structure invalid");
+		}
+		let keys = this.getKeysHelper(opts);
+		let o = opts as any;
+		let cols: string[];
+		let id: string;
+		[id, cols] = this.handleTransformationsCols(o[keys[0]], trans);
+		if (keys.length === 2) {
+			let orderFields: string[];
+			let orderDirection: string;
+			[orderFields, orderDirection] = this.handleOrder(o[keys[1]], cols, id);
+			return new Options(id, cols, orderFields, orderDirection);
+		}
+		return new Options(id, cols);
+	}
+
+	private handleOrder(obj: unknown, cols: string[], id: string): [string[], string] {
+		let order = obj as any;
+		let keys = this.helper.getKeysHelper(order);
+		let orderFields = [];
+		let orderKeys: string[] = [];
+		let direction = "";
+		if (keys.length === 2) {
+			if (!(keys[0] === "dir" && keys[1] === "keys")) {
+				throw new InsightError("incorrect order format");
+			}
+			if (!(order[keys[0]] === "UP" || order[keys[0]] === "DOWN")) {
+				throw new InsightError("incorrect direction");
+			}
+			direction = order[keys[0]];
+			orderKeys = order[keys[1]];
+		} else {
+			orderKeys = [order as string];
+		}
+		if (orderKeys.length < 1) {
+			throw new InsightError("unspecified order");
+		}
+		for (let i of orderKeys) {
+			let field: string;
+			let currID: string;
+			if (this.validateMSKey(i) || this.validateRoomsKey(i)) {
+				[currID, field] = this.extractFieldIDString(i);
+				if (currID !== id) {
+					throw new InsightError("multiple ids referenced");
+				}
+			} else {
+				field = i;
+			}
+			this.checkOrder(cols, field);
+			orderFields.push(field);
+		}
+		return [orderFields, direction];
+	}
+
+	private handleTransformationsCols(obj: unknown, trans: Transformations): [string, string[]] {
+		let strs: string[] = obj as string[];
+		let id: string = trans.getdatasetID();
+		let cols: string[] = [];
+		if (strs.length < 1) {
+			throw new InsightError("no columns specified");
+		}
+		let applyKeys = trans.getApplyKeys();
+		let groups = trans.getGroup();
+		for (let i of strs) {
+			let field;
+			if (this.validateMSKey(i) || this.validateRoomsKey(i)) {
+				let currId = this.extractIDString(i);
+				if (id !== currId) {
+					throw new InsightError("more than one dataset specified in columns");
+				}
+				field = this.extractField(i);
+			} else {
+				field = i;
+			}
+			if (!(applyKeys.has(field) || !(groups.has(field)))) {
+				throw new InsightError("Columns keys do not correspond to group or applyKeys");
+			}
+			cols.push(field);
+		}
+		return [id, cols];
+	}
+
+	private handleOptions(opts: unknown): Options {
 		if (!this.validOpts(opts)) {
 			throw new InsightError("Options structure invalid");
 		}
@@ -120,29 +234,25 @@ export default class QueryEngine {
 		let id: string;
 		[id, cols] = this.handleCols(o[keys[0]]);
 		if (keys.length === 2) {
-			if (!this.validateMSKey(o[keys[1]])) {
-				throw new InsightError("the key provided in order is incorrectly formatted");
-			}
-			let [orderKey, orderField] = this.extractFieldIDString(o[keys[1]]);
-			// let orderKey = this.extractIDString(o[keys[1]]);
-			// let orderField = this.extractField(o[keys[1]]);
-			if (orderKey !== id) {
-				throw new InsightError("multiple order keys found");
-			}
-			let invalidOrderField: boolean = true;
-			for (let i of cols) {
-				if (i === orderField) {
-					invalidOrderField = false;
-					break;
-				}
-			}
-			if (invalidOrderField) {
-				throw new InsightError("invalid order field");
-			}
-			// options has the id already, just need to add fields
-			return new Options(id, cols, orderField);
+			let orderFields: string[];
+			let orderDirection: string;
+			[orderFields, orderDirection] = this.handleOrder(o[keys[1]], cols, id);
+			return new Options(id, cols, orderFields, orderDirection);
 		}
 		return new Options(id, cols);
+	}
+
+	private checkOrder(cols: string[], orderField: string) {
+		let invalidOrderField: boolean = true;
+		for (let i of cols) {
+			if (i === orderField) {
+				invalidOrderField = false;
+				break;
+			}
+		}
+		if (invalidOrderField) {
+			throw new InsightError(orderField);
+		}
 	}
 
 	private handleCols(obj: unknown): [string, string[]] {
@@ -153,7 +263,9 @@ export default class QueryEngine {
 			throw new InsightError("no columns specified");
 		}
 		for (let i of strs) {
-			this.validateMSKey(i);
+			if (!(this.validateMSKey(i) || this.validateRoomsKey(i))) {
+				throw new InsightError("invalid key in cols");
+			}
 			let currId = this.extractIDString(i);
 			if (id !== "" && id !== currId) {
 				throw new InsightError("more than one dataset specified in columns");

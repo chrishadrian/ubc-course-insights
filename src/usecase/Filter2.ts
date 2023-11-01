@@ -10,7 +10,7 @@ export interface Node {
 type DatasetIndexes = Record<string, Map<string | number, Section[]>> | Record<string, Map<string | number, Room[]>>
 type DatasetResult = Array<Section | Room>
 
-export default class Filter {
+export default class Filter2 {
 	public filterByFields(
 		operation: Logic,
 		fieldNames: string[],
@@ -91,6 +91,11 @@ export default class Filter {
 		}
 
 		return result;
+	}
+
+	public filterByNode2(root: Node, indexes: DatasetIndexes): DatasetResult {
+		let fields: string[] = [], values: string[][] = [], result: DatasetResult = [], counter = 0;
+		return [];
 	}
 
 	public filterByNode(
@@ -180,7 +185,7 @@ export default class Filter {
 	}
 
 	public filterByColumnsAndOrder(
-		data: DatasetResult, columns: string[], orderFields: string[], direction: string, datasetID: string
+		data: DatasetResult, columns: string[], orderField: string, direction: string, datasetID: string
 	) {
 		const filteredData = data.map((section) => {
 			const filteredItem: any = {};
@@ -191,29 +196,24 @@ export default class Filter {
 		});
 
 		const result =  filteredData.sort((a, b) => {
-			// const order = `${datasetID}_${orderField as keyof (Section | Room)}`;
+			const order = `${datasetID}_${orderField as keyof (Section | Room)}`;
 			if (direction === "" || direction === "UP") {
-				for (let orderField of orderFields) {
-					const order =  `${datasetID}_${orderField as keyof (Section | Room)}`;
-					if (a[order] < b[order]) {
-						return -1;
-					}
-					if (a[order] > b[order]) {
-						return 1;
-					}
+				if (a[order] < b[order]) {
+					return -1;
 				}
+				if (a[order] > b[order]) {
+					return 1;
+				}
+				return 0;
 			} else {
-				for (let orderField of orderFields) {
-					const order =  `${datasetID}_${orderField as keyof (Section | Room)}`;
-					if (a[order] > b[order]) {
-						return -1;
-					}
-					if (a[order] < b[order]) {
-						return 1;
-					}
+				if (a[order] > b[order]) {
+					return -1;
 				}
+				if (a[order] < b[order]) {
+					return 1;
+				}
+				return 0;
 			}
-			return 0;
 		});
 
 		return result;

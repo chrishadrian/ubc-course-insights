@@ -1,8 +1,10 @@
 import {InsightError} from "../controller/IInsightFacade";
+import QueryHelper from "../util/PerformQueryHelper";
 export interface Node {
 	[key: string]: string | number | Node[] | Node;
 }
 export default class WhereRe {
+	private helper = new QueryHelper();
 
 	private validateKey(key: string, isSkey: boolean): boolean {
 		if (isSkey) {
@@ -62,7 +64,7 @@ export default class WhereRe {
 
 	private handleSComp(scomp: Node): [Node, string] {
 		let keys = this.getKeysHelper(scomp);
-		if (keys.length !== 1 || !this.validateKey(keys[0], true)) {
+		if (keys.length !== 1 || !(this.validateKey(keys[0], true) || this.helper.validateRoomsSKey(keys[0]))) {
 			throw new InsightError();
 		}
 		if (!this.validateInputString(scomp[keys[0]] as string)) {
@@ -79,7 +81,7 @@ export default class WhereRe {
 
 	private handleNotSComp(scomp: Node): [Node, string] {
 		let keys = this.getKeysHelper(scomp);
-		if (keys.length !== 1 || !this.validateKey(keys[0], true)) {
+		if (keys.length !== 1 || !(this.validateKey(keys[0], true) || this.helper.validateRoomsSKey(keys[0]))) {
 			throw new InsightError();
 		}
 		if (!this.validateInputString(scomp[keys[0]] as string)) {
@@ -96,7 +98,7 @@ export default class WhereRe {
 
 	private handleMComp(mcomp: Node): [Node, string] {
 		let keys = this.getKeysHelper(mcomp);
-		if (keys.length !== 1 || !this.validateKey(keys[0], false)) {
+		if (keys.length !== 1 || !(this.validateKey(keys[0], false) || this.helper.validateRoomsMKey(keys[0]))) {
 			throw new InsightError();
 		}
 		let [id, field]: [string, string] = this.extractFieldIDString(keys[0]);
@@ -156,7 +158,7 @@ export default class WhereRe {
 
 	private handleNotMComp(mcomp: Node, comp: string): [Node, string] {
 		let keys = this.getKeysHelper(mcomp);
-		if (keys.length !== 1 || !this.validateKey(keys[0], false)) {
+		if (keys.length !== 1 || !(this.validateKey(keys[0], false) || this.helper.validateRoomsMKey(keys[0]))) {
 			throw new InsightError();
 		}
 		let [id, field]: [string, string] = this.extractFieldIDString(keys[0]);

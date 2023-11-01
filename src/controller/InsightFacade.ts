@@ -79,10 +79,9 @@ export default class InsightFacade implements IInsightFacade {
 
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
 		const queryEngine = new QueryEngine();
-		let datasetID = "";
-		let orderField = "";
-		let columns = [""];
-		let filters: Node = {};
+		let {filters, datasetID, columns, orderFields, direction}:
+		{filters: Node; datasetID: string; columns: string[]; orderFields: any[]; direction: string;}
+		= this.initializePerformQuery();
 
 		try {
 			const queryResult = queryEngine.parseQuery(query);
@@ -92,7 +91,8 @@ export default class InsightFacade implements IInsightFacade {
 			const options = queryResult.optionsBlock;
 			datasetID = options.getDatasetID();
 			columns = options.getColumns();
-			orderField = options.getOrder();
+			orderFields = options.getOrder();
+			direction = options.getDirection();
 		} catch (err) {
 			return Promise.reject(err);
 		}
@@ -109,13 +109,15 @@ export default class InsightFacade implements IInsightFacade {
 				indexes = await viewer.getSectionIndexesByDatasetID(datasetID);
 			}
 
-
 			const filter = new Filter();
-			const filteredSections = filter.filterByNode(filters, indexes);
+			const noFilter: Node = {IS: {furniture: ".*"}};
+			const filteredSections = JSON.stringify(filters) === "{}"
+				? filter.filterByNode(noFilter, indexes)
+				: filter.filterByNode(filters, indexes);
 			if (filteredSections.length > 5000) {
 				throw new ResultTooLargeError();
 			}
-			const result = filter.filterByColumnsAndOrder(filteredSections, columns, orderField, datasetID);
+			const result = filter.filterByColumnsAndOrder(filteredSections, columns, orderFields, direction, datasetID);
 
 			return Promise.resolve(result);
 		} catch (err) {
@@ -124,6 +126,15 @@ export default class InsightFacade implements IInsightFacade {
 			}
 			return Promise.reject(`Perform query error: ${err}`);
 		}
+	}
+
+	private initializePerformQuery() {
+		let datasetID = "";
+		let orderFields: any[] = [];
+		let columns = [""];
+		let filters: Node = {};
+		let direction = "";
+		return {filters, datasetID, columns, orderFields, direction};
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {

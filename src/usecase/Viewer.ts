@@ -3,6 +3,7 @@ import {InsightDataset, InsightError} from "../controller/IInsightFacade";
 import Section from "../model/Section";
 import {SectionJSON} from "./SectionParser";
 import Room from "../model/Room";
+import {Logic} from "./QueryEngine";
 const persistDir = "./data";
 
 export default class Viewer {

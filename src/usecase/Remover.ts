@@ -6,10 +6,6 @@ export default class Remover {
 	}
 
 	public async removeFromDisk(datasetID: string) {
-		fs.unlink(`./data/${datasetID}.json`, (err) => {
-			if (err) {
-				throw err;
-			}
-		});
+		fs.unlinkSync(`./data/${datasetID}.json`);
 	}
 }

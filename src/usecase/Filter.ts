@@ -128,7 +128,6 @@ export default class Filter {
 					}
 				}
 			}
-			// THIS NEEDS FIXING
 			return [];
 		};
 

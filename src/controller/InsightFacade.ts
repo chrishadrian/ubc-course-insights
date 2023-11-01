@@ -79,11 +79,9 @@ export default class InsightFacade implements IInsightFacade {
 
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
 		const queryEngine = new QueryEngine();
-		let datasetID = "";
-		let orderFields = [];
-		let columns = [""];
-		let filters: Node = {};
-		let direction = "";
+		let {filters, datasetID, columns, orderFields, direction}:
+		{filters: Node; datasetID: string; columns: string[]; orderFields: any[]; direction: string;}
+		= this.initializePerformQuery();
 
 		try {
 			const queryResult = queryEngine.parseQuery(query);
@@ -111,9 +109,11 @@ export default class InsightFacade implements IInsightFacade {
 				indexes = await viewer.getSectionIndexesByDatasetID(datasetID);
 			}
 
-
 			const filter = new Filter();
-			const filteredSections = filter.filterByNode(filters, indexes);
+			const noFilter: Node = {IS: {furniture: ".*"}};
+			const filteredSections = JSON.stringify(filters) === "{}"
+				? filter.filterByNode(noFilter, indexes)
+				: filter.filterByNode(filters, indexes);
 			if (filteredSections.length > 5000) {
 				throw new ResultTooLargeError();
 			}
@@ -126,6 +126,15 @@ export default class InsightFacade implements IInsightFacade {
 			}
 			return Promise.reject(`Perform query error: ${err}`);
 		}
+	}
+
+	private initializePerformQuery() {
+		let datasetID = "";
+		let orderFields: any[] = [];
+		let columns = [""];
+		let filters: Node = {};
+		let direction = "";
+		return {filters, datasetID, columns, orderFields, direction};
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {

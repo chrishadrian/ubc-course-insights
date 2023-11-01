@@ -367,14 +367,13 @@ describe("InsightFacade — Room", function () {
 					}
 				});
 
-				it("should list empty dataset after old facade removed prev dataset and crashed", async function () {
+				it("should list one dataset after old facade removed one prev dataset and crashed", async function () {
 					try {
 						await facade.addDataset("abc", rooms, InsightDatasetKind.Rooms);
-						await facade.removeDataset("abc");
 						await facade.removeDataset("rooms");
 						const newFacade = new InsightFacade();
 						const datasets = await newFacade.listDatasets();
-						expect(datasets.length).to.equal(0);
+						expect(datasets.length).to.equal(1);
 					} catch (err) {
 						expect.fail("Should not be rejected! Error: " + err);
 					}
@@ -1119,17 +1118,16 @@ describe("InsightFacade - Section", function () {
 						}
 					});
 
-				it("section - should list empty dataset after old facade removed prev dataset and crashed",
+				it("section - should list one dataset after old facade removed one prev dataset and crashed",
 					async function () {
 						try {
 							await facade.addDataset("abc", sections, InsightDatasetKind.Sections);
-							await facade.removeDataset("abc");
 							await facade.removeDataset("sections");
 							const newFacade = new InsightFacade();
 							const datasets = await newFacade.listDatasets();
-							expect(datasets.length).to.equal(0);
+							expect(datasets.length).to.equal(1);
 						} catch (err) {
-							expect.fail("Should not be rejected!");
+							expect.fail("Should not be rejected!" + err);
 						}
 					});
 

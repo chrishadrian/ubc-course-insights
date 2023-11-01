@@ -80,7 +80,7 @@ export default class InsightFacade implements IInsightFacade {
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
 		const queryEngine = new QueryEngine();
 		let datasetID = "", orderFields = [], columns = [""], filters: Node = {}, direction = "";
-		let group, apply: Node[] = [];
+		let group: Set<string>, apply: Node[] = [];
 		try {
 			const queryResult = queryEngine.parseQuery(query);
 			const where = queryResult.whereBlock;
@@ -94,15 +94,13 @@ export default class InsightFacade implements IInsightFacade {
 			if (transformations) {
 				group = transformations.getGroup();
 				apply = transformations.getApply();
+				return this.performQueryTransformations(
+					filters, datasetID, columns, orderFields, direction, group, apply);
 			}
 		} catch (err) {
 			return Promise.reject(err);
 		}
 		try {
-			if (group) {
-				return this.performQueryTransformations(
-					filters, datasetID, columns, orderFields, direction, group, apply);
-			}
 			const section = new Section();
 			const isSection = columns[0] in section;
 			const viewer = new Viewer();
@@ -114,7 +112,9 @@ export default class InsightFacade implements IInsightFacade {
 				indexes = await viewer.getSectionIndexesByDatasetID(datasetID);
 			}
 			const filter = new Filter();
-			const filteredSections = filter.filterByNode(filters, indexes);
+			const noFilter: Node = {IS: {furniture: ".*"}};
+			const filteredSections = JSON.stringify(filters) === "{}" ? filter.filterByNode(noFilter, indexes) :
+				filter.filterByNode(filters, indexes);
 			if (filteredSections.length > 5000) {
 				throw new ResultTooLargeError();
 			}
@@ -126,6 +126,15 @@ export default class InsightFacade implements IInsightFacade {
 			}
 			return Promise.reject(`Perform query error: ${err}`);
 		}
+	}
+
+	private initializePerformQuery() {
+		let datasetID = "";
+		let orderFields: any[] = [];
+		let columns = [""];
+		let filters: Node = {};
+		let direction = "";
+		return {filters, datasetID, columns, orderFields, direction};
 	}
 
 	private performQueryTransformations(

@@ -8,8 +8,7 @@ export default class Rooms {
 	}
 
 	public addRoom(room: Room) {
-		const finalRoom = new Room(room);
-		this.rooms.push(finalRoom);
+		this.rooms.push(room);
 	}
 
 	public getRooms(): Room[] {

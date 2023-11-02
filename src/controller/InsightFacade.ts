@@ -113,9 +113,9 @@ export default class InsightFacade implements IInsightFacade {
 			const filteredSections = JSON.stringify(filters) === "{}" ? filter.filterByNode(noFilter, indexes) :
 				filter.filterByNode(filters, indexes);
 			if (group.size === 0) {
+				this.checkLength(filteredSections.length);
 				const result = filter.filterByColumnsAndOrder(
 					filteredSections, columns, orderFields, direction, datasetID);
-				this.checkLength(filteredSections.length);
 				return Promise.resolve(result);
 			}
 			const grouper = new FilterByGroup();

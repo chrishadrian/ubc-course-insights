@@ -228,6 +228,8 @@ export default class FilterByGroup {
 					break;
 				case "COUNT":
 					groupData.set(rule, (curr as Set<number | string>).add(resultData));
+				default:
+					return;
 			}
 		}
 	}

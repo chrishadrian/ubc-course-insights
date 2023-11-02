@@ -165,21 +165,21 @@ export default class FilterByGroup {
 		switch (token) {
 			case "MAX":
 			case "MIN": final.set(applyKey, result as number);
-				break;
+				return;
 			case "AVG":
 				res = result as number;
 				avg = res / numRows;
 				res = Number(avg.toFixed(2));
 				final.set(applyKey, res);
-				break;
+				return;
 			case "SUM":
 				res = result as number;
 				final.set(applyKey, Number(res.toFixed(2)));
-				break;
+				return;
 			case "COUNT":
 				res = result as Set<string|number>;
 				final.set(applyKey, res.size);
-				break;
+				return;
 			default: throw new InsightError();
 		}
 	}
@@ -197,6 +197,7 @@ export default class FilterByGroup {
 				case "MIN": curr = this.getValue(result, msKey) as number;
 					break;
 				case "AVG": curr = new Decimal(this.getValue(result, msKey) as number);
+					break;
 				case "SUM": curr = this.getValue(result, msKey) as number;
 					break;
 				case "COUNT": curr = new Set<number | string>();
@@ -227,6 +228,9 @@ export default class FilterByGroup {
 					break;
 				case "COUNT":
 					groupData.set(rule, (curr as Set<number | string>).add(resultData));
+					break;
+				default:
+					return;
 			}
 		}
 	}

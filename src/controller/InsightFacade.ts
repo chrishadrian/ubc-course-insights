@@ -10,6 +10,9 @@ import QueryEngine from "../usecase/QueryEngine";
 import RoomParser, {RoomIndexes} from "../usecase/RoomParser";
 import Section from "../model/Section";
 import Filter, {Node} from "../usecase/Filter";
+import QueryHelper from "../util/PerformQueryHelper";
+import Group from "../usecase/Group";
+import FilterByGroup from "../usecase/FilterByGroup";
 
 export default class InsightFacade implements IInsightFacade {
 	private validator;
@@ -17,6 +20,7 @@ export default class InsightFacade implements IInsightFacade {
 	private datasets: InsightDataset[];
 	private sindexes: SectionIndexes;
 	private rindexes: RoomIndexes;
+	private queryHelper: QueryHelper = new QueryHelper();
 
 	constructor() {
 		const viewer = new Viewer();
@@ -80,13 +84,11 @@ export default class InsightFacade implements IInsightFacade {
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
 		const queryEngine = new QueryEngine();
 		let datasetID = "", orderFields = [], columns = [""], filters: Node = {}, direction = "";
-		let group: Set<string>, apply: Node[] = [];
+		let group: Set<string> = new Set<string>(), apply: Node[] = [];
 		try {
-			const queryResult = queryEngine.parseQuery(query);
-			const where = queryResult.whereBlock;
+			const queryResult = queryEngine.parseQuery(query), where = queryResult.whereBlock;
 			filters = where;
-			const options = queryResult.optionsBlock;
-			const transformations = queryResult.transformationsBlock;
+			const options = queryResult.optionsBlock, transformations = queryResult.transformationsBlock;
 			datasetID = options.getDatasetID();
 			columns = options.getColumns();
 			orderFields = options.getOrder();
@@ -94,31 +96,33 @@ export default class InsightFacade implements IInsightFacade {
 			if (transformations) {
 				group = transformations.getGroup();
 				apply = transformations.getApply();
-				return this.performQueryTransformations(
-					filters, datasetID, columns, orderFields, direction, group, apply);
 			}
 		} catch (err) {
 			return Promise.reject(err);
 		}
 		try {
-			const section = new Section();
-			const isSection = columns[0] in section;
 			const viewer = new Viewer();
-			let indexes = isSection ? this.sindexes[datasetID] : this.rindexes[datasetID];
+			let indexes = this.evalIndexes(datasetID, columns, apply);
 			if (!indexes) {
 				return Promise.reject(new InsightError("Dataset does not exist!"));
 			}
 			if (Object.keys(indexes).length === 0) {
 				indexes = await viewer.getSectionIndexesByDatasetID(datasetID);
 			}
-			const filter = new Filter();
-			const noFilter: Node = {IS: {furniture: ".*"}};
+			const filter = new Filter(), noFilter: Node = {IS: {furniture: ".*"}};
 			const filteredSections = JSON.stringify(filters) === "{}" ? filter.filterByNode(noFilter, indexes) :
 				filter.filterByNode(filters, indexes);
 			if (filteredSections.length > 5000) {
 				throw new ResultTooLargeError();
 			}
-			const result = filter.filterByColumnsAndOrder(filteredSections, columns, orderFields, direction, datasetID);
+			if (group.size === 0) {
+				const result = filter.filterByColumnsAndOrder(
+					filteredSections, columns, orderFields, direction, datasetID);
+				return Promise.resolve(result);
+			}
+			const grouper = new FilterByGroup();
+			const [g, applyVals] = grouper.groupResults(filteredSections, group, apply);
+			const result = grouper.filterByColumnsAndOrder(g, applyVals,columns, orderFields, direction, datasetID);
 			return Promise.resolve(result);
 		} catch (err) {
 			if (err instanceof ResultTooLargeError) {
@@ -137,11 +141,20 @@ export default class InsightFacade implements IInsightFacade {
 		return {filters, datasetID, columns, orderFields, direction};
 	}
 
-	private performQueryTransformations(
-		filter: Node,
-		datasetID: string, columns: string[],
-		orderFields: string[], direction: string, group: Set<string>, apply: Node[]): any[] {
-		return [];
+	private evalIndexes(datasetID: string, columns: string[], apply: Node[]): any{
+		const section = new Section();
+		let isSection;
+		if (apply.length !== 0) {
+			let firstRule = apply[0];
+			let firstApplyKey = this.queryHelper.getKeysHelper(firstRule)[0];
+			let firstApplyTokenKey = firstRule[firstApplyKey];
+			let firstApplyToken: string = this.queryHelper.getKeysHelper(firstApplyTokenKey)[0];
+			isSection = firstApplyToken in section;
+		} else {
+			isSection = columns[0] in section;
+		}
+		let indexes = isSection ? this.sindexes[datasetID] : this.rindexes[datasetID];
+		return indexes;
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {

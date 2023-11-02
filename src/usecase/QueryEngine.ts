@@ -216,7 +216,7 @@ export default class QueryEngine {
 			} else {
 				field = i;
 			}
-			if (!(applyKeys.has(field) || !(groups.has(field)))) {
+			if (!(applyKeys.has(field) || (groups.has(field)))) {
 				throw new InsightError("Columns keys do not correspond to group or applyKeys");
 			}
 			cols.push(field);

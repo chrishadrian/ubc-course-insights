@@ -1,5 +1,5 @@
 const roomQuery = {
-	title: "Room Transformation Query With Group and Count",
+	title: "Transformation Query With Group and Avg",
 	input: {
 		WHERE: {
 			AND: [
@@ -18,7 +18,7 @@ const roomQuery = {
 		OPTIONS: {
 			COLUMNS: [
 				"rooms_type",
-				"countSeats"
+				"avgSeats"
 			]
 		},
 		TRANSFORMATIONS: {
@@ -27,8 +27,8 @@ const roomQuery = {
 			],
 			APPLY: [
 				{
-					countSeats: {
-						COUNT: "rooms_seats"
+					avgSeats: {
+						AVG: "rooms_seats"
 					}
 				}
 			]
@@ -38,11 +38,11 @@ const roomQuery = {
 	expected: [
 		{
 			rooms_type: "Tiered Large Group",
-			countSeats: 2
+			avgSeats: 358.33
 		},
 		{
 			rooms_type: "Open Design General Purpose",
-			countSeats: 1
+			avgSeats: 442
 		}
 	]
 };

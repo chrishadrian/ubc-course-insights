@@ -167,8 +167,8 @@ export default class FilterByGroup {
 			case "MIN": final.set(applyKey, result as number);
 				break;
 			case "AVG":
-				result = result as Decimal;
-				avg = result.toNumber() / numRows;
+				res = result as number;
+				avg = res / numRows;
 				res = Number(avg.toFixed(2));
 				final.set(applyKey, res);
 				break;

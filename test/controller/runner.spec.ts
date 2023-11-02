@@ -3,6 +3,7 @@ import InsightFacade from "../../src/controller/InsightFacade";
 import {expect, use} from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {clearDisk, getContentFromArchives} from "../TestUtil";
+import {roomQuery} from "../resources/queries/roomsQueries";
 
 use(chaiAsPromised);
 
@@ -23,7 +24,7 @@ describe("InsightFacade", function () {
 				facade = new InsightFacade();
 			});
 
-			it("should add one dataset and return its id", async function () {
+			it("should add one dataset and return its id and perform the query", async function () {
 				const datasetID = "rooms";
 				try {
 					const result = await facade.addDataset(datasetID, rooms, InsightDatasetKind.Rooms);
@@ -31,9 +32,9 @@ describe("InsightFacade", function () {
 					// const remove = await facade.removeDataset(datasetID);
 					// expect(remove).to.deep.equal(datasetID);
 
-					// const queryResult = await facade.performQuery(NegationQuery.input);
-					// const expectedResult = NegationQuery.output;
-					// expect(queryResult).have.deep.members(NegationQuery.output);
+					const queryResult = await facade.performQuery(roomQuery.input);
+					const expectedResult = roomQuery.expected;
+					expect(queryResult).have.deep.members(roomQuery.expected);
 				} catch (err) {
 					console.error("Found error: ", err);
 				}

@@ -19,6 +19,9 @@ export default class Transformations {
 		}
 		let transformations = obj as any;
 		[this.group, this.datasetID] = this.parseGroup(transformations[keys[0]]);
+		if (this.datasetID === "") {
+			throw new InsightError("invalid id");
+		}
 		this.parseApply(transformations[keys[1]]);
 	}
 
@@ -32,7 +35,7 @@ export default class Transformations {
 				throw new InsightError("apply key defined twice in APPLY");
 			}
 			this.applyKeys.add(currApplyKey);
-			this.apply.push({[currApplyKey]: currNode});
+			this.apply.push(currNode);
 		}
 	}
 
@@ -100,6 +103,7 @@ export default class Transformations {
 			if (id !== "" && id !== currId) {
 				throw new InsightError("more than one dataset specified in group");
 			}
+			id = currId;
 			groupFields.add(field);
 		}
 		return [groupFields, id];

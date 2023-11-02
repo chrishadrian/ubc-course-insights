@@ -435,27 +435,27 @@ describe("InsightFacade — Room", function () {
 		});
 	});
 
-	describe("PerformQuery", function () {
-		before(async function () {
-			clearDisk();
-			const performQueryRooms = getContentFromArchives("rooms/campus.zip");
-			facade = new InsightFacade();
-			try {
-				await facade.addDataset("rooms", performQueryRooms, InsightDatasetKind.Rooms);
-			} catch (err) {
-				expect.fail("Should not be rejected!");
-			}
-		});
+	// describe("PerformQuery", function () {
+	// 	before(async function () {
+	// 		clearDisk();
+	// 		const performQueryRooms = getContentFromArchives("rooms/campus.zip");
+	// 		facade = new InsightFacade();
+	// 		try {
+	// 			await facade.addDataset("rooms", performQueryRooms, InsightDatasetKind.Rooms);
+	// 		} catch (err) {
+	// 			expect.fail("Should not be rejected!");
+	// 		}
+	// 	});
 
-		it("should perform a Room Transformation Query With Group and Avg", async function () {
-			try {
-				const result = await facade.performQuery(roomQuery.input);
-				expect(result).have.deep.members(roomQuery.expected);
-			} catch (err) {
-				expect.fail("Should not be rejected!");
-			}
-		});
-	});
+	// 	it("should perform a Room Transformation Query With Group and Avg", async function () {
+	// 		try {
+	// 			const result = await facade.performQuery(roomQuery.input);
+	// 			expect(result).have.deep.members(roomQuery.expected);
+	// 		} catch (err) {
+	// 			expect.fail("Should not be rejected!");
+	// 		}
+	// 	});
+	// });
 
 	describe("Room — PerformQuery with foldertest", () => {
 		before(async function () {

@@ -15,44 +15,90 @@ export default class FilterByGroup {
 	private helper: QueryHelper = new QueryHelper();
 
 	public groupResults(data: DatasetResult, group: Set<string>, apply: Node[]):
-		[Map<string, DatasetResult>] {
+		[Map<string, DatasetResult>, Map<string, Map<string, number>>] {
 		let groupings: Map<string, DatasetResult> =
 			new Map<string, DatasetResult>();
 		for (const result of data) {
-			let keyString: string = "";
-			const resultKeys = [];
+			let values = [];
+			let resultKeys;
 			for (let key of group) {
 				const value = this.getValue(result, key);
-				keyString = keyString + " " + value;
-				resultKeys.push(value);
+				values.push(value);
 			}
-			let datasetResult = groupings.get(keyString);
+			resultKeys = "[" + [...values].join(" ") + "]";
+			let datasetResult = groupings.get(resultKeys);
 			if (datasetResult) {
 				datasetResult.push(result);
-				groupings.set(keyString, datasetResult);
+				groupings.set(resultKeys, datasetResult);
 			} else {
-				groupings.set(keyString, [result]);
+				groupings.set(resultKeys, [result]);
 			}
 		}
-		// let applyVals: Map<Map<string, string | number>, Map<string, number>>
-			// = this.getApplyVals(groupings, apply);
-		return [groupings];
+		let applyVals: Map<string, Map<string, number>>
+			= this.getApplyVals(groupings, apply);
+		return [groupings, applyVals];
+	}
+
+	private getApplyVals(
+		groupings: Map<string, DatasetResult>, apply: Node[]): Map<string, Map<string, number>> {
+		let applyVals:
+			Map<string, Map<string, number>> = new Map();
+		let applyRules: Map<string, [string, string]> = new Map();
+		for (let node of apply) {
+			let applyKey: string = this.helper.getKeysHelper(node)[0];
+			let applyKeyNode: Node = node[applyKey] as Node;
+			let applyToken: string = this.helper.getKeysHelper(applyKeyNode)[0];
+			let msKey: string = applyKeyNode[applyToken] as string;
+			applyRules.set(applyKey, [applyToken, msKey]);
+		}
+		for (let key of groupings.keys()) {
+			let datasetResults = groupings.get(key);
+			if (!datasetResults) {
+				break;
+			}
+			let calculations: Map<string, number|Decimal|Set<number | string >> = new Map();
+			for (let result of datasetResults) {
+				for (let rule of applyRules.keys()) {
+					let definition = applyRules.get(rule);
+					if (!definition) {
+						break;
+					}
+					this.handleCollectData(result, rule, definition, calculations);
+				}
+			}
+			let final: Map<string, number> = new Map();
+			for (let applyKey of calculations.keys()) {
+				let definition = applyRules.get(applyKey);
+				let result = calculations.get(applyKey);
+				if (!definition || !result) {
+					break;
+				}
+				this.finalCalculations(applyKey, definition, result, final, datasetResults.length);
+			}
+			applyVals.set(key, final);
+
+		}
+		return applyVals;
 	}
 
 	public filterByColumnsAndOrder(
-		groupings: Map<Map<string, string | number>, DatasetResult>,
-		applyVals: Map<Map<string, string | number>, Map<string, number>>,
-		columns: string[], orderFields: string[], direction: string, datasetID: string) {
+		groupings: Map<string, DatasetResult>,
+		applyVals: Map<string, Map<string, number>>,
+		columns: string[], orderFields: string[], direction: string, datasetID: string, group: Set<string>) {
 		let data = [];
-		for (let keys of groupings.keys()) {
+		for (let key of groupings.keys()) {
+			let value = groupings.get(key);
+			if (!value) {
+				break;
+			}
 			let filteredItem: any = {};
 			for (let column of columns) {
-				if (keys.has(column)) {
-					filteredItem[`${datasetID}_${column}`] = keys.get(column);
+				if (group.has(column)) {
+					filteredItem[`${datasetID}_${column}`] = this.getValue(value[0], column);
 				} else {
-					let groupingApplyValue = applyVals.get(keys);
-					if (groupingApplyValue) {
-						let groupingApplyResult = groupingApplyValue.get(column);
+					let applySet = applyVals.get(key);
+					if (applySet) {
+						let groupingApplyResult = applySet.get(column);
 						if (groupingApplyResult) {
 							filteredItem[column] = groupingApplyResult;
 						}
@@ -109,49 +155,6 @@ export default class FilterByGroup {
 			return 0;
 		});
 		return result;
-	}
-
-	private getApplyVals(
-		groupings: Map<Map<string, string | number>, DatasetResult>, apply: Node[]):
-		Map<Map<string, string | number>, Map<string, number>>{
-		let applyVals:
-			Map<Map<string, string | number>, Map<string, number>> = new Map();
-		let applyRules: Map<string, [string, string]> = new Map();
-		for (let node of apply) {
-			let applyKey: string = this.helper.getKeysHelper(node)[0];
-			let applyKeyNode: Node = node[applyKey] as Node;
-			let applyToken: string = this.helper.getKeysHelper(applyKeyNode)[0];
-			let msKey: string = applyKeyNode[applyToken] as string;
-			applyRules.set(applyKey, [applyToken, msKey]);
-		}
-		for (let key of groupings.keys()) {
-			let datasetResults = groupings.get(key);
-			if (!datasetResults) {
-				break;
-			}
-			let calculations: Map<string, number|Decimal|Set<number | string >> = new Map();
-			for (let result of datasetResults) {
-				for (let rule of applyRules.keys()) {
-					let definition = applyRules.get(rule);
-					if (!definition) {
-						break;
-					}
-					this.handleCollectData(result, rule, definition, calculations);
-				}
-			}
-			let final: Map<string, number> = new Map();
-			for (let applyKey of calculations.keys()) {
-				let definition = applyRules.get(applyKey);
-				let result = calculations.get(applyKey);
-				if (!definition || !result) {
-					break;
-				}
-				this.finalCalculations(applyKey, definition, result, final, datasetResults.length);
-			}
-			applyVals.set(key, final);
-
-		}
-		return applyVals;
 	}
 
 	private finalCalculations(applyKey: string, definition: [string,string],

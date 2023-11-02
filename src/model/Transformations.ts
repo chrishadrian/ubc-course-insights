@@ -35,7 +35,7 @@ export default class Transformations {
 				throw new InsightError("apply key defined twice in APPLY");
 			}
 			this.applyKeys.add(currApplyKey);
-			this.apply.push({[currApplyKey]: currNode});
+			this.apply.push(currNode);
 		}
 	}
 

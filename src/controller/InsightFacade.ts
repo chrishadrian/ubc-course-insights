@@ -112,24 +112,28 @@ export default class InsightFacade implements IInsightFacade {
 			const filter = new Filter(), noFilter: Node = {IS: {furniture: ".*"}};
 			const filteredSections = JSON.stringify(filters) === "{}" ? filter.filterByNode(noFilter, indexes) :
 				filter.filterByNode(filters, indexes);
-			if (filteredSections.length > 5000) {
-				throw new ResultTooLargeError();
-			}
+			this.checkLength(filteredSections.length);
 			if (group.size === 0) {
 				const result = filter.filterByColumnsAndOrder(
 					filteredSections, columns, orderFields, direction, datasetID);
 				return Promise.resolve(result);
 			}
 			const grouper = new FilterByGroup();
-			const [g] = grouper.groupResults(filteredSections, group, apply);
-			// const result = grouper.filterByColumnsAndOrder(g, applyVals,columns, orderFields, direction, datasetID);
-			// return Promise.resolve(result);
-			return Promise.reject(new InsightError("Dataset does not exist!"));
+			const [g, applyVals] = grouper.groupResults(filteredSections, group, apply);
+			const result = grouper.filterByColumnsAndOrder(
+				g, applyVals,columns, orderFields, direction, datasetID, group);
+			return Promise.resolve(result);
 		} catch (err) {
 			if (err instanceof ResultTooLargeError) {
 				return Promise.reject(new ResultTooLargeError());
 			}
 			return Promise.reject(`Perform query error: ${err}`);
+		}
+	}
+
+	private checkLength(numResults: number) {
+		if (numResults > 5000) {
+			throw new ResultTooLargeError();
 		}
 	}
 

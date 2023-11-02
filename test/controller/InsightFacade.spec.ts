@@ -48,6 +48,7 @@ import {
 	InvalidIdStringEmptyId,
 } from "../resources/queries/invalidQuery";
 import {roomQuery} from "../resources/queries/roomsQueries";
+import {emptyWhere} from "../resources/queries/emptyWhere";
 
 use(chaiAsPromised);
 
@@ -867,6 +868,14 @@ describe("InsightFacade - Section", function () {
 				expect.fail("Should not be rejected!");
 			}
 		});
+		it("should perform a query and return grouped results", async function () {
+			try {
+				const result = await facade.performQuery(emptyWhere.input);
+				expect(result).have.deep.members(emptyWhere.expected);
+			} catch (err) {
+				expect.fail("Should not be rejected!");
+			}
+		});
 
 		it("should perform a query and return empty array", async function () {
 			try {
@@ -1203,14 +1212,16 @@ describe("InsightFacade - Section", function () {
 	});
 
 	describe("Section — PerformQuery with foldertest", () => {
-		let rooms: string;
+		let large: string;
 		before(async function () {
 			clearDisk();
 			sections = getContentFromArchives("halfPair.zip");
+			large = getContentFromArchives("pair.zip");
 			// rooms = getContentFromArchives("rooms/campus.zip");
 			facade = new InsightFacade();
 			try {
 				await facade.addDataset("sections", sections, InsightDatasetKind.Sections);
+				await facade.addDataset("large", large, InsightDatasetKind.Sections);
 				// await facade.addDataset("rooms", rooms, InsightDatasetKind.Rooms);
 			} catch (err) {
 				expect.fail("Should not be rejected!");

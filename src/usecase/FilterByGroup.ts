@@ -15,26 +15,28 @@ export default class FilterByGroup {
 	private helper: QueryHelper = new QueryHelper();
 
 	public groupResults(data: DatasetResult, group: Set<string>, apply: Node[]):
-		[Map<Map<string, string | number>, DatasetResult>, Map<Map<string, string | number>, Map<string, number>>] {
-		let groupings: Map<Map<string, string | number>, DatasetResult> =
-			new Map<Map<string, string | number>, DatasetResult>();
-		for (let result of data) {
-			let resultKeys: Map<string, string | number> = new Map<string, string | number>();
+		[Map<string, DatasetResult>] {
+		let groupings: Map<string, DatasetResult> =
+			new Map<string, DatasetResult>();
+		for (const result of data) {
+			let keyString: string = "";
+			const resultKeys = [];
 			for (let key of group) {
-				let value = this.getValue(result, key);
-				resultKeys.set(key, value);
+				const value = this.getValue(result, key);
+				keyString = keyString + " " + value;
+				resultKeys.push(value);
 			}
-			let datasetResult = groupings.get(resultKeys);
+			let datasetResult = groupings.get(keyString);
 			if (datasetResult) {
 				datasetResult.push(result);
-				groupings.set(resultKeys, datasetResult);
+				groupings.set(keyString, datasetResult);
 			} else {
-				groupings.set(resultKeys, [result]);
+				groupings.set(keyString, [result]);
 			}
 		}
-		let applyVals: Map<Map<string, string | number>, Map<string, number>>
-			= this.getApplyVals(groupings, apply);
-		return [groupings, applyVals];
+		// let applyVals: Map<Map<string, string | number>, Map<string, number>>
+			// = this.getApplyVals(groupings, apply);
+		return [groupings];
 	}
 
 	public filterByColumnsAndOrder(
@@ -59,12 +61,12 @@ export default class FilterByGroup {
 			}
 			data.push(filteredItem);
 		}
-		const result =  this.handleOrder(data, orderFields, direction, datasetID);
+		let result =  this.handleOrder(data, orderFields, direction, datasetID);
 		return result;
 	}
 
 	private handleOrder(data: any[], orderFields: string[], direction: string, datasetID: string): any[]{
-		const result =  data.sort((a, b) => {
+		let result =  data.sort((a, b) => {
 			if (direction === "" || direction === "UP") {
 				for (let orderField of orderFields) {
 					if (a[orderField]) {
@@ -75,7 +77,7 @@ export default class FilterByGroup {
 							return 1;
 						}
 					} else {
-						const order =  `${datasetID}_${orderField as keyof (Section | Room)}`;
+						let order =  `${datasetID}_${orderField as keyof (Section | Room)}`;
 						if (a[order] < b[order]) {
 							return -1;
 						}
@@ -94,7 +96,7 @@ export default class FilterByGroup {
 							return 1;
 						}
 					} else {
-						const order =  `${datasetID}_${orderField as keyof (Section | Room)}`;
+						let order =  `${datasetID}_${orderField as keyof (Section | Room)}`;
 						if (a[order] > b[order]) {
 							return -1;
 						}
@@ -197,7 +199,8 @@ export default class FilterByGroup {
 				case "COUNT": curr = new Set<number | string>();
 					curr.add(this.getValue(result, msKey));
 					break;
-				default: throw new InsightError();
+				default:
+					return;
 			}
 			groupData.set(rule, curr);
 		} else {

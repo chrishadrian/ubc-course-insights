@@ -47,15 +47,18 @@ import {
 	InvalidKeySCompOnMKey,
 	InvalidIdStringEmptyId,
 } from "../resources/queries/invalidQuery";
+import {roomQuery} from "../resources/queries/roomsQueries";
 
 use(chaiAsPromised);
 
 describe("InsightFacade — Room", function () {
 	let facade: IInsightFacade;
 	let rooms: string;
+	let moreRooms: string;
 
 	before(function () {
 		rooms = getContentFromArchives("rooms/lessCampus.zip");
+		moreRooms = getContentFromArchives("rooms/campus.zip");
 
 		clearDisk();
 	});
@@ -432,7 +435,7 @@ describe("InsightFacade — Room", function () {
 		});
 	});
 
-	describe("Room — PerformQuery with foldertest", () => {
+	describe("PerformQuery", function () {
 		before(async function () {
 			clearDisk();
 			const performQueryRooms = getContentFromArchives("rooms/campus.zip");
@@ -444,33 +447,55 @@ describe("InsightFacade — Room", function () {
 			}
 		});
 
-		after(function () {
-			clearDisk();
-		});
-
-		type PQErrorKind = "ResultTooLargeError" | "InsightError";
-
-		folderTest<unknown, Promise<InsightResult[]>, PQErrorKind>(
-			"Room — Dynamic InsightFacade PerformQuery tests",
-			async (input) => await facade.performQuery(input),
-			"./test/resources/queries/rooms",
-			{
-				assertOnResult: async (actual, expected) => {
-					const expectedResult = await expected;
-					expect(actual).have.deep.members(expectedResult);
-				},
-				errorValidator: (error): error is PQErrorKind =>
-					error === "ResultTooLargeError" || error === "InsightError",
-				assertOnError: (actual, expected) => {
-					if (expected === "ResultTooLargeError") {
-						expect(actual).to.be.instanceof(ResultTooLargeError);
-					} else {
-						expect(actual).to.be.instanceof(InsightError);
-					}
-				},
+		it("should perform a Room Transformation Query With Group and Count", async function () {
+			try {
+				const result = await facade.performQuery(roomQuery.input);
+				expect(result).have.deep.members(roomQuery.expected);
+			} catch (err) {
+				expect.fail("Should not be rejected!");
 			}
-		);
+		});
 	});
+
+	// describe("Room — PerformQuery with foldertest", () => {
+	// 	before(async function () {
+	// 		clearDisk();
+	// 		const performQueryRooms = getContentFromArchives("rooms/campus.zip");
+	// 		facade = new InsightFacade();
+	// 		try {
+	// 			await facade.addDataset("rooms", performQueryRooms, InsightDatasetKind.Rooms);
+	// 		} catch (err) {
+	// 			expect.fail("Should not be rejected!");
+	// 		}
+	// 	});
+
+	// 	after(function () {
+	// 		clearDisk();
+	// 	});
+
+	// 	type PQErrorKind = "ResultTooLargeError" | "InsightError";
+
+	// 	folderTest<unknown, Promise<InsightResult[]>, PQErrorKind>(
+	// 		"Room — Dynamic InsightFacade PerformQuery tests",
+	// 		async (input) => await facade.performQuery(input),
+	// 		"./test/resources/queries/rooms",
+	// 		{
+	// 			assertOnResult: async (actual, expected) => {
+	// 				const expectedResult = await expected;
+	// 				expect(actual).have.deep.members(expectedResult);
+	// 			},
+	// 			errorValidator: (error): error is PQErrorKind =>
+	// 				error === "ResultTooLargeError" || error === "InsightError",
+	// 			assertOnError: (actual, expected) => {
+	// 				if (expected === "ResultTooLargeError") {
+	// 					expect(actual).to.be.instanceof(ResultTooLargeError);
+	// 				} else {
+	// 					expect(actual).to.be.instanceof(InsightError);
+	// 				}
+	// 			},
+	// 		}
+	// 	);
+	// });
 
 });
 

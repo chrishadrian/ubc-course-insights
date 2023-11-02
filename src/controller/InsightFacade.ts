@@ -121,9 +121,10 @@ export default class InsightFacade implements IInsightFacade {
 				return Promise.resolve(result);
 			}
 			const grouper = new FilterByGroup();
-			const [g, applyVals] = grouper.groupResults(filteredSections, group, apply);
-			const result = grouper.filterByColumnsAndOrder(g, applyVals,columns, orderFields, direction, datasetID);
-			return Promise.resolve(result);
+			const [g] = grouper.groupResults(filteredSections, group, apply);
+			// const result = grouper.filterByColumnsAndOrder(g, applyVals,columns, orderFields, direction, datasetID);
+			// return Promise.resolve(result);
+			return Promise.reject(new InsightError("Dataset does not exist!"));
 		} catch (err) {
 			if (err instanceof ResultTooLargeError) {
 				return Promise.reject(new ResultTooLargeError());

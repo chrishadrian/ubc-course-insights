@@ -91,6 +91,16 @@ describe("InsightFacade — Room", function () {
 				}
 			});
 
+			it("should add one room dataset with only one valid room and return its id", async function () {
+				try {
+					const oneValidRoom = getContentFromArchives("rooms/oneValidRoom.zip");
+					const result = await facade.addDataset("rooms", oneValidRoom, InsightDatasetKind.Rooms);
+					expect(result).to.deep.equal(["rooms"]);
+				} catch (err) {
+					expect.fail("Should not be rejected!");
+				}
+			});
+
 			it("should reject building with no room", async function () {
 				const noRoomData = getContentFromArchives("rooms/noRoomTable.zip");
 				try {
@@ -533,6 +543,16 @@ describe("InsightFacade - Section", function () {
 					expect(result1).to.deep.equal(["sections"]);
 					const result2 = await facade.addDataset("ubc", sections, InsightDatasetKind.Sections);
 					expect(result2).to.deep.equal(["sections", "ubc"]);
+				} catch (err) {
+					expect.fail("Should not be rejected!");
+				}
+			});
+
+			it("should add one section dataset with only one valid section and return its id", async function () {
+				try {
+					const oneValidSection = getContentFromArchives("oneValidSection.zip");
+					const result = await facade.addDataset("sections", oneValidSection, InsightDatasetKind.Sections);
+					expect(result).to.deep.equal(["sections"]);
 				} catch (err) {
 					expect.fail("Should not be rejected!");
 				}

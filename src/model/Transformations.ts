@@ -14,19 +14,18 @@ export default class Transformations {
 		this.apply = [];
 		this.applyKeys = new Set<string>();
 		let keys = this.queryHelper.getKeysHelper(obj);
-		if (keys.length !== 2 && keys[0] !== "GROUP" && keys[1] !== "APPLY") {
+		let transformations = obj as any;
+		if (!(keys.length === 2 && transformations["GROUP"] && transformations["APPLY"])) {
 			throw new InsightError();
 		}
-		let transformations = obj as any;
-		[this.group, this.datasetID] = this.parseGroup(transformations[keys[0]]);
+		[this.group, this.datasetID] = this.parseGroup(transformations["GROUP"]);
 		if (this.datasetID === "") {
 			throw new InsightError("invalid id");
 		}
-		this.parseApply(transformations[keys[1]]);
+		this.parseApply(transformations["APPLY"] as Node[]);
 	}
 
 	private parseApply(apply: Node[]) {
-		let currID: string;
 		let currNode: Node;
 		let currApplyKey: string;
 		for (let i of apply) {
@@ -66,7 +65,7 @@ export default class Transformations {
 					this.queryHelper.validateRoomsSKey(key) ||
 					this.queryHelper.validateSectionsMKey(key) ||
 					this.queryHelper.validateSectionsSKey(key))) {
-					throw new InsightError();
+					throw new InsightError("Key in COUNT is invalid!");
 				}
 				[id, field] = this.queryHelper.extractFieldIDString(key);
 				return [{COUNT: field}, id];
@@ -76,7 +75,7 @@ export default class Transformations {
 			case "MAX":
 				if (!(this.queryHelper.validateRoomsMKey(key) ||
 					this.queryHelper.validateSectionsMKey(key))) {
-					throw new InsightError();
+					throw new InsightError(`Key ${key} is invalid!`);
 				}
 				[id, field] = this.queryHelper.extractFieldIDString(key);
 				return [{[keys[0]]: field}, id];

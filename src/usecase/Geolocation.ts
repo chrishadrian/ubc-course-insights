@@ -7,8 +7,11 @@ interface GeoResponse {
 }
 
 export default class Geolocation {
-	public getGeolocation = (address: string): Promise<GeoResponse> => {
+	public getGeolocation = (address?: string): Promise<GeoResponse> => {
 		return new Promise<GeoResponse>((resolve, reject) => {
+			if (!address) {
+				return Promise.reject({error: "Error: address is undefined!"});
+			}
 			const encodedAddress = encodeURIComponent(address);
 			const url = `http://cs310.students.cs.ubc.ca:11316/api/v1/project_team246/${encodedAddress}`;
 

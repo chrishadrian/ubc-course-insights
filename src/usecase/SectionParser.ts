@@ -28,7 +28,7 @@ export default class SectionParser {
 	}
 
 	public async parseSectionsContent(content: string): Promise<Sections> {
-		let count = 0;
+		let validSection = false;
 		const decode = (str: string): string => Buffer.from(str, "base64").toString("binary");
 
 		try {
@@ -36,7 +36,6 @@ export default class SectionParser {
 			const zip = await JSZip.loadAsync(data);
 			const folderPath = "courses/";
 			const sections = new Sections();
-
 			const promises: any[] = [];
 
 			zip.forEach(async function (relativePath, zipEntry) {
@@ -50,14 +49,16 @@ export default class SectionParser {
 							const jsonObject: ZipFile = JSON.parse(jsonContent);
 							const results = jsonObject.result;
 							if (results.length !== 0) {
-								count++;
+								if (!validSection) {
+									validSection = true;
+								}
 								for (let result of results) {
 									const section = new Section(result);
 									sections.addSection(section);
 								}
 							}
 						} catch (error) {
-							throw new InsightError(`Course ${zipEntry.name} is invalid: ${error}`);
+							return;
 						}
 					});
 
@@ -67,7 +68,7 @@ export default class SectionParser {
 
 			await Promise.all(promises);
 
-			if (count === 0) {
+			if (!validSection) {
 				throw new InsightError("There is no valid section!");
 			}
 

@@ -66,7 +66,7 @@ export default class Transformations {
 					this.queryHelper.validateRoomsSKey(key) ||
 					this.queryHelper.validateSectionsMKey(key) ||
 					this.queryHelper.validateSectionsSKey(key))) {
-					throw new InsightError();
+					throw new InsightError("Key in COUNT is invalid!");
 				}
 				[id, field] = this.queryHelper.extractFieldIDString(key);
 				return [{COUNT: field}, id];
@@ -76,7 +76,7 @@ export default class Transformations {
 			case "MAX":
 				if (!(this.queryHelper.validateRoomsMKey(key) ||
 					this.queryHelper.validateSectionsMKey(key))) {
-					throw new InsightError();
+					throw new InsightError(`Key ${key} is invalid!`);
 				}
 				[id, field] = this.queryHelper.extractFieldIDString(key);
 				return [{[keys[0]]: field}, id];

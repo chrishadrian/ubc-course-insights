@@ -83,44 +83,32 @@ export default class InsightFacade implements IInsightFacade {
 
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
 		const queryEngine = new QueryEngine();
-		let datasetID = "", orderFields = [], columns = [""], filters: Node = {}, direction = "";
-		let group: Set<string> = new Set<string>(), apply: Node[] = [];
 		try {
-			const queryResult = queryEngine.parseQuery(query), where = queryResult.whereBlock;
-			filters = where;
-			const options = queryResult.optionsBlock, transformations = queryResult.transformationsBlock;
-			datasetID = options.getDatasetID();
-			columns = options.getColumns();
-			orderFields = options.getOrder();
-			direction = options.getDirection();
-			if (transformations) {
-				group = transformations.getGroup();
-				apply = transformations.getApply();
-			}
-		} catch (err) {
-			return Promise.reject(err);
-		}
-		try {
+			const queryResult = queryEngine.parseQuery(query);
+			const {
+				filters, group, apply, datasetID,
+				columns, orderFields, direction
+			} = this.initializeQuery(queryResult);
 			const viewer = new Viewer();
 			let indexes = this.evalIndexes(datasetID, columns, group);
-			if (!indexes) {
-				return Promise.reject(new InsightError("Dataset does not exist!"));
-			}
 			if (Object.keys(indexes).length === 0) {
 				indexes = await viewer.getSectionIndexesByDatasetID(datasetID);
 			}
 			const filter = new Filter();
-			const noFilter: Node = this.isSection(datasetID, columns, group) ? {IS: {id: ".*"}} :
-				{IS: {furniture: ".*"}};
-			const filteredSections = JSON.stringify(filters) === "{}" ? filter.filterByNode(noFilter, indexes) :
-				filter.filterByNode(filters, indexes);
+			const noFilter: Node = this.isSection(columns, group)
+				? {IS: {id: ".*"}}
+				: {IS: {furniture: ".*"}};
+			const filteredSections = JSON.stringify(filters) === "{}"
+				? filter.filterByNode(noFilter, indexes)
+				: filter.filterByNode(filters, indexes);
 			if (group.size === 0) {
 				this.checkLength(filteredSections.length);
-				const result = filter.filterByColumnsAndOrder(
-					filteredSections, columns, orderFields, direction, datasetID);
+				const result = filter.
+					filterByColumnsAndOrder(filteredSections, columns, orderFields, direction, datasetID);
 				return Promise.resolve(result);
 			}
-			const grouper = new FilterByGroup(), [g, applyVals] = grouper.groupResults(filteredSections, group, apply);
+			const grouper = new FilterByGroup();
+			const [g, applyVals] = grouper.groupResults(filteredSections, group, apply);
 			this.checkLength(g.size);
 			const result = grouper.filterByColumnsAndOrder(g,applyVals,columns,orderFields,direction,datasetID,group);
 			return Promise.resolve(result);
@@ -128,7 +116,7 @@ export default class InsightFacade implements IInsightFacade {
 			if (err instanceof ResultTooLargeError) {
 				return Promise.reject(new ResultTooLargeError());
 			}
-			return Promise.reject(`Perform query error: ${err}`);
+			return Promise.reject(new InsightError(`Perform query error: ${err}`));
 		}
 	}
 
@@ -138,16 +126,25 @@ export default class InsightFacade implements IInsightFacade {
 		}
 	}
 
-	private initializePerformQuery() {
-		let datasetID = "";
-		let orderFields: any[] = [];
-		let columns = [""];
-		let filters: Node = {};
-		let direction = "";
-		return {filters, datasetID, columns, orderFields, direction};
+	private initializeQuery(queryResult: any) {
+		let group: Set<string> = new Set<string>();
+		let apply: Node[] = [];
+		const where = queryResult.whereBlock;
+		const options = queryResult.optionsBlock;
+		const transformations = queryResult.transformationsBlock;
+		const filters = where;
+		const datasetID = options.getDatasetID();
+		const columns = options.getColumns();
+		const orderFields = options.getOrder();
+		const direction = options.getDirection();
+		if (transformations) {
+			group = transformations.getGroup();
+			apply = transformations.getApply();
+		}
+		return {filters, group, apply, datasetID, columns, orderFields, direction};
 	}
 
-	private isSection (datasteID: string, columns: string[], group: Set<string>): boolean {
+	private isSection (columns: string[], group: Set<string>): boolean {
 		const section = new Section();
 		let isSection = false;
 		if (group.size !== 0) {
@@ -174,6 +171,9 @@ export default class InsightFacade implements IInsightFacade {
 			isSection = columns[0] in section;
 		}
 		const indexes = isSection ? this.sindexes[datasetID] : this.rindexes[datasetID];
+		if (!indexes) {
+			throw new InsightError("Dataset does not exist!");
+		}
 		return indexes;
 	}
 

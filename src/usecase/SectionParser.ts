@@ -54,18 +54,18 @@ export default class SectionParser {
 								}
 								for (let result of results) {
 									const section = new Section(result);
-									sections.addSection(section);
+									if (!section.isInvalidSection()) {
+										sections.addSection(section);
+									}
 								}
 							}
 						} catch (error) {
 							return;
 						}
 					});
-
 					promises.push(promise);
 				}
 			});
-
 			await Promise.all(promises);
 
 			if (!validSection) {
@@ -123,7 +123,7 @@ export default class SectionParser {
 	private createIndex(fieldName: keyof Section, data: Section[]): void {
 		const index = new Map<string | number, Section[]>();
 		for (const item of data) {
-			const value = item[fieldName];
+			const value = item[fieldName] as string|number;
 			if (!index.has(value)) {
 				index.set(value, []);
 			}

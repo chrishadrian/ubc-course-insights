@@ -23,7 +23,7 @@ export default class FilterByGroup {
 			let resultKeys;
 			for (let key of group) {
 				const value = this.getValue(result, key);
-				values.push(value);
+				values.push(key + "_" + value.toString());
 			}
 			resultKeys = "[" + [...values].join(" ") + "]";
 			let datasetResult = groupings.get(resultKeys);

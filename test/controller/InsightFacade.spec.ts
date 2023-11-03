@@ -1203,14 +1203,16 @@ describe("InsightFacade - Section", function () {
 	});
 
 	describe("Section — PerformQuery with foldertest", () => {
-		let rooms: string;
+		let large: string;
 		before(async function () {
 			clearDisk();
 			sections = getContentFromArchives("halfPair.zip");
+			large = getContentFromArchives("pair.zip");
 			// rooms = getContentFromArchives("rooms/campus.zip");
 			facade = new InsightFacade();
 			try {
 				await facade.addDataset("sections", sections, InsightDatasetKind.Sections);
+				await facade.addDataset("large", large, InsightDatasetKind.Sections);
 				// await facade.addDataset("rooms", rooms, InsightDatasetKind.Rooms);
 			} catch (err) {
 				expect.fail("Should not be rejected!");

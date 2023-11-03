@@ -102,14 +102,16 @@ export default class InsightFacade implements IInsightFacade {
 		}
 		try {
 			const viewer = new Viewer();
-			let indexes = this.evalIndexes(datasetID, columns, apply);
+			let indexes = this.evalIndexes(datasetID, columns, group);
 			if (!indexes) {
 				return Promise.reject(new InsightError("Dataset does not exist!"));
 			}
 			if (Object.keys(indexes).length === 0) {
 				indexes = await viewer.getSectionIndexesByDatasetID(datasetID);
 			}
-			const filter = new Filter(), noFilter: Node = {IS: {furniture: ".*"}};
+			const filter = new Filter();
+			const noFilter: Node = this.isSection(datasetID, columns, group) ? {IS: {id: ".*"}} :
+				{IS: {furniture: ".*"}};
 			const filteredSections = JSON.stringify(filters) === "{}" ? filter.filterByNode(noFilter, indexes) :
 				filter.filterByNode(filters, indexes);
 			if (group.size === 0) {
@@ -118,11 +120,9 @@ export default class InsightFacade implements IInsightFacade {
 					filteredSections, columns, orderFields, direction, datasetID);
 				return Promise.resolve(result);
 			}
-			const grouper = new FilterByGroup();
-			const [g, applyVals] = grouper.groupResults(filteredSections, group, apply);
+			const grouper = new FilterByGroup(), [g, applyVals] = grouper.groupResults(filteredSections, group, apply);
 			this.checkLength(g.size);
-			const result = grouper.filterByColumnsAndOrder(
-				g, applyVals,columns, orderFields, direction, datasetID, group);
+			const result = grouper.filterByColumnsAndOrder(g,applyVals,columns,orderFields,direction,datasetID,group);
 			return Promise.resolve(result);
 		} catch (err) {
 			if (err instanceof ResultTooLargeError) {
@@ -147,19 +147,33 @@ export default class InsightFacade implements IInsightFacade {
 		return {filters, datasetID, columns, orderFields, direction};
 	}
 
-	private evalIndexes(datasetID: string, columns: string[], apply: Node[]): any{
+	private isSection (datasteID: string, columns: string[], group: Set<string>): boolean {
 		const section = new Section();
-		let isSection;
-		if (apply.length !== 0) {
-			let firstRule = apply[0];
-			let firstApplyKey = this.queryHelper.getKeysHelper(firstRule)[0];
-			let firstApplyTokenKey = firstRule[firstApplyKey];
-			let firstApplyToken: string = this.queryHelper.getKeysHelper(firstApplyTokenKey)[0];
-			isSection = firstApplyToken in section;
+		let isSection = false;
+		if (group.size !== 0) {
+			for (let key of group) {
+				isSection = key in section;
+				return isSection;
+			}
 		} else {
 			isSection = columns[0] in section;
 		}
-		let indexes = isSection ? this.sindexes[datasetID] : this.rindexes[datasetID];
+		return isSection;
+	}
+
+	private evalIndexes(datasetID: string, columns: string[], group: Set<string>) {
+		const section = new Section();
+		let isSection;
+		if (group.size !== 0) {
+			for (let key of group) {
+				isSection = key in section;
+				const indexes = isSection ? this.sindexes[datasetID] : this.rindexes[datasetID];
+				return indexes;
+			}
+		} else {
+			isSection = columns[0] in section;
+		}
+		const indexes = isSection ? this.sindexes[datasetID] : this.rindexes[datasetID];
 		return indexes;
 	}
 

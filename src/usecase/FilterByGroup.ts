@@ -85,13 +85,13 @@ export default class FilterByGroup {
 		groupings: Map<string, DatasetResult>,
 		applyVals: Map<string, Map<string, number>>,
 		columns: string[], orderFields: string[], direction: string, datasetID: string, group: Set<string>) {
-		let data = [];
+		const data = [];
 		for (let key of groupings.keys()) {
 			let value = groupings.get(key);
 			if (!value) {
 				break;
 			}
-			let filteredItem: any = {};
+			const filteredItem: any = {};
 			for (let column of columns) {
 				if (group.has(column)) {
 					filteredItem[`${datasetID}_${column}`] = this.getValue(value[0], column);
@@ -107,12 +107,12 @@ export default class FilterByGroup {
 			}
 			data.push(filteredItem);
 		}
-		let result =  this.handleOrder(data, orderFields, direction, datasetID);
+		const result =  this.handleOrder(data, orderFields, direction, datasetID);
 		return result;
 	}
 
 	private handleOrder(data: any[], orderFields: string[], direction: string, datasetID: string): any[]{
-		let result =  data.sort((a, b) => {
+		const result =  data.sort((a, b) => {
 			if (direction === "" || direction === "UP") {
 				for (let orderField of orderFields) {
 					if (a[orderField]) {

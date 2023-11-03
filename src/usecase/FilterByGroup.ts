@@ -125,14 +125,6 @@ export default class FilterByGroup {
 						if (a[orderField] > b[orderField]) {
 							return 1;
 						}
-					} else {
-						let order =  `${datasetID}_${orderField as keyof (Section | Room)}`;
-						if (a[order] < b[order]) {
-							return -1;
-						}
-						if (a[order] > b[order]) {
-							return 1;
-						}
 					}
 				}
 			} else {
@@ -142,14 +134,6 @@ export default class FilterByGroup {
 							return -1;
 						}
 						if (a[orderField] < b[orderField]) {
-							return 1;
-						}
-					} else {
-						let order =  `${datasetID}_${orderField as keyof (Section | Room)}`;
-						if (a[order] > b[order]) {
-							return -1;
-						}
-						if (a[order] < b[order]) {
 							return 1;
 						}
 					}

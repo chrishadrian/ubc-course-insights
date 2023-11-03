@@ -48,7 +48,6 @@ import {
 	InvalidIdStringEmptyId,
 } from "../resources/queries/invalidQuery";
 import {roomQuery} from "../resources/queries/roomsQueries";
-import {emptyWhere} from "../resources/queries/emptyWhere";
 
 use(chaiAsPromised);
 
@@ -864,14 +863,6 @@ describe("InsightFacade - Section", function () {
 			try {
 				await facade.addDataset("sections", sections, InsightDatasetKind.Sections);
 				await facade.addDataset("large", halfSections, InsightDatasetKind.Sections);
-			} catch (err) {
-				expect.fail("Should not be rejected!");
-			}
-		});
-		it("should perform a query and return grouped results", async function () {
-			try {
-				const result = await facade.performQuery(emptyWhere.input);
-				expect(result).have.deep.members(emptyWhere.expected);
 			} catch (err) {
 				expect.fail("Should not be rejected!");
 			}

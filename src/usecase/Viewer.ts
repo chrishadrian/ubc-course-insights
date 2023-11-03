@@ -29,17 +29,14 @@ export default class Viewer {
 		datasetID: string
 	): Promise<Record<string, Map<string | number, Section[]>>> {
 		let result: Record<string, Map<string | number, Section[]>> = {};
-
 		if (!fs.existsSync(persistDir)) {
 			return Promise.reject(new InsightError("dataset does not exist"));
 		}
-
 		const fileContent = await fs.readFile(`${persistDir}/${datasetID}.json`);
 		const datasetJSON: {
 			insightDataset: InsightDataset;
 			MappedSection: Record<string, Record<string | number, Section[]>>;
 		} = JSON.parse(fileContent.toString());
-
 		for (const key in datasetJSON.MappedSection) {
 			const fieldName: keyof Section = key as keyof Section;
 			result[fieldName] = this.sectionJSONToMap(datasetJSON.MappedSection[fieldName]);

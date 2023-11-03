@@ -558,6 +558,16 @@ describe("InsightFacade - Section", function () {
 				}
 			});
 
+			it("should add one section dataset with only partial section and return its id", async function () {
+				try {
+					const oneValidSection = getContentFromArchives("partialFilledSection.zip");
+					const result = await facade.addDataset("sections", oneValidSection, InsightDatasetKind.Sections);
+					expect(result).to.deep.equal(["sections"]);
+				} catch (err) {
+					expect.fail("Should not be rejected!");
+				}
+			});
+
 			it("should reject dataset with 0 numrows and return its id", async function () {
 				try {
 					const emptyNumSection = getContentFromArchives("emptyNumRow.zip");

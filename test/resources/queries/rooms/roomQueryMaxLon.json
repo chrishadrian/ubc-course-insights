@@ -1,0 +1,48 @@
+{
+	"title": "Room Query Max Lon",
+	"input": {
+		"WHERE": {
+			"AND": [
+				{
+					"IS": {
+						"rooms_furniture": "*Tables*"
+					}
+				},
+				{
+					"GT": {
+						"rooms_seats": 300
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"rooms_type",
+				"maxLon"
+			]
+		},
+		"TRANSFORMATIONS": {
+			"GROUP": [
+				"rooms_type"
+			],
+			"APPLY": [
+				{
+					"maxLon": {
+						"MAX": "rooms_lon"
+					}
+				}
+			]
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{
+			"rooms_type": "Tiered Large Group",
+			"maxLon": -123.24494
+		},
+		{
+			"rooms_type": "Open Design General Purpose",
+			"maxLon": -123.24467
+		}
+	]
+}

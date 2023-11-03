@@ -144,18 +144,40 @@ export default class QueryEngine {
 		if (!this.validOpts(opts)) {
 			throw new InsightError("Options structure invalid");
 		}
-		let keys = this.getKeysHelper(opts);
-		let o = opts as any;
-		let cols: string[];
-		let id: string;
+		let keys = this.getKeysHelper(opts), o = opts as any, cols: string[], id: string;
 		[id, cols] = this.handleTransformationsCols(o[keys[0]], trans);
 		if (keys.length === 2) {
-			let orderFields: string[];
-			let orderDirection: string;
-			[orderFields, orderDirection] = this.handleOrder(o[keys[1]], cols, id);
+			let orderFields: string[], orderDirection: string;
+			[orderFields, orderDirection] = this.handleTransformationsOrder(o[keys[1]], cols, id);
 			return new Options(id, cols, orderFields, orderDirection);
 		}
 		return new Options(id, cols);
+	}
+
+	private handleTransformationsOrder(obj: unknown, cols: string[], id: string): [string[], string] {
+		let order = obj as any;
+		let keys = this.helper.getKeysHelper(order);
+		let orderKeys: string[] = [];
+		let direction = "";
+		if (keys.length === 2) {
+			if (!(keys[0] === "dir" && keys[1] === "keys")) {
+				throw new InsightError("incorrect order format");
+			}
+			if (!(order[keys[0]] === "UP" || order[keys[0]] === "DOWN")) {
+				throw new InsightError("incorrect direction");
+			}
+			direction = order[keys[0]];
+			orderKeys = order[keys[1]];
+		} else {
+			orderKeys = [order as string];
+		}
+		if (orderKeys.length < 1) {
+			throw new InsightError("unspecified order");
+		}
+		for (let i of orderKeys) {
+			this.checkOrder(cols, i);
+		}
+		return [orderKeys, direction];
 	}
 
 	private handleOrder(obj: unknown, cols: string[], id: string): [string[], string] {
@@ -216,10 +238,10 @@ export default class QueryEngine {
 			} else {
 				field = i;
 			}
-			if (!(applyKeys.has(field) || (groups.has(field)))) {
+			if (!(applyKeys.has(i) || (groups.has(field)))) {
 				throw new InsightError("Columns keys do not correspond to group or applyKeys");
 			}
-			cols.push(field);
+			cols.push(i);
 		}
 		return [id, cols];
 	}
@@ -256,9 +278,7 @@ export default class QueryEngine {
 	}
 
 	private handleCols(obj: unknown): [string, string[]] {
-		let strs: string[] = obj as string[];
-		let id: string = "";
-		let cols: string[] = [];
+		let strs: string[] = obj as string[], id: string = "", cols: string[] = [];
 		if (strs.length < 1) {
 			throw new InsightError("no columns specified");
 		}

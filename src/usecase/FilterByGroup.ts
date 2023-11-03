@@ -23,7 +23,7 @@ export default class FilterByGroup {
 			let resultKeys;
 			for (let key of group) {
 				const value = this.getValue(result, key);
-				values.push(value);
+				values.push(key + "_" + value.toString());
 			}
 			resultKeys = "[" + [...values].join(" ") + "]";
 			let datasetResult = groupings.get(resultKeys);
@@ -93,8 +93,11 @@ export default class FilterByGroup {
 			}
 			const filteredItem: any = {};
 			for (let column of columns) {
-				if (group.has(column)) {
-					filteredItem[`${datasetID}_${column}`] = this.getValue(value[0], column);
+				if (this.helper.validateMSKey(column)) {
+					let [id, field] = this.helper.extractFieldIDString(column);
+					if (group.has(field)) {
+						filteredItem[column] = this.getValue(value[0], field);
+					}
 				} else {
 					let applySet = applyVals.get(key);
 					if (applySet) {

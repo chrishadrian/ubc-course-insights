@@ -35,6 +35,12 @@ export default class QueryHelper {
 		return validateMKeyRegex.test(key);
 	}
 
+	public validateMSKey(key: string): boolean {
+		return this.validateSectionsSKey(key) ||
+			this.validateSectionsMKey(key) ||
+			this.validateRoomsMKey(key) || this.validateRoomsSKey(key);
+	}
+
 	public extractFieldIDString(str: string): [string,string] {
 		let l = str.length;
 		let id: string = "";

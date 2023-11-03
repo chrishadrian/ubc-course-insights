@@ -91,6 +91,16 @@ describe("InsightFacade — Room", function () {
 				}
 			});
 
+			it("should add one room dataset with only one valid room and return its id", async function () {
+				try {
+					const oneValidRoom = getContentFromArchives("rooms/OneValidRoom.zip");
+					const result = await facade.addDataset("rooms", oneValidRoom, InsightDatasetKind.Rooms);
+					expect(result).to.deep.equal(["rooms"]);
+				} catch (err) {
+					expect.fail("Should not be rejected!");
+				}
+			});
+
 			it("should reject building with no room", async function () {
 				const noRoomData = getContentFromArchives("rooms/noRoomTable.zip");
 				try {

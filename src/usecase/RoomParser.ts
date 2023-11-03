@@ -59,12 +59,12 @@ export default class RoomParser {
 				const indexObject = parse5.parse(indexContent);
 				await this.findElements(indexObject, zip, true, this.room);
 				if (!this.validIndex) {
-					throw new InsightError("index.htm is invalid");
+					throw new InsightError("index.htm is invalid!");
 				} else if (!this.validRoom) {
-					throw new InsightError("room.htm is invalid");
+					throw new InsightError("room.htm is not found!");
 				}
 			} catch (error) {
-				return Promise.reject(new InsightError(`Error when parsing room content: ${error}`));
+				throw new InsightError(`Error when parsing room content: ${error}`);
 			}
 			return Promise.resolve(this.rooms);
 		} catch (error) {
@@ -120,7 +120,7 @@ export default class RoomParser {
 	private createIndex(fieldName: keyof Room, data: Room[]): void {
 		const index = new Map<string | number, Room[]>();
 		for (const item of data) {
-			const value = item[fieldName];
+			const value = item[fieldName] as string|number;
 			if (!index.has(value)) {
 				index.set(value, []);
 			}
@@ -204,6 +204,10 @@ export default class RoomParser {
 
 			case RoomField.nothing: {
 				try {
+					if (this.room.isInvalidBuilding()) {
+						this.room.resetBuildingInfo();
+						break;
+					}
 					const util = new Geolocation();
 					const currentRoom = this.room;
 					this.room = new Room();
@@ -214,18 +218,23 @@ export default class RoomParser {
 					currentRoom.lat = geoLocation.lat;
 					currentRoom.lon = geoLocation.lon;
 
-					const nodeTagA = this.findChildByNodeName(node, "a");
-					const roomLink: string = this.findNodeAttrByName(nodeTagA, "href").value;
-					const zipEntry = zip.files[roomLink.substring(2)];
-					const indexContent = await zipEntry.async("text");
-					const indexObject = parse5.parse(indexContent);
+					const indexObject = await this.getRoomIndexObject(node, zip);
 					await this.findElements(indexObject, zip, false, currentRoom);
 					break;
 				} catch (error) {
-					throw new InsightError(`Error finding building information: ${error}}`);
+					break;
 				}
 			}
 		}
+	}
+
+	private async getRoomIndexObject(node: any, zip: JSZip) {
+		const nodeTagA = this.findChildByNodeName(node, "a");
+		const roomLink: string = this.findNodeAttrByName(nodeTagA, "href").value;
+		const zipEntry = zip.files[roomLink.substring(2)];
+		const indexContent = await zipEntry.async("text");
+		const indexObject = parse5.parse(indexContent);
+		return indexObject;
 	}
 
 	private processMoreInfo(node: any, currentRoom: Room) {
@@ -262,8 +271,11 @@ export default class RoomParser {
 					const nodeTagA = this.findChildByNodeName(node, "a");
 					const href = this.findNodeAttrByName(nodeTagA, "href").value;
 					currentRoom.href = href;
-					const completeRoom = new Room(currentRoom);
-					this.rooms.addRoom(completeRoom);
+					if (!currentRoom.isInvalidRoom()){
+						const completeRoom = new Room(currentRoom);
+						this.rooms.addRoom(completeRoom);
+					}
+					currentRoom.resetRoomInfo();
 					break;
 				}
 			}

@@ -40,7 +40,6 @@ export default class QueryEngine {
 	private helper = new QueryHelper();
 
 	public parseQuery(query: unknown): Query {
-		// throw new InsightError();
 		if (!this.validRoot(query)) {
 			throw new InsightError("Initial structure of query is incorrect");
 		}
@@ -68,17 +67,19 @@ export default class QueryEngine {
 	// https://bobbyhadz.com/blog/typescript-type-unknown-is-not-assignable-to-type
 	private validRoot(query: unknown): boolean {
 		let keys = this.getKeysHelper(query);
+		let q = query as any;
 		if (keys.length === 2) {
-			return keys[0] === "WHERE" && keys[1] === "OPTIONS";
+			return (keys[0] === "WHERE" && keys[1] === "OPTIONS") || (keys[0] === "OPTIONS" && keys[1] === "WHERE");
 		} else if (keys.length === 3) {
-			return keys[0] === "WHERE" && keys[1] === "OPTIONS" && keys[2] === "TRANSFORMATIONS";
+			return q["WHERE"] && q["OPTIONS"] && q["TRANSFORMATIONS"];
 		}
 		return false;
 	}
 
 	private validOpts(opts: unknown): boolean {
 		let keys = this.getKeysHelper(opts);
-		return (keys.length === 1 || (keys.length === 2 && keys[1] === "ORDER")) && keys[0] === "COLUMNS";
+		let o = opts as any;
+		return (keys.length === 1 || (keys.length === 2 && o["ORDER"])) && o["COLUMNS"];
 	}
 
 	private validateRoomsKey(key: string): boolean {
@@ -145,10 +146,10 @@ export default class QueryEngine {
 			throw new InsightError("Options structure invalid");
 		}
 		let keys = this.getKeysHelper(opts), o = opts as any, cols: string[], id: string;
-		[id, cols] = this.handleTransformationsCols(o[keys[0]], trans);
+		[id, cols] = this.handleTransformationsCols(o["COLUMNS"], trans);
 		if (keys.length === 2) {
 			let orderFields: string[], orderDirection: string;
-			[orderFields, orderDirection] = this.handleTransformationsOrder(o[keys[1]], cols, id);
+			[orderFields, orderDirection] = this.handleTransformationsOrder(o["ORDER"], cols, id);
 			return new Options(id, cols, orderFields, orderDirection);
 		}
 		return new Options(id, cols);
@@ -160,14 +161,14 @@ export default class QueryEngine {
 		let orderKeys: string[] = [];
 		let direction = "";
 		if (keys.length === 2) {
-			if (!(keys[0] === "dir" && keys[1] === "keys")) {
+			if (!(order["dir"] && order["keys"])) {
 				throw new InsightError("incorrect order format");
 			}
-			if (!(order[keys[0]] === "UP" || order[keys[0]] === "DOWN")) {
+			if (!(order["dir"] === "UP" || order["dir"] === "DOWN")) {
 				throw new InsightError("incorrect direction");
 			}
-			direction = order[keys[0]];
-			orderKeys = order[keys[1]];
+			direction = order["dir"];
+			orderKeys = order["keys"];
 		} else {
 			orderKeys = [order as string];
 		}
@@ -187,14 +188,14 @@ export default class QueryEngine {
 		let orderKeys: string[] = [];
 		let direction = "";
 		if (keys.length === 2) {
-			if (!(keys[0] === "dir" && keys[1] === "keys")) {
+			if (!(order["dir"] && order["keys"])) {
 				throw new InsightError("incorrect order format");
 			}
-			if (!(order[keys[0]] === "UP" || order[keys[0]] === "DOWN")) {
+			if (!(order["dir"] === "UP" || order["dir"] === "DOWN")) {
 				throw new InsightError("incorrect direction");
 			}
-			direction = order[keys[0]];
-			orderKeys = order[keys[1]];
+			direction = order["dir"];
+			orderKeys = order["keys"];
 		} else {
 			orderKeys = [order as string];
 		}
@@ -254,11 +255,11 @@ export default class QueryEngine {
 		let o = opts as any;
 		let cols: string[];
 		let id: string;
-		[id, cols] = this.handleCols(o[keys[0]]);
+		[id, cols] = this.handleCols(o["COLUMNS"]);
 		if (keys.length === 2) {
 			let orderFields: string[];
 			let orderDirection: string;
-			[orderFields, orderDirection] = this.handleOrder(o[keys[1]], cols, id);
+			[orderFields, orderDirection] = this.handleOrder(o["ORDER"], cols, id);
 			return new Options(id, cols, orderFields, orderDirection);
 		}
 		return new Options(id, cols);

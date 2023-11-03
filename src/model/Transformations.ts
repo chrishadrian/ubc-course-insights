@@ -14,19 +14,18 @@ export default class Transformations {
 		this.apply = [];
 		this.applyKeys = new Set<string>();
 		let keys = this.queryHelper.getKeysHelper(obj);
-		if (keys.length !== 2 && keys[0] !== "GROUP" && keys[1] !== "APPLY") {
+		let transformations = obj as any;
+		if (!(keys.length === 2 && transformations["GROUP"] && transformations["APPLY"])) {
 			throw new InsightError();
 		}
-		let transformations = obj as any;
-		[this.group, this.datasetID] = this.parseGroup(transformations[keys[0]]);
+		[this.group, this.datasetID] = this.parseGroup(transformations["GROUP"]);
 		if (this.datasetID === "") {
 			throw new InsightError("invalid id");
 		}
-		this.parseApply(transformations[keys[1]]);
+		this.parseApply(transformations["APPLY"] as Node[]);
 	}
 
 	private parseApply(apply: Node[]) {
-		let currID: string;
 		let currNode: Node;
 		let currApplyKey: string;
 		for (let i of apply) {

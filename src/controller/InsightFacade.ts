@@ -13,6 +13,7 @@ import Filter, {Node} from "../usecase/Filter";
 import QueryHelper from "../util/PerformQueryHelper";
 import Group from "../usecase/Group";
 import FilterByGroup from "../usecase/FilterByGroup";
+import Room from "../model/Room";
 
 export default class InsightFacade implements IInsightFacade {
 	private validator;

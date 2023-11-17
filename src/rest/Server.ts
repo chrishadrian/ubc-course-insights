@@ -84,7 +84,13 @@ export default class Server {
 		// http://localhost:4321/echo/hello
 		this.express.get("/echo/:msg", Server.echo);
 
-		// TODO: your other endpoints should go here
+		this.express.put("/dataset/:id/:kind", Server.echo);
+
+		this.express.delete("/dataset/:id", Server.echo);
+
+		this.express.post("/query", Server.echo);
+
+		this.express.get("/datasets", Server.echo);
 
 	}
 

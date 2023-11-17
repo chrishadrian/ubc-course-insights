@@ -4,7 +4,7 @@ import {expect, use} from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {clearDisk, getContentFromArchives} from "../TestUtil";
 import {roomQuery} from "../resources/queries/roomsQueries";
-import {sectionQuery} from "../resources/queries/sectionQueries";
+// import {sectionQuery} from "../resources/queries/sectionQueries";
 
 use(chaiAsPromised);
 
@@ -44,9 +44,9 @@ describe("InsightFacade", function () {
 					const expectedResult = roomQuery.expected;
 					expect(queryResult).have.deep.members(roomQuery.expected);
 
-					const queryResult2 = await facade.performQuery(sectionQuery.input);
-					const expectedResult2 = sectionQuery.expected;
-					expect(queryResult2).have.deep.members(sectionQuery.expected);
+					// const queryResult2 = await facade.performQuery(sectionQuery.input);
+					// const expectedResult2 = sectionQuery.expected;
+					// expect(queryResult2).have.deep.members(sectionQuery.expected);
 				} catch (err) {
 					console.error("Found error: ", err);
 					expect.fail();

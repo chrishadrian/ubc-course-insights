@@ -12,7 +12,6 @@ export default class Routes {
 	}
 
 	// Registers all request handlers to routes
-	// eslint-disable-next-line max-lines-per-function
 	public registerRoutes() {
 		// This is an example endpoint this you can invoke by accessing this URL in your browser:
 		// http://localhost:4321/echo/hello

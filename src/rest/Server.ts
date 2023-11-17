@@ -13,8 +13,8 @@ export default class Server {
 		this.port = port;
 		this.app = express();
 
-		const routes = new Routes(this.app);
 		const middleware = new Middleware(this.app);
+		const routes = new Routes(this.app);
 
 		middleware.registerMiddleware();
 		routes.registerRoutes();

@@ -1,32 +1,43 @@
 import {Application, Request, Response} from "express";
 import InsightFacade from "../controller/InsightFacade";
-import {InsightError, ResultTooLargeError} from "../controller/IInsightFacade";
+import {InsightDatasetKind, InsightError, NotFoundError, ResultTooLargeError} from "../controller/IInsightFacade";
 import Usecase from "./Usecase";
 
 export default class Controller {
-	constructor() {
-		console.log("Initializing controller...");
-	}
-
-	// The next two methods handle the echo service.
+	// This method handles the echo service.
 	public static echo(req: Request, res: Response) {
 		try {
 			console.log(`Server::echo(..) - params: ${JSON.stringify(req.params)}`);
 			const response = Usecase.performEcho(req.params.msg);
 			res.status(200).json({result: response});
-		} catch (err) {
-			res.status(400).json({error: err});
+		} catch (error) {
+			if (error instanceof InsightError) {
+				res.status(400).json({error: error.message});
+			} else {
+				res.status(500).json({error: error});
+			}
 		}
 	}
 
-	// TODO: POST /dataset/:id/:kind allows one to submit a zip file that will be parsed and used for future queries. The zip file content will be sent 'raw' as a buffer in the PUT's body, and you will need to convert it to base64 server side.
+	// TODO: POST /dataset/:id/:kind allows one to submit a zip file that will be parsed and used for future queries. The zip file content will be sent 'raw' as a buffer in the POST's body, and you will need to convert it to base64 server side.
 	public static async addDataset(req: Request, res: Response) {
 		try {
 			const facade = new InsightFacade();
-			const result = await facade.addDataset(req.params.id, req.params.kind, req.body);
+			const inputs: {
+				id: string;
+				content: string;
+				kind: InsightDatasetKind;
+			} = {
+				id: req.params.id,
+				content: req.body.toString("base64"),
+				kind: req.params.kind as InsightDatasetKind,
+			};
+			const result = await facade.addDataset(inputs.id, inputs.content, inputs.kind);
 			res.status(200).json({result});
 		} catch (error) {
 			if (error instanceof InsightError) {
+				res.status(400).json({error: error.message});
+			} else if (error instanceof NotFoundError) {
 				res.status(400).json({error: error.message});
 			} else {
 				res.status(500).json({error: error});
@@ -43,8 +54,10 @@ export default class Controller {
 		} catch (error) {
 			if (error instanceof InsightError) {
 				res.status(400).json({error: error.message});
-			} else if (error instanceof ResultTooLargeError) {
-				res.status(404).json({error: error.message});
+			} else if (error instanceof NotFoundError) {
+				res.status(400).json({error: error.message});
+			} else {
+				res.status(500).json({error: error});
 			}
 		}
 	}
@@ -59,6 +72,8 @@ export default class Controller {
 		} catch (error) {
 			if (error instanceof InsightError) {
 				res.status(400).json({error: error.message});
+			} else if (error instanceof ResultTooLargeError) {
+				res.status(404).json({error: error.message});
 			} else {
 				res.status(500).json({error: error});
 			}

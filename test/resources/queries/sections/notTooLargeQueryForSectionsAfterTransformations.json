@@ -9,12 +9,12 @@
 		},
 		"TRANSFORMATIONS": {
 			"GROUP": [
-				"large_title"
+				"sections_title"
 			],
 			"APPLY": [
 				{
 					"countType": {
-						"COUNT": "large_title"
+						"COUNT": "sections_title"
 					}
 				}
 			]

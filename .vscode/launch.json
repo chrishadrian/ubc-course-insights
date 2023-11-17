@@ -34,9 +34,9 @@
 		},
 		{
 			"type": "node-terminal",
-			"name": "section",
+			"name": "server",
 			"request": "launch",
-			"command": "yarn run section",
+			"command": "yarn start",
 			"cwd": "${workspaceFolder}"
 		}
     ]

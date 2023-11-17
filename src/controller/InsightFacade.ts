@@ -13,6 +13,7 @@ import Filter, {Node} from "../usecase/Filter";
 import QueryHelper from "../util/PerformQueryHelper";
 import Group from "../usecase/Group";
 import FilterByGroup from "../usecase/FilterByGroup";
+import Room from "../model/Room";
 
 export default class InsightFacade implements IInsightFacade {
 	private validator;
@@ -26,8 +27,12 @@ export default class InsightFacade implements IInsightFacade {
 		const viewer = new Viewer();
 
 		this.validator = new Validator();
-		this.datasetIDs = [];
 		this.datasets = viewer.getInsightDatasets();
+		this.datasetIDs = [];
+		for (const datasetKey in this.datasets) {
+			const dataset: InsightDataset = this.datasets[datasetKey];
+			this.datasetIDs.push(dataset.id);
+		}
 		this.sindexes = {};
 		this.rindexes = {};
 	}
@@ -75,6 +80,7 @@ export default class InsightFacade implements IInsightFacade {
 		this.datasets.forEach((item, index) => {
 			if (item.id === id) {
 				this.datasets.splice(index, 1);
+				this.datasetIDs.splice(index, 1);
 			}
 		});
 

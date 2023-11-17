@@ -1,24 +1,23 @@
-import express, {Application, Request, Response} from "express";
+import express, {Application} from "express";
 import * as http from "http";
-import cors from "cors";
+import Routes from "./Routes";
+import Middleware from "./Middleware";
 
 export default class Server {
 	private readonly port: number;
-	private express: Application;
+	private app: Application;
 	private server: http.Server | undefined;
 
 	constructor(port: number) {
 		console.info(`Server::<init>( ${port} )`);
 		this.port = port;
-		this.express = express();
+		this.app = express();
 
-		this.registerMiddleware();
-		this.registerRoutes();
+		const middleware = new Middleware(this.app);
+		const routes = new Routes(this.app);
 
-		// NOTE: you can serve static frontend files in from your express server
-		// by uncommenting the line below. This makes files in ./frontend/public
-		// accessible at http://localhost:<port>/
-		// this.express.use(express.static("./frontend/public"))
+		middleware.registerMiddleware();
+		routes.registerRoutes();
 	}
 
 	/**
@@ -35,14 +34,16 @@ export default class Server {
 				console.error("Server::start() - server already listening");
 				reject();
 			} else {
-				this.server = this.express.listen(this.port, () => {
-					console.info(`Server::start() - server listening on port: ${this.port}`);
-					resolve();
-				}).on("error", (err: Error) => {
-					// catches errors in server start
-					console.error(`Server::start() - server ERROR: ${err.message}`);
-					reject(err);
-				});
+				this.server = this.app
+					.listen(this.port, () => {
+						console.info(`Server::start() - server listening on port: ${this.port}`);
+						resolve();
+					})
+					.on("error", (err: Error) => {
+						// catches errors in server start
+						console.error(`Server::start() - server ERROR: ${err.message}`);
+						reject(err);
+					});
 			}
 		});
 	}
@@ -66,46 +67,5 @@ export default class Server {
 				});
 			}
 		});
-	}
-
-	// Registers middleware to parse request before passing them to request handlers
-	private registerMiddleware() {
-		// JSON parser must be place before raw parser because of wildcard matching done by raw parser below
-		this.express.use(express.json());
-		this.express.use(express.raw({type: "application/*", limit: "10mb"}));
-
-		// enable cors in request headers to allow cross-origin HTTP requests
-		this.express.use(cors());
-	}
-
-	// Registers all request handlers to routes
-	private registerRoutes() {
-		// This is an example endpoint this you can invoke by accessing this URL in your browser:
-		// http://localhost:4321/echo/hello
-		this.express.get("/echo/:msg", Server.echo);
-
-		// TODO: your other endpoints should go here
-
-	}
-
-	// The next two methods handle the echo service.
-	// These are almost certainly not the best place to put these, but are here for your reference.
-	// By updating the Server.echo function pointer above, these methods can be easily moved.
-	private static echo(req: Request, res: Response) {
-		try {
-			console.log(`Server::echo(..) - params: ${JSON.stringify(req.params)}`);
-			const response = Server.performEcho(req.params.msg);
-			res.status(200).json({result: response});
-		} catch (err) {
-			res.status(400).json({error: err});
-		}
-	}
-
-	private static performEcho(msg: string): string {
-		if (typeof msg !== "undefined" && msg !== null) {
-			return `${msg}...${msg}`;
-		} else {
-			return "Message not provided";
-		}
 	}
 }

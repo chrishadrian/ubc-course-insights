@@ -18,23 +18,23 @@ import Room from "../model/Room";
 export default class InsightFacade implements IInsightFacade {
 	private validator;
 	private datasetIDs: string[];
-	private datasets: InsightDataset[];
+	private insights: InsightDataset[];
 	private sindexes: SectionIndexes;
 	private rindexes: RoomIndexes;
-	private queryHelper: QueryHelper = new QueryHelper();
 
 	constructor() {
-		const viewer = new Viewer();
-
 		this.validator = new Validator();
-		this.datasets = viewer.getInsightDatasets();
+
+		const viewer = new Viewer();
+		const {insights, roomIndexes, sectionIndexes} = viewer.getDataFromDisk();
+		this.insights = insights;
 		this.datasetIDs = [];
-		for (const datasetKey in this.datasets) {
-			const dataset: InsightDataset = this.datasets[datasetKey];
+		for (const index in this.insights) {
+			const dataset: InsightDataset = this.insights[index];
 			this.datasetIDs.push(dataset.id);
 		}
-		this.sindexes = {};
-		this.rindexes = {};
+		this.sindexes = sectionIndexes;
+		this.rindexes = roomIndexes;
 	}
 
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
@@ -53,12 +53,12 @@ export default class InsightFacade implements IInsightFacade {
 				const sections = await sparser.parseSectionsContent(content);
 				const datasetJSON = await sparser.writeToDisk(sections, id, kind);
 				this.sindexes[id] = datasetJSON.datasetIndexes[id];
-				this.datasets.push(datasetJSON.insightDataset);
+				this.insights.push(datasetJSON.insightDataset);
 			} else {
 				const rooms = await rparser.parseRoomsContent(content);
 				const datasetJSON = await rparser.writeToDisk(rooms, id, kind);
 				this.rindexes[id] = datasetJSON.datasetIndexes[id];
-				this.datasets.push(datasetJSON.insightDataset);
+				this.insights.push(datasetJSON.insightDataset);
 			}
 			this.datasetIDs.push(id);
 
@@ -77,9 +77,9 @@ export default class InsightFacade implements IInsightFacade {
 		}
 
 		remover.removeFromDisk(id);
-		this.datasets.forEach((item, index) => {
+		this.insights.forEach((item, index) => {
 			if (item.id === id) {
-				this.datasets.splice(index, 1);
+				this.insights.splice(index, 1);
 				this.datasetIDs.splice(index, 1);
 			}
 		});
@@ -97,9 +97,6 @@ export default class InsightFacade implements IInsightFacade {
 			} = this.initializeQuery(queryResult);
 			const viewer = new Viewer();
 			let indexes = this.evalIndexes(datasetID, columns, group);
-			if (Object.keys(indexes).length === 0) {
-				indexes = await viewer.getSectionIndexesByDatasetID(datasetID);
-			}
 			const filteredSections = this.getFilteredSections(columns, group, filters, indexes);
 			if (group.size === 0) {
 				const result = this.getResultWithNoGroup(filteredSections, columns, orderFields, direction, datasetID);
@@ -206,7 +203,7 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public listDatasets(): Promise<InsightDataset[]> {
-		const memoryResult = this.datasets;
+		const memoryResult = this.insights;
 
 		return Promise.resolve(memoryResult);
 	}

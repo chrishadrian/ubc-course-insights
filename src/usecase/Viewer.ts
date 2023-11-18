@@ -1,71 +1,57 @@
 import * as fs from "fs-extra";
-import {InsightDataset, InsightError} from "../controller/IInsightFacade";
+import {InsightDataset as IInsightDataset, InsightDatasetKind} from "../controller/IInsightFacade";
 import Section from "../model/Section";
-import {SectionJSON} from "./SectionParser";
+import {SectionIndexes} from "./SectionParser";
 import Room from "../model/Room";
-import {Logic} from "./QueryEngine";
+import {RoomIndexes} from "./RoomParser";
 const persistDir = "./data";
 
+export interface SectionJSON {
+	InsightDataset: IInsightDataset;
+	InsightIndexes: Record<string, Record<string | number, Section[] | Room[]>>;
+}
+
 export default class Viewer {
-	public getInsightDatasets(): InsightDataset[] {
-		const result: InsightDataset[] = [];
+	public getDataFromDisk(): {
+		insights: IInsightDataset[],
+		roomIndexes: RoomIndexes,
+		sectionIndexes: SectionIndexes
+		} {
+		const insights: IInsightDataset[] = [];
+		const roomIndexes: RoomIndexes = {};
+		const sectionIndexes: SectionIndexes = {};
 
 		if (!fs.existsSync(persistDir)) {
-			return result;
+			return {insights, roomIndexes, sectionIndexes};
 		}
 
 		const files = fs.readdirSync(persistDir);
-
 		files.forEach((file) => {
+			const sectionResult: Record<string, Map<string | number, Section[]>> = {};
+			const roomResult: Record<string, Map<string | number, Room[]>> = {};
 			const fileContent = fs.readFileSync(`${persistDir}/${file}`).toString();
-			const obj: SectionJSON = JSON.parse(fileContent);
-			result.push(obj.InsightDataset);
+			const {InsightDataset, InsightIndexes}: SectionJSON = JSON.parse(fileContent);
+			insights.push(InsightDataset);
+			if (InsightDataset.kind === InsightDatasetKind.Sections) {
+				for (const key in InsightIndexes) {
+					const fieldName: keyof Section = key as keyof Section;
+					sectionResult[fieldName] = this.sectionJSONToMap(
+						InsightIndexes[fieldName] as Record<string | number, Section[]>
+					);
+				}
+				sectionIndexes[InsightDataset.id] = sectionResult;
+			} else if (InsightDataset.kind === InsightDatasetKind.Rooms) {
+				for (const key in InsightIndexes) {
+					const fieldName: keyof Room = key as keyof Room;
+					roomResult[fieldName] = this.roomJSONToMap(
+						InsightIndexes[fieldName] as Record<string | number, Room[]>
+					);
+				}
+				roomIndexes[InsightDataset.id] = roomResult;
+			}
 		});
 
-		return result;
-	}
-
-	public async getSectionIndexesByDatasetID(
-		datasetID: string
-	): Promise<Record<string, Map<string | number, Section[]>>> {
-		let result: Record<string, Map<string | number, Section[]>> = {};
-		if (!fs.existsSync(persistDir)) {
-			return Promise.reject(new InsightError("dataset does not exist"));
-		}
-		const fileContent = await fs.readFile(`${persistDir}/${datasetID}.json`);
-		const datasetJSON: {
-			insightDataset: InsightDataset;
-			MappedSection: Record<string, Record<string | number, Section[]>>;
-		} = JSON.parse(fileContent.toString());
-		for (const key in datasetJSON.MappedSection) {
-			const fieldName: keyof Section = key as keyof Section;
-			result[fieldName] = this.sectionJSONToMap(datasetJSON.MappedSection[fieldName]);
-		}
-
-		return Promise.resolve(result);
-	}
-
-	public async getRoomIndexesByDatasetID(
-		datasetID: string
-	): Promise<Record<string, Map<string | number, Room[]>>> {
-		let result: Record<string, Map<string | number, Room[]>> = {};
-
-		if (!fs.existsSync(persistDir)) {
-			return Promise.reject(new InsightError("dataset does not exist"));
-		}
-
-		const fileContent = await fs.readFile(`${persistDir}/${datasetID}.json`);
-		const datasetJSON: {
-			insightDataset: InsightDataset;
-			MappedSection: Record<string, Record<string | number, Room[]>>;
-		} = JSON.parse(fileContent.toString());
-
-		for (const key in datasetJSON.MappedSection) {
-			const fieldName: keyof Room = key as keyof Room;
-			result[fieldName] = this.roomJSONToMap(datasetJSON.MappedSection[fieldName]);
-		}
-
-		return Promise.resolve(result);
+		return {insights, roomIndexes, sectionIndexes};
 	}
 
 	private sectionJSONToMap(json: Record<string | number, Section[]>): Map<string | number, Section[]> {

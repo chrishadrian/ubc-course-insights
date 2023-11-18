@@ -21,7 +21,7 @@ const persistDir = "./data";
 
 export interface RoomJSON {
 	InsightDataset: InsightDataset;
-	MappedSection: Record<string, Record<string | number, Room[]>>;
+	InsightIndexes: Record<string, Record<string | number, Room[]>>;
 }
 
 export interface RoomIndexes {
@@ -88,13 +88,13 @@ export default class RoomParser {
 
 		const datasetJSON: RoomJSON = {
 			InsightDataset: insight,
-			MappedSection: {},
+			InsightIndexes: {},
 		};
 
 		for (const key in data[0]) {
 			const fieldName: keyof Room = key as keyof Room;
 			this.createIndex(fieldName, data);
-			datasetJSON.MappedSection[fieldName] = this.mapToJSON(this.indexes[fieldName]);
+			datasetJSON.InsightIndexes[fieldName] = this.mapToJSON(this.indexes[fieldName]);
 		}
 
 		const jsonData = JSON.stringify(datasetJSON, null, 2);

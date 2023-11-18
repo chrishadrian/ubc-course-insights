@@ -100,17 +100,9 @@ export default class InsightFacade implements IInsightFacade {
 			if (Object.keys(indexes).length === 0) {
 				indexes = await viewer.getSectionIndexesByDatasetID(datasetID);
 			}
-			const filter = new Filter();
-			const noFilter: Node = this.isSection(columns, group)
-				? {IS: {id: ".*"}}
-				: {IS: {furniture: ".*"}};
-			const filteredSections = JSON.stringify(filters) === "{}"
-				? filter.filterByNode(noFilter, indexes)
-				: filter.filterByNode(filters, indexes);
+			const filteredSections = this.getFilteredSections(columns, group, filters, indexes);
 			if (group.size === 0) {
-				this.checkLength(filteredSections.length);
-				const result = filter.
-					filterByColumnsAndOrder(filteredSections, columns, orderFields, direction, datasetID);
+				const result = this.getResultWithNoGroup(filteredSections, columns, orderFields, direction, datasetID);
 				return Promise.resolve(result);
 			}
 			const grouper = new FilterByGroup();
@@ -124,6 +116,36 @@ export default class InsightFacade implements IInsightFacade {
 			}
 			return Promise.reject(new InsightError(`Perform query error: ${err}`));
 		}
+	}
+
+	private getResultWithNoGroup(
+		filteredSections: Array<Section | Room>,
+		columns: any,
+		orderFields: any,
+		direction: any,
+		datasetID: any
+	) {
+		const filter = new Filter();
+		this.checkLength(filteredSections.length);
+		const result = filter.
+			filterByColumnsAndOrder(filteredSections, columns, orderFields, direction, datasetID);
+		return result;
+	}
+
+	private getFilteredSections(
+		columns: any,
+		group: Set<string>,
+		filters: any,
+		indexes: Record<string, Map<string | number, Section[]>> | Record<string, Map<string | number, Room[]>>
+	) {
+		const filter = new Filter();
+		const noFilter: Node = this.isSection(columns, group)
+			? {IS: {id: ".*"}}
+			: {IS: {furniture: ".*"}};
+		const filteredSections = JSON.stringify(filters) === "{}"
+			? filter.filterByNode(noFilter, indexes)
+			: filter.filterByNode(filters, indexes);
+		return filteredSections;
 	}
 
 	private checkLength(numResults: number) {

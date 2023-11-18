@@ -11,7 +11,7 @@ interface ZipFile {
 
 export interface SectionJSON {
 	InsightDataset: InsightDataset;
-	MappedSection: Record<string, Record<string | number, Section[]>>;
+	InsightIndexes: Record<string, Record<string | number, Section[]>>;
 }
 
 export interface SectionIndexes {
@@ -91,13 +91,13 @@ export default class SectionParser {
 
 		const datasetJSON: SectionJSON = {
 			InsightDataset: insight,
-			MappedSection: {},
+			InsightIndexes: {},
 		};
 
 		for (const key in data[0]) {
 			const fieldName: keyof Section = key as keyof Section;
 			this.createIndex(fieldName, data);
-			datasetJSON.MappedSection[fieldName] = mapToJSON(this.indexes[fieldName]);
+			datasetJSON.InsightIndexes[fieldName] = mapToJSON(this.indexes[fieldName]);
 		}
 
 		const jsonData = JSON.stringify(datasetJSON, null, 2);

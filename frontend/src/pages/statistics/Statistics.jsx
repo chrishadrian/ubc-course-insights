@@ -1,7 +1,5 @@
-import React from 'react'
+import React from 'react';
 
 export default function Statistics() {
-  return (
-	<div>Statistics</div>
-  )
+	return <div className=''>Statistics</div>;
 }

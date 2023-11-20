@@ -1,5 +1,5 @@
-import Statistics from './statistics/Statistics';
 import BestProfessor from './bestProfessor/BestProfessor';
+import Statistics from './statistics/Statistics';
 
 const pages = [
 	{

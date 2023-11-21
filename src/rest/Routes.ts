@@ -1,7 +1,8 @@
 import {Application} from "express";
 import InsightFacade from "../controller/InsightFacade";
 import {InsightError, ResultTooLargeError} from "../controller/IInsightFacade";
-import Controller from "./Controller";
+import DatasetController from "./controllers/DatasetController";
+import CourseController from "./controllers/CourseController";
 
 export default class Routes {
 	private app: Application;
@@ -11,14 +12,13 @@ export default class Routes {
 		this.app = app;
 	}
 
-	// Registers all request handlers to routes
 	public registerRoutes() {
-		// This is an example endpoint this you can invoke by accessing this URL in your browser:
-		// http://localhost:4321/echo/hello
-		this.app.get("/echo/:msg", Controller.echo);
-		this.app.put("/dataset/:id/:kind", Controller.addDataset);
-		this.app.delete("/dataset/:id", Controller.removeDataset);
-		this.app.post("/query", Controller.performQuery);
-		this.app.get("/datasets", Controller.listDataset);
+		this.app.get("/datasets", DatasetController.listDataset);
+		this.app.put("/dataset/:id/:kind", DatasetController.addDataset);
+		this.app.delete("/dataset/:id", DatasetController.removeDataset);
+		this.app.post("/query", DatasetController.performQuery);
+
+		this.app.get("/course/subjects", CourseController.getCourseSubjects);
+		this.app.get("/course/:subject/sections", CourseController.getCourseSectionsBySubject);
 	}
 }

@@ -13,11 +13,12 @@ export default function DropdownMenu({ attributes }) {
 						}}
 						label={attribute.label}
 					>
-						{attribute.values.map((val) => (
-							<Option key={val} value={val}>
-								{val}
-							</Option>
-						))}
+						{attribute.values &&
+							attribute.values.map((val) => (
+								<Option key={val} value={val}>
+									{val}
+								</Option>
+							))}
 					</Select>
 				</div>
 			))}

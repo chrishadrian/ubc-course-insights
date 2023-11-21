@@ -21,12 +21,6 @@ export default function DropdownMenu({ attributes }) {
 					</Select>
 				</div>
 			))}
-			{/* <div className='mb-4'>
-				<Select value={selectedTrack} onChange={(value) => setSelectedTrack(value)} label='Select Track'>
-					<Option value='all'>All</Option>
-					<Option value='spa'>Spa</Option>
-				</Select>
-			</div> */}
 		</div>
 	);
 }

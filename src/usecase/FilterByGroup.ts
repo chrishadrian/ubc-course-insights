@@ -14,10 +14,16 @@ type Grouping = Map<Map<string, string | number>, DatasetResult>;
 export default class FilterByGroup {
 	private helper: QueryHelper = new QueryHelper();
 
-	public groupResults(data: DatasetResult, group: Set<string>, apply: Node[]):
-		[Map<string, DatasetResult>, Map<string, Map<string, number>>] {
-		let groupings: Map<string, DatasetResult> =
-			new Map<string, DatasetResult>();
+	public groupResults(
+		data: DatasetResult,
+		group: Set<string>,
+		apply: Node[]
+	): [
+		Map<string, DatasetResult>,
+		Map<string,
+		Map<string, number>>
+	] {
+		let groupings = new Map<string, DatasetResult>();
 		for (const result of data) {
 			let values = [];
 			let resultKeys;
@@ -40,9 +46,10 @@ export default class FilterByGroup {
 	}
 
 	private getApplyVals(
-		groupings: Map<string, DatasetResult>, apply: Node[]): Map<string, Map<string, number>> {
-		let applyVals:
-			Map<string, Map<string, number>> = new Map();
+		groupings: Map<string, DatasetResult>,
+		apply: Node[]
+	): Map<string, Map<string, number>> {
+		let applyVals: Map<string, Map<string, number>> = new Map();
 		let applyRules: Map<string, [string, string]> = new Map();
 		for (let node of apply) {
 			let applyKey: string = this.helper.getKeysHelper(node)[0];
@@ -223,7 +230,9 @@ export default class FilterByGroup {
 	}
 
 	private getValue(result: Room | Section, key: string): string | number {
-		if (result instanceof Section) {
+		const isSection = this.validateSection(result);
+		if (isSection) {
+			result = result as Section;
 			switch (key) {
 				case "avg": return this.getValueOrThrowError(result.avg, key);
 				case "pass": return this.getValueOrThrowError(result.pass, key);
@@ -237,6 +246,7 @@ export default class FilterByGroup {
 				case "uuid": return this.getValueOrThrowError(result.uuid, key);
 			}
 		} else {
+			result = result as Room;
 			switch (key) {
 				case "lat": return this.getValueOrThrowError(result.lat, key);
 				case "lon": return this.getValueOrThrowError(result.lon, key);
@@ -251,7 +261,7 @@ export default class FilterByGroup {
 				case "href": return this.getValueOrThrowError(result.href, key);
 			}
 		}
-		throw new InsightError();
+		throw new InsightError("Invalid group keys");
 
 	}
 
@@ -262,4 +272,13 @@ export default class FilterByGroup {
 		return value;
 	}
 
+	private validateSection(result: Room | Section): boolean {
+		const section = new Section();
+		for (const key in result) {
+			if (key in section) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

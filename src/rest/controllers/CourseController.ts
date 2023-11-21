@@ -26,7 +26,7 @@ export default class CourseController {
 		}
 	}
 
-	public static async getCourseSectionsBySubject(req: Request, res: Response) {
+	public static async getCourseNumbersBySubject(req: Request, res: Response) {
 		try {
 			const facade = new InsightFacade();
 			const courseSubject = req.params.subject.toLowerCase();

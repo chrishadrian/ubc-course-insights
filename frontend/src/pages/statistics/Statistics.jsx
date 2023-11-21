@@ -1,6 +1,6 @@
-import { Spinner, Typography } from '@material-tailwind/react';
+import { Spinner, Typography, Button } from '@material-tailwind/react';
 import React, { useEffect, useState } from 'react';
-import DropdownMenu from '../../components/DropdownMenu';
+import DropdownMenus from '../../components/DropdownMenu';
 import COURSE_DATA from '../../data/courses.json';
 
 const STARTING_YEAR = 2010;
@@ -22,11 +22,11 @@ export default function Statistics() {
 	const [selectedCourse, setSelectedCourse] = useState('');
 	const [selectedSection, setSelectedSection] = useState('');
 	const courseSubjects = COURSE_DATA;
-	const [courseSections, setCourseSections] = useState([]);
+	const [courseNumbers, setCourseNumbers] = useState([]);
 	const [loading, setLoading] = useState(false);
 
 	useEffect(() => {
-		async function getCourseSections() {
+		async function getCourseNumbers() {
 			setLoading(true);
 			try {
 				const response = await fetch(`http://localhost:4321/course/${selectedCourse}/sections`);
@@ -34,7 +34,7 @@ export default function Statistics() {
 					throw new Error(`Failed to fetch data. Status: ${response.status}`);
 				}
 				const result = await response.json();
-				setCourseSections(result.result);
+				setCourseNumbers(result.result);
 			} catch (error) {
 				console.error('Error fetching data:', error);
 			} finally {
@@ -43,29 +43,29 @@ export default function Statistics() {
 		}
 
 		if (selectedCourse !== '') {
-			getCourseSections();
+			getCourseNumbers();
 		}
 	}, [selectedCourse]);
 
 	const yearDropdown = {
 		selectedAttribute: selectedYear,
 		setSelectedAttribute: setSelectedYear,
-		label: 'Select Year',
+		label: 'Year',
 		values: getListOfYears(),
 	};
 
 	const courseDropdown = {
 		selectedAttribute: selectedCourse,
 		setSelectedAttribute: setSelectedCourse,
-		label: 'Select Course',
+		label: 'Subject',
 		values: courseSubjects,
 	};
 
 	const sectionDropdown = {
 		selectedAttribute: selectedSection,
 		setSelectedAttribute: setSelectedSection,
-		label: 'Select Section',
-		values: courseSections,
+		label: 'Course Number',
+		values: courseNumbers,
 	};
 
 	return (
@@ -79,7 +79,12 @@ export default function Statistics() {
 					<Typography variant='h2' className='mb-4'>
 						Course Statistics
 					</Typography>
-					<DropdownMenu attributes={[yearDropdown, courseDropdown, sectionDropdown]} />
+					<div className='flex lg:space-x-5'>
+					<DropdownMenus attributes={[yearDropdown, courseDropdown, sectionDropdown]} />
+					<Button variant="gradient" className="rounded-full h-1/2 w-32 " color="light-blue" size='md'>
+						Search
+					</Button>
+					</div>
 				</>
 			)}
 		</div>

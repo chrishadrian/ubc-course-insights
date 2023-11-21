@@ -10,7 +10,7 @@ export default class CourseController {
 		try {
 			const facade = new InsightFacade();
 			const filteredData = await facade.performQuery(filterCourseSubjectQuery);
-			const result = filteredData.map((item) => item.sections_dept);
+			const result = filteredData.map((item) => item.sections_dept.toString().toUpperCase());
 			if (!fs.existsSync("frontend/src/data/courses.json")) {
 				await fs.writeFile("frontend/src/data/courses.json", JSON.stringify(result));
 			}

@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import './App.css';
 import pages from './pages/pages';
-import Sidebar from './pages/SideBar';
+import Sidebar from './components/SideBar';
 
 function App() {
 	return (

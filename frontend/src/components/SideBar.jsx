@@ -7,23 +7,37 @@ import {
 	AcademicCapIcon,
 	PowerIcon,
 } from '@heroicons/react/24/solid';
+import { useNavigate } from 'react-router-dom';
 
 export default function Sidebar() {
+	const navigate = useNavigate();
+
 	return (
-		<Card className='h-screen w-full max-w-[20rem] p-4 shadow-xl shadow-blue-gray-900/20'>
+		<Card
+			className='h-screen w-full max-w-[20rem] p-4 shadow-xl
+			bg-cyan-200 shadow-blue-gray-900/20 rounded-l-none'
+		>
 			<div className='mb-2 p-4'>
 				<Typography variant='h5' color='blue-gray'>
 					UBC Course Insights
 				</Typography>
 			</div>
 			<List>
-				<ListItem>
+				<ListItem
+					onClick={() => {
+						navigate('/');
+					}}
+				>
 					<ListItemPrefix>
 						<PresentationChartBarIcon className='h-5 w-5' />
 					</ListItemPrefix>
 					Course Statistics
 				</ListItem>
-				<ListItem>
+				<ListItem
+					onClick={() => {
+						navigate('/bestprofessor');
+					}}
+				>
 					<ListItemPrefix>
 						<AcademicCapIcon className='h-5 w-5' />
 					</ListItemPrefix>

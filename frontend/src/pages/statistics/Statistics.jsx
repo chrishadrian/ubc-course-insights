@@ -39,9 +39,7 @@ export default function Statistics() {
 	}, [selectedCourse]);
 
 	const courseDropdown = CreateDropdownMenu(selectedCourse, setSelectedCourse, 'Subject', courseSubjects);
-
 	const sectionDropdown = CreateDropdownMenu(selectedNumber, setSelectedNumber, 'Course Number', courseNumbers);
-
 	const statisticsDropdown = CreateDropdownMenu(selectedStats, setSelectedStats, 'Statistics', statisticsOptions);
 
 	const handleSearchClicked = async () => {

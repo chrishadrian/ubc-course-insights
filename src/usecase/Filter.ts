@@ -31,7 +31,17 @@ export default class Filter {
 					resultSet = filteredData;
 					newResult = false;
 				} else {
-					resultSet = resultSet.filter((data) => filteredData.includes(data));
+					if (this.validateSection(filteredData[0])) {
+						const filteredSectionData = filteredData as Section[];
+						const filteredDataIds = filteredSectionData.map((item) => item.uuid);
+						const sectionSet = resultSet as Section[];
+						resultSet = sectionSet.filter((data) => filteredDataIds.includes(data.uuid));
+					} else {
+						const filteredRoomData = filteredData as Room[];
+						const filteredDataNames = filteredRoomData.map((item) => item.name);
+						const roomSet = resultSet as Room[];
+						resultSet = roomSet.filter((data) => filteredDataNames.includes(data.name));
+					}
 				}
 			} else if (operation === Logic.OR) {
 				resultSet = [...new Set([...resultSet, ...filteredData])];
@@ -93,10 +103,7 @@ export default class Filter {
 		return result;
 	}
 
-	public filterByNode(
-		root: Node,
-		indexes: DatasetIndexes,
-	): DatasetResult {
+	public filterByNode(root: Node, indexes: DatasetIndexes): DatasetResult {
 		let fields: string[] = [], values: string[][] = [], result: DatasetResult = [], counter = 0;
 
 		const filterSections = (node: Node): DatasetResult => {
@@ -135,10 +142,12 @@ export default class Filter {
 			if (key !== Logic.AND && key !== Logic.OR) {
 				const {field, fieldValue}: {field: string; fieldValue: string[];} = this.handleComp(root, key);
 				result = this.filterByField(field, fieldValue, indexes);
+				break;
 			} else {
 				const tempResult = filterSections(root);
 				const newResult = counter === 0;
 				result = this.handleLogicMerge(key, result, tempResult, newResult);
+				break;
 			}
 		}
 		return result;
@@ -156,7 +165,17 @@ export default class Filter {
 		}
 
 		if (logic === Logic.AND) {
-			resultSet = resultSet.filter((data) => result.includes(data));
+			if (this.validateSection(result[0])) {
+				const sectionResult = result as Section[];
+				const sectionResultIDs = sectionResult.map((item) => item.uuid);
+				const sectionSet = resultSet as Section[];
+				resultSet = sectionSet.filter((data) => sectionResultIDs.includes(data.uuid));
+			} else {
+				const roomResult = result as Room[];
+				const roomResultNames = roomResult.map((item) => item.name);
+				const roomSet = resultSet as Room[];
+				resultSet = roomSet.filter((data) => roomResultNames.includes(data.name));
+			}
 		} else if (logic === Logic.OR) {
 			resultSet = [...new Set([...resultSet, ...result])];
 		}
@@ -217,5 +236,15 @@ export default class Filter {
 		});
 
 		return result;
+	}
+
+	private validateSection(result: Room | Section): boolean {
+		const section = new Section();
+		for (const key in result) {
+			if (key in section) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

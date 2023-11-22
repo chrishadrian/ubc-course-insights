@@ -1,7 +1,7 @@
 import {Request, Response} from "express";
 import InsightFacade from "../../controller/InsightFacade";
 import {InsightError, ResultTooLargeError} from "../../controller/IInsightFacade";
-import {filterCourseNumQuery, filterCourseSubjectQuery} from "./constants";
+import {filterCourseNumQuery, filterCourseStatistics, filterCourseSubjectQuery} from "./constants";
 import * as fs from "fs-extra";
 
 
@@ -28,11 +28,13 @@ export default class CourseController {
 
 	public static async getCourseNumbersBySubject(req: Request, res: Response) {
 		try {
-			const facade = new InsightFacade();
 			const courseSubject = req.params.subject.toLowerCase();
 			const query = filterCourseNumQuery(courseSubject);
+
+			const facade = new InsightFacade();
 			const filteredData = await facade.performQuery(query);
 			const result = filteredData.map((item) => item.sections_id);
+
 			res.status(200).json({result: result});
 		} catch (error) {
 			if (error instanceof InsightError) {
@@ -45,8 +47,23 @@ export default class CourseController {
 		}
 	}
 
-	private extractSectionsDeptValues(jsonArray: Array<{sections_dept: string}>): string[] {
-		return jsonArray.map((item) => item.sections_dept);
+	public static async getCourseStatistics(req: Request, res: Response) {
+		try {
+			const courseSubject = req.params.subject.toLowerCase();
+			const courseNumber = req.params.number.toLowerCase();
+			const courseStatistics = req.params.statistics.toLowerCase();
+			const query = filterCourseStatistics(courseSubject, courseNumber, courseStatistics);
+
+			const facade = new InsightFacade();
+			const result = await facade.performQuery(query);
+			res.status(200).json({result: result});
+		} catch (error) {
+			if (error instanceof InsightError) {
+				res.status(400).json({error: error.message});
+			} else {
+				res.status(500).json({error: error});
+			}
+		}
 	}
 
 }

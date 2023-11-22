@@ -15,7 +15,7 @@ export default function Statistics() {
 		async function getCourseNumbers() {
 			setLoading(true);
 			try {
-				const response = await fetch(`http://localhost:4321/course/${selectedCourse}/sections`);
+				const response = await fetch(`http://localhost:4321/course/${selectedCourse}/numbers`);
 				if (!response.ok) {
 					throw new Error(`Failed to fetch data. Status: ${response.status}`);
 				}

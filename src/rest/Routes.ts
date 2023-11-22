@@ -19,6 +19,8 @@ export default class Routes {
 		this.app.post("/query", DatasetController.performQuery);
 
 		this.app.get("/course/subjects", CourseController.getCourseSubjects);
-		this.app.get("/course/:subject/sections", CourseController.getCourseNumbersBySubject);
+		this.app.get("/course/:subject/numbers", CourseController.getCourseNumbersBySubject);
+		this.app.get("/course/:subject/:number/:statistics", CourseController.getCourseStatistics);
+
 	}
 }

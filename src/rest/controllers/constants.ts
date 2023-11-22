@@ -41,3 +41,48 @@ export const filterCourseNumQuery = (subject: string) => {
 		}
 	};
 };
+
+export const filterCourseStatistics = (subject: string, number: string, statistics: string) => {
+	let statQuery = statistics.toLowerCase();
+	if (statQuery === "average") {
+		statQuery = "avg";
+	}
+
+	return {
+		WHERE: {
+			AND: [
+				{IS: {sections_dept: subject}},
+				{IS: {sections_id: number}},
+				{
+					NOT: {
+						EQ: {
+							sections_year: 1900
+						}
+					}
+				}
+			]
+		},
+		OPTIONS: {
+			COLUMNS: [
+				"sections_year",
+				"statistics"
+			],
+			ORDER: {
+				dir: "UP",
+				keys: [
+					"sections_year"
+				]
+			}
+		},
+		TRANSFORMATIONS: {
+			GROUP: [
+				"sections_year"
+			],
+			APPLY: [
+				{statistics: {
+					AVG: `sections_${statQuery}`
+				}}
+			]
+		}
+	};
+};

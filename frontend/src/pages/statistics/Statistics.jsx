@@ -3,15 +3,18 @@ import React, { useEffect, useState } from 'react';
 import DropdownMenus from '../../components/DropdownMenu';
 import COURSE_DATA from '../../data/courses.json';
 import LineChart from './components/LineChart';
+import CreateDropdownMenu from '../../utils/DropdownHelper';
 
 export default function Statistics() {
 	const [selectedStats, setSelectedStats] = useState('');
 	const [selectedCourse, setSelectedCourse] = useState('');
 	const [selectedNumber, setSelectedNumber] = useState('');
-	const courseSubjects = COURSE_DATA;
 	const [courseNumbers, setCourseNumbers] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [statisticResults, setStatisticResult] = useState([]);
+
+	const courseSubjects = COURSE_DATA;
+	const statisticsOptions = ['Average', 'Pass', 'Audit', 'Fail'];
 
 	useEffect(() => {
 		async function getCourseNumbers() {
@@ -35,26 +38,11 @@ export default function Statistics() {
 		}
 	}, [selectedCourse]);
 
-	const courseDropdown = {
-		selectedAttribute: selectedCourse,
-		setSelectedAttribute: setSelectedCourse,
-		label: 'Subject',
-		values: courseSubjects,
-	};
+	const courseDropdown = CreateDropdownMenu(selectedCourse, setSelectedCourse, 'Subject', courseSubjects);
 
-	const sectionDropdown = {
-		selectedAttribute: selectedNumber,
-		setSelectedAttribute: setSelectedNumber,
-		label: 'Course Number',
-		values: courseNumbers,
-	};
+	const sectionDropdown = CreateDropdownMenu(selectedNumber, setSelectedNumber, 'Course Number', courseNumbers);
 
-	const statisticsDropdown = {
-		selectedAttribute: selectedStats,
-		setSelectedAttribute: setSelectedStats,
-		label: 'Statistics',
-		values: ['Average', 'Pass', 'Audit', 'Fail'],
-	};
+	const statisticsDropdown = CreateDropdownMenu(selectedStats, setSelectedStats, 'Statistics', statisticsOptions);
 
 	const handleSearchClicked = async () => {
 		setLoading(true);
@@ -66,7 +54,6 @@ export default function Statistics() {
 				throw new Error(`Failed to fetch data. Status: ${response.status}`);
 			}
 			const result = await response.json();
-			console.log('result: ', result.result);
 			setStatisticResult(result.result);
 		} catch (error) {
 			console.error('Error fetching data:', error);

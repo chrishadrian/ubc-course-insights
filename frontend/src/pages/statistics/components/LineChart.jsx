@@ -50,7 +50,5 @@ export default function LineChart({ statisticResults }) {
 		],
 	};
 
-	console.log('data: ', data);
-
 	return <Line options={options} data={data} />;
 }

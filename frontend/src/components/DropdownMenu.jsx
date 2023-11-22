@@ -5,7 +5,7 @@ export default function DropdownMenus({ attributes }) {
 	return (
 		<div className='flex flex-col justify-between lg:flex-row lg:space-x-5'>
 			{attributes.map((attribute) => (
-				<div className='mb-4'>
+				<div key={attribute.label} className='mb-4'>
 					<Select
 						value={attribute.selectedAttribute}
 						onChange={(value) => {

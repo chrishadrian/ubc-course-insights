@@ -2,14 +2,16 @@ import { Spinner, Typography, Button } from '@material-tailwind/react';
 import React, { useEffect, useState } from 'react';
 import DropdownMenus from '../../components/DropdownMenu';
 import COURSE_DATA from '../../data/courses.json';
+import LineChart from './components/LineChart';
 
 export default function Statistics() {
 	const [selectedStats, setSelectedStats] = useState('');
 	const [selectedCourse, setSelectedCourse] = useState('');
-	const [selectedSection, setSelectedSection] = useState('');
+	const [selectedNumber, setSelectedNumber] = useState('');
 	const courseSubjects = COURSE_DATA;
 	const [courseNumbers, setCourseNumbers] = useState([]);
 	const [loading, setLoading] = useState(false);
+	const [statisticResults, setStatisticResult] = useState([]);
 
 	useEffect(() => {
 		async function getCourseNumbers() {
@@ -41,8 +43,8 @@ export default function Statistics() {
 	};
 
 	const sectionDropdown = {
-		selectedAttribute: selectedSection,
-		setSelectedAttribute: setSelectedSection,
+		selectedAttribute: selectedNumber,
+		setSelectedAttribute: setSelectedNumber,
 		label: 'Course Number',
 		values: courseNumbers,
 	};
@@ -54,8 +56,23 @@ export default function Statistics() {
 		values: ['Average', 'Pass', 'Audit', 'Fail'],
 	};
 
-	const handleSearchClicked = () => {
-		// TODO: using course subject, number, and filter flag, call a new statistics API
+	const handleSearchClicked = async () => {
+		setLoading(true);
+		try {
+			const response = await fetch(
+				`http://localhost:4321/course/${selectedCourse}/${selectedNumber}/${selectedStats}`,
+			);
+			if (!response.ok) {
+				throw new Error(`Failed to fetch data. Status: ${response.status}`);
+			}
+			const result = await response.json();
+			console.log('result: ', result.result);
+			setStatisticResult(result.result);
+		} catch (error) {
+			console.error('Error fetching data:', error);
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	return (
@@ -80,6 +97,9 @@ export default function Statistics() {
 						>
 							Search
 						</Button>
+					</div>
+					<div>
+						<LineChart statisticResults={statisticResults} />
 					</div>
 				</>
 			)}

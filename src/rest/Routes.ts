@@ -1,8 +1,7 @@
 import {Application} from "express";
-import InsightFacade from "../controller/InsightFacade";
-import {InsightError, ResultTooLargeError} from "../controller/IInsightFacade";
 import DatasetController from "./controllers/DatasetController";
 import CourseController from "./controllers/CourseController";
+import ProfController from "./controllers/ProfController";
 
 export default class Routes {
 	private app: Application;
@@ -22,9 +21,7 @@ export default class Routes {
 		this.app.get("/course/:subject/numbers", CourseController.getCourseNumbersBySubject);
 		this.app.get("/course/:subject/:number/:statistics", CourseController.getCourseStatistics);
 
-		this.app.get("/professor/subjects", CourseController.getCourseSubjects);
-		this.app.get("/professor/:subject/numbers", CourseController.getCourseNumbersBySubject);
-		this.app.get("/professor/:subject/:number/:year", CourseController.getBestProfs);
+		this.app.get("/professor/:subject/:number/:year", ProfController.getBestProfs);
 
 	}
 }

@@ -25,7 +25,9 @@ export default function BestProfessor() {
 	const [selectedNumber, setSelectedNumber] = useState('');
 	const [courseNumbers, setCourseNumbers] = useState([]);
 	const [loading, setLoading] = useState(false);
-	const [professorResults, setProfessorResult] = useState([]);
+	const [professorResults, setProfessorResult] = useState(null);
+	const [courseError, setCourseError] = useState(false);
+	const [numberError, setNumberError] = useState(false);
 
 	const courseSubjects = COURSE_DATA;
 
@@ -47,15 +49,35 @@ export default function BestProfessor() {
 		}
 
 		if (selectedCourse !== '') {
+			setCourseError(false);
+			setNumberError(false);
 			getCourseNumbers();
 		}
 	}, [selectedCourse]);
+
+	useEffect(() => {
+		if (selectedNumber !== '') {
+			setNumberError(false);
+		}
+	}, [selectedNumber]);
 
 	const yearDropdown = CreateDropdownMenu(selectedYear, setSelectedYear, 'Year', getListOfYears());
 	const courseDropdown = CreateDropdownMenu(selectedCourse, setSelectedCourse, 'Subject', courseSubjects);
 	const sectionDropdown = CreateDropdownMenu(selectedNumber, setSelectedNumber, 'Course Number', courseNumbers);
 
 	const handleSearchClicked = async () => {
+		if (selectedCourse === '') {
+			setCourseError(true);
+			return;
+		}
+		setCourseError(false);
+
+		if (selectedNumber === '') {
+			setNumberError(true);
+			return;
+		}
+		setNumberError(false);
+
 		setLoading(true);
 		try {
 			const response = await fetch(
@@ -85,7 +107,10 @@ export default function BestProfessor() {
 						Best Professors
 					</Typography>
 					<div className='flex lg:space-x-5'>
-						<DropdownMenus attributes={[yearDropdown, courseDropdown, sectionDropdown]} />
+						<DropdownMenus
+							attributes={[yearDropdown, courseDropdown, sectionDropdown]}
+							errors={{ courseError, numberError }}
+						/>
 						<Button
 							variant='gradient'
 							className='rounded-full h-1/2 w-32 '
@@ -97,7 +122,7 @@ export default function BestProfessor() {
 						</Button>
 					</div>
 					<div className='h-[calc(100vh-12rem)] pt-6'>
-						<TableChart professorResults={professorResults} />
+						{professorResults && <TableChart professorResults={professorResults} />}
 					</div>
 				</>
 			)}

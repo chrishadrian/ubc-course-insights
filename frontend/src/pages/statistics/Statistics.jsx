@@ -6,12 +6,14 @@ import LineChart from './components/LineChart';
 import CreateDropdownMenu from '../../utils/DropdownHelper';
 
 export default function Statistics() {
-	const [selectedStats, setSelectedStats] = useState('');
 	const [selectedCourse, setSelectedCourse] = useState('');
 	const [selectedNumber, setSelectedNumber] = useState('');
+	const [selectedStats, setSelectedStats] = useState('Average');
 	const [courseNumbers, setCourseNumbers] = useState([]);
 	const [loading, setLoading] = useState(false);
-	const [statisticResults, setStatisticResult] = useState([]);
+	const [statisticResults, setStatisticResult] = useState(null);
+	const [courseError, setCourseError] = useState(false);
+	const [numberError, setNumberError] = useState(false);
 
 	const courseSubjects = COURSE_DATA;
 	const statisticsOptions = ['Average', 'Pass', 'Audit', 'Fail'];
@@ -34,17 +36,34 @@ export default function Statistics() {
 		}
 
 		if (selectedCourse !== '') {
+			setCourseError(false);
 			getCourseNumbers();
 		}
 	}, [selectedCourse]);
 
+	useEffect(() => {
+		if (selectedNumber !== '') {
+			setNumberError(false);
+		}
+	}, [selectedNumber]);
+
 	const courseDropdown = CreateDropdownMenu(selectedCourse, setSelectedCourse, 'Subject', courseSubjects);
-
 	const sectionDropdown = CreateDropdownMenu(selectedNumber, setSelectedNumber, 'Course Number', courseNumbers);
-
 	const statisticsDropdown = CreateDropdownMenu(selectedStats, setSelectedStats, 'Statistics', statisticsOptions);
 
 	const handleSearchClicked = async () => {
+		if (selectedCourse === '') {
+			setCourseError(true);
+		} else {
+			setCourseError(false);
+		}
+
+		if (selectedNumber === '') {
+			setNumberError(true);
+		} else {
+			setNumberError(false);
+		}
+
 		setLoading(true);
 		try {
 			const response = await fetch(
@@ -74,7 +93,10 @@ export default function Statistics() {
 						Course Statistics
 					</Typography>
 					<div className='flex lg:space-x-5'>
-						<DropdownMenus attributes={[courseDropdown, sectionDropdown, statisticsDropdown]} />
+						<DropdownMenus
+							attributes={[courseDropdown, sectionDropdown, statisticsDropdown]}
+							errors={{ courseError, numberError }}
+						/>
 						<Button
 							variant='gradient'
 							className='rounded-full h-1/2 w-32 '
@@ -85,9 +107,7 @@ export default function Statistics() {
 							Search
 						</Button>
 					</div>
-					<div>
-						<LineChart statisticResults={statisticResults} />
-					</div>
+					<div>{statisticResults && <LineChart statisticResults={statisticResults} />}</div>
 				</>
 			)}
 		</div>

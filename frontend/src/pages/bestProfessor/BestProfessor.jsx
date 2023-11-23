@@ -2,7 +2,7 @@ import { Spinner, Typography, Button } from '@material-tailwind/react';
 import React, { useEffect, useState } from 'react';
 import DropdownMenus from '../../components/DropdownMenu';
 import COURSE_DATA from '../../data/courses.json';
-import Table from './components/Table';
+import TableChart from './components/TableChart';
 import CreateDropdownMenu from '../../utils/DropdownHelper';
 
 const STARTING_YEAR = 2010;
@@ -33,7 +33,7 @@ export default function BestProfessor() {
 		async function getCourseNumbers() {
 			setLoading(true);
 			try {
-				const response = await fetch(`http://localhost:4321/professor/${selectedCourse}/numbers`);
+				const response = await fetch(`http://localhost:4321/course/${selectedCourse}/numbers`);
 				if (!response.ok) {
 					throw new Error(`Failed to fetch data. Status: ${response.status}`);
 				}
@@ -51,20 +51,9 @@ export default function BestProfessor() {
 		}
 	}, [selectedCourse]);
 
-	// console.log(yearDropdown);
-
-	const courseDropdown = CreateDropdownMenu(selectedCourse, setSelectedCourse, 'Subject', courseSubjects);
-
-	const sectionDropdown = CreateDropdownMenu(selectedNumber, setSelectedNumber, 'Course Number', courseNumbers);
-
 	const yearDropdown = CreateDropdownMenu(selectedYear, setSelectedYear, 'Year', getListOfYears());
-
-	// const yearDropdown = {
-	// 	selectedAttribute: selectedYear,
-	// 	setSelectedAttribute: setSelectedYear,
-	// 	label: 'Year',
-	// 	values: getListOfYears(),
-	// };
+	const courseDropdown = CreateDropdownMenu(selectedCourse, setSelectedCourse, 'Subject', courseSubjects);
+	const sectionDropdown = CreateDropdownMenu(selectedNumber, setSelectedNumber, 'Course Number', courseNumbers);
 
 	const handleSearchClicked = async () => {
 		setLoading(true);
@@ -85,7 +74,7 @@ export default function BestProfessor() {
 	};
 
 	return (
-		<div className='container mx-auto p-8'>
+		<div className='container mx-auto p-8 h-screen'>
 			{loading ? (
 				<div className='w-3/5'>
 					<Spinner className='h-16 w-16 text-gray-900/50 mx-auto' />
@@ -96,7 +85,7 @@ export default function BestProfessor() {
 						Best Professors
 					</Typography>
 					<div className='flex lg:space-x-5'>
-						<DropdownMenus attributes={[courseDropdown, sectionDropdown, yearDropdown]} />
+						<DropdownMenus attributes={[yearDropdown, courseDropdown, sectionDropdown]} />
 						<Button
 							variant='gradient'
 							className='rounded-full h-1/2 w-32 '
@@ -107,8 +96,8 @@ export default function BestProfessor() {
 							Search
 						</Button>
 					</div>
-					<div>
-						<Table professorResults={professorResults} />
+					<div className='h-[calc(100vh-12rem)] pt-6'>
+						<TableChart professorResults={professorResults} />
 					</div>
 				</>
 			)}

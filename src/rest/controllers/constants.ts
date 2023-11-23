@@ -95,7 +95,12 @@ export const filterCourseProfs = (subject: string, num: string, yearsPast: numbe
 			AND: [
 				{IS: {sections_dept: subject}},
 				{IS: {sections_id: num}},
-				{GT: {sections_year: yearsPast}}
+				{
+					OR: [
+						{GT: {sections_year: yearsPast}},
+						{EQ: {sections_year: yearsPast}}
+					]
+				}
 			]
 		},
 		OPTIONS: {

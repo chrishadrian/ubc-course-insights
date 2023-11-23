@@ -5,7 +5,7 @@ import COURSE_DATA from '../../data/courses.json';
 import TableChart from './components/TableChart';
 import CreateDropdownMenu from '../../utils/DropdownHelper';
 
-const STARTING_YEAR = 2010;
+const STARTING_YEAR = 1908;
 
 // https://stackoverflow.com/questions/1575271/range-of-years-in-javascript-for-a-select-box
 function getListOfYears() {

@@ -79,9 +79,48 @@ export const filterCourseStatistics = (subject: string, number: string, statisti
 				"sections_year"
 			],
 			APPLY: [
-				{statistics: {
-					AVG: `sections_${statQuery}`
-				}}
+				{
+					statistics: {
+						AVG: `sections_${statQuery}`
+					}
+				}
+			]
+		}
+	};
+};
+
+export const filterCourseProfs = (subject: string, num: string, yearsPast: number) => {
+	return {
+		WHERE: {
+			AND: [
+				{IS: {sections_dept: subject}},
+				{IS: {sections_id: num}},
+				{
+					OR: [
+						{GT: {sections_year: yearsPast}},
+						{EQ: {sections_year: yearsPast}}
+					]
+				}
+			]
+		},
+		OPTIONS: {
+			COLUMNS: [
+				"sections_instructor",
+				"overallAvg",
+				"lastYear"
+			],
+			ORDER: {
+				dir: "DOWN",
+				keys: ["overallAvg"]
+			}
+		},
+		TRANSFORMATIONS: {
+			GROUP: [
+				"sections_instructor"
+			],
+			APPLY: [
+				{overallAvg: {AVG: "sections_avg"}},
+				{lastYear: {MAX: "sections_year"}}
 			]
 		}
 	};

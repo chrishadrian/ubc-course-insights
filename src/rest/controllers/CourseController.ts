@@ -1,7 +1,7 @@
 import {Request, Response} from "express";
 import InsightFacade from "../../controller/InsightFacade";
 import {InsightError, ResultTooLargeError} from "../../controller/IInsightFacade";
-import {filterCourseNumQuery, filterCourseStatistics, filterCourseSubjectQuery} from "./constants";
+import {filterCourseNumQuery, filterCourseStatistics, filterCourseSubjectQuery, filterCourseProfs} from "./constants";
 import * as fs from "fs-extra";
 
 
@@ -65,5 +65,5 @@ export default class CourseController {
 			}
 		}
 	}
-
 }
+
